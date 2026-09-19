@@ -159,6 +159,6 @@ payments         id, event_id, stripe_session_id, amount, plan, status
 ## Open items (need Fakhrul, but not blocking A)
 
 - VPS box (deliberately deferred).
-- Stripe MY account under which entity (AP Devotion Enterprise?).
+- Stripe MY account under FF Dev Studio (own SSM + gateways). Fakhrul creates it.
 - Registrar + DNS handover for indahnya.my.
 - Google OAuth client (personal GCP project).

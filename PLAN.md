@@ -18,7 +18,7 @@ and accepted without discussion — change freely.
 | Pricing | Free / RM59 / RM99, one-time per event, no subscription. |
 | Payments | Stripe MY (FPX + cards + GrabPay). |
 | Host auth | Email magic link + Google. Guests never sign in. |
-| Stack | Next.js 16 (App Router) · Postgres + Drizzle · R2 presigned direct uploads · PM2 + nginx on a VPS. |
+| Stack | **Nuxt 4 (Vue 3)** · Postgres + Drizzle · R2 presigned direct uploads · PM2 + nginx on a VPS. Was Next.js; switched 2026-09-20 because the UI must be ANK Ops verbatim and ANK's design system is Vue (`app/ui/`, copied from `ANKPets/packages/ui`). |
 | Hosting | VPS for app + Postgres; R2 (personal CF account, same as ffdev.studio) for media. **Which box: decide later, do not ask.** |
 | Languages | BM (colloquial MY register, English trade words) + EN in v1. CN later. |
 | Event types | kahwin front door; aqiqah / birthday / corporate / graduation as types with copy tweaks only. |
@@ -26,6 +26,8 @@ and accepted without discussion — change freely.
 | Retention | window ends → 30-day grace with email warnings → hard delete from R2. Extend by paying again. |
 | Vendor / photographer mode | not v1. Parked. |
 | Differentiators | last: face-search "cari gambar saya", WhatsApp reminders, disposable-camera mode, e-kad partner API. |
+| UI | **Exactly ANK Ops**: tokens, 33 primitives, transitions (veil/pop/drop/slide, `.reveal` no-fill keyframes, no route transitions), shell, composition rules. Guest pages use the same language one size warmer. |
+| Landing page | none yet, by decision. `/` redirects to `/app`. |
 
 ## Pricing table
 
@@ -143,6 +145,33 @@ payments         id, event_id, stripe_session_id, amount, plan, status
 /tv/[slug]?token=         slideshow (fullscreen, autoplay, reconnecting)
 /api/...                  route handlers; webhooks at /api/stripe/webhook
 ```
+
+## Status (2026-09-20)
+
+**Phase A built and verified locally** (commit 566e390): magic-link auth,
+event wizard, presigned upload → worker (sharp/HEIC/ffmpeg) → gallery,
+reactions, guest self-delete, host moderation (hide moves objects under
+`hidden/` so copied links die), zip download, TV slideshow with live poll,
+QR SVG/PNG + 3 print sheets, Stripe Checkout + webhook + reconcile,
+retention sweep + 3 warning mails, approval mode. Phone width clean at 375.
+
+**Dev rig:** Postgres `indahnya` local; **Garage** (S3-compatible, brew) on
+:9000 with bucket `indahnya-media` — MinIO's brew download 410'd; dev reads
+go through `/media/<key>` (dev-only Nitro route) because Garage has no bucket
+policies. Config in `~/.local/garage/config.toml`; `GARAGE_CONFIG_FILE` env.
+Start: `garage -c ~/.local/garage/config.toml server`.
+
+**Blocked on Fakhrul:** an R2 API token (Object Read & Write) on the personal
+CF account — the `ffdevstudio-mac` token is zone-scoped and wrangler's OAuth
+login is the Lewix account, so AP could not create the bucket. Also: domain,
+Stripe MY (FF entity), Google OAuth client, SMTP.
+
+**Traps met:** AWS SDK v3 flexible checksums sign a CRC32 into presigned PUTs
+that browsers never send (Garage and R2 reject) → `requestChecksumCalculation:
+'WHEN_REQUIRED'`; a raw `or` inside drizzle `and()` needs its own parentheses
+(the sweep once nulled every ready row's keys); `Sk` seeded widths must be
+rounded or SSR/client `sin()` differ past 11 digits; head composables must
+run before a top-level `await` inside a composable.
 
 ## Phases
 

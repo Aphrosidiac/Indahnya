@@ -1,0 +1,53 @@
+{
+  "name": "indahnya",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "nuxt dev --port 3180",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "worker": "tsx server/worker/run.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3",
+    "@aws-sdk/s3-request-presigner": "^3",
+    "@pinia/nuxt": "^1.0.2",
+    "archiver": "^7",
+    "drizzle-orm": "^0.45",
+    "exifr": "^7",
+    "heic-convert": "^2",
+    "lucide-vue-next": "^1.0.0",
+    "nanoid": "^5",
+    "nodemailer": "^7",
+    "nuxt": "^4.5.2",
+    "pg": "^8",
+    "pinia": "^4",
+    "qrcode": "^1.5",
+    "sharp": "^0.35",
+    "stripe": "^22",
+    "ulid": "^3",
+    "vue": "^3.5.42",
+    "vue-router": "^5.3.1",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/archiver": "^6",
+    "@types/heic-convert": "^2",
+    "@types/nodemailer": "^7",
+    "@types/pg": "^8",
+    "@types/qrcode": "^1.5",
+    "drizzle-kit": "^0.31",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4",
+    "typescript": "~5.9",
+    "vue-tsc": "^3"
+  }
+}

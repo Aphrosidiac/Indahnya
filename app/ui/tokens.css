@@ -1,0 +1,338 @@
+@import "tailwindcss";
+
+/* Tailwind's automatic content detection starts from the importing app, so the
+   component library has to declare itself or every class used only in here gets
+   tree-shaken out of the app's build. */
+@source "./components";
+@source "../";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ANK Pets Ops — design tokens.
+
+   RE-GROUNDED 2026-09-18 on a warm off-white, measured from the reference
+   screens Fakhrul supplied (a clinic back office: sidebar and page share ONE
+   ground, cards are pure white with a hairline and a soft lift, the active nav
+   item is a bright green pill, the primary action is charcoal, status is a
+   tinted chip with regular-weight text, and table headers are sentence-case
+   grey rather than uppercase eyebrows).
+
+   Every token NAME is unchanged so the seven hundred class references across
+   Ops and the till keep resolving; only the values moved. Two rules carry over
+   from RackForge because they are decisions, not decoration:
+
+   1. The PRIMARY ACTION IS INK (now charcoal #424242 — the reference's "+ New").
+      The green is for the active nav item, the one "do the obvious thing"
+      button on a page, and progress. It never carries white text.
+   2. Cards use a hairline AND a shadow. On this ground the hairline is nearly
+      invisible and the shadow is what lifts the card; both stay because a
+      card with neither disappears the moment two sit side by side.
+
+   Sampled values (mode of a region, not a single pixel):
+     ground #f6f4f3 · card #ffffff · tab strip #e9e7e6 · primary #424242
+     active nav #7dd56f · progress green #76c66e · icon square #515056
+     chips: green #eef5e9 · amber #f9f2e1 · red #f9ebe7 · blue #eaeffb
+            purple #f1edfd · grey #f0f0ee
+     callouts: blue #eaf0fe · green #e1f0dd
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  /* ink ramp — neutral, because the ground is neutral now */
+  --color-ink-900: #1a1a1a;   /* headings, figures            ~17:1 on ground */
+  --color-ink-800: #2b2b2b;   /* body                         ~13:1 */
+  --color-ink-700: #424242;   /* THE primary button, the icon squares */
+  --color-ink-600: #5c5c5c;   /* secondary text               ~6.5:1 */
+  --color-ink-500: #767676;   /* muted, table headers, subs   ~4.6:1 */
+  --color-ink-400: #9a9a9a;   /* placeholders, faint labels — non-essential only */
+  --color-ink-300: #bdbdbd;   /* disabled, dotted outlines */
+
+  --color-line-200: #e3e1df;  /* input borders, dividers on the ground */
+  --color-line-100: #efedeb;  /* card hairlines, table rows */
+
+  --color-surface-50: #f6f4f3; /* THE ground — sidebar, header and page alike */
+  --color-surface-0:  #ffffff; /* cards, inputs, the detail panel */
+  --color-sand:       #e9e7e6; /* the tab strip, subtle fills, count badges */
+
+  /* primary — the reference green. Active nav, the accent button, links.
+     #7dd56f cannot carry white text (2.1:1), which is why rule 1 exists: it
+     carries ink, and only ink. The -700 step is the one that works as text. */
+  --color-primary-900: #1f4d1c;
+  --color-primary-800: #27622a;
+  --color-primary-700: #2f7a2b;  /* links, active-nav text on the tint — 5.3:1 on white */
+  --color-primary-600: #3d8f39;  /* progress bars, the mark */
+  --color-primary-500: #76c66e;  /* meters */
+  --color-primary-400: #7dd56f;  /* THE active nav pill and the accent button */
+  --color-primary-100: #cdeec5;
+  --color-primary-50:  #eef5e9;  /* selected rows, the success chip */
+
+  /* steel — the blue series: "in progress" chips, the info callout, charts */
+  --color-steel-700: #3557b8;
+  --color-steel-600: #4b6fd3;
+  --color-steel-400: #6887db;
+  --color-steel-100: #d5e6fb;
+  --color-steel-50:  #eaeffb;
+
+  /* semantic — every -50 is a chip tint from the reference, every -600 passes
+     4.5:1 on its own tint */
+  --color-success-600: #2f7a2b;  --color-success-50: #eef5e9;
+  --color-warning-600: #a86a1c;  --color-warning-50: #f9f2e1;
+  --color-info-600:    #3557b8;  --color-info-50:    #eaeffb;
+  --color-violet-600:  #6a48c9;  --color-violet-50:  #f1edfd;
+  --color-danger-600:  #c9553f;  --color-danger-700: #a8432f;
+  --color-danger-50:   #f9ebe7;
+
+  /* the steps the screens already reach for: a darker text step and a border
+     tint per semantic colour. `warn-*` and `surface-100` are aliases for the
+     spellings that had crept in — an undefined token in Tailwind v4 emits
+     nothing at all, which is how a "done" rail went invisible once before. */
+  --color-success-700: #27622a;  --color-success-200: #cfe6c8;
+  --color-warning-700: #8a5614;  --color-warning-200: #f0dcb0;
+  --color-danger-200:  #f3c9bf;
+  --color-info-700:    #2a468f;  --color-info-200:    #cddaf5;
+  --color-warn-700:    #8a5614;  --color-warn-600: #a86a1c;  --color-warn-500: #e6a24c;
+  --color-warn-200:    #f0dcb0;  --color-warn-50:  #f9f2e1;
+  --color-surface-100: #e9e7e6;
+  --color-line:        #e3e1df;
+
+  /* callout grounds — a shade deeper than the chips so a box reads as a box */
+  --color-callout-blue:  #eaf0fe;
+  --color-callout-green: #e1f0dd;
+  --color-callout-amber: #fbf3df;
+  --color-callout-red:   #f9ebe7;
+
+  --radius-xs: 6px;    /* count badges, tiny controls */
+  --radius-sm: 10px;   /* buttons, inputs, nav items, tabs */
+  --radius-md: 16px;   /* cards, modals, popovers, callouts */
+  --radius-lg: 18px;   /* feature panels, the frame */
+
+  /* neutral shadows now — the ground is neutral, so a tinted shadow would
+     read as a stain */
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 14px rgb(0 0 0 / 0.045);
+  --shadow-md: 0 4px 16px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 24px 48px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.06);
+
+  /* One easing for everything, and three durations. A motion vocabulary that
+     fits on one screen is one people actually follow. */
+  --ease-in-out: cubic-bezier(.2, .8, .2, 1);
+  --dur-fast: 120ms;   /* leaving, and anything the pointer is waiting on */
+  --dur-base: 200ms;   /* overlays arriving */
+  --dur-slow: 260ms;   /* the drawer, which travels further */
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+
+  /**
+   * SCROLLBARS TAKE NO SPACE. EVER.
+   *
+   * A classic scrollbar (Windows; a Mac with "always show" or a mouse plugged
+   * in) steals ~15px from its scroller the moment content grows past the edge
+   * and gives it back when it shrinks — so list pages shunt sideways as rows
+   * load, forms jump when a message appears, tables re-flow at the tenth row.
+   * Reserving a permanent gutter was tried and looks like a mistake: an empty
+   * strip down the right of every page, most of the time for nothing.
+   *
+   * So the native bar is not drawn at all, on the document and on every inner
+   * scroller. Scrolling itself is untouched — wheel, trackpad, keys, touch and
+   * drag all work — the browser simply never lays out a bar. This is what a
+   * Mac does by default and what overlay-scrollbar apps do everywhere; it is
+   * the only way to have a scroller whose width never depends on its content.
+   */
+  html, body, * { scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  body {
+    margin: 0;
+    background: var(--color-surface-50);
+    color: var(--color-ink-800);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.4286;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  html, body, #__nuxt { min-height: 100%; }
+
+  h1, h2, h3, h4 {
+    color: var(--color-ink-900);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+
+  /* Never remove the focus ring. Staff live in this tool on a keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink-900);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection { background: var(--color-primary-100); }
+  [type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-200);
+    border-radius: 99px;
+    border: 3px solid var(--color-surface-50);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-300); }
+}
+
+@layer components {
+  .card {
+    background: var(--color-surface-0);
+    border: 1px solid var(--color-line-100);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Every column of digits gets this. Money, quantities, dates, SKU counts. */
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Section labels and table headers. SENTENCE CASE, not uppercase: the
+     reference labels its columns "Patient · Wants · Flexible on" in a quiet
+     grey, and an uppercase tracked eyebrow is the loudest thing on a page
+     that is otherwise whispering. Same class name so 65 call sites moved at
+     once. */
+  .eyebrow {
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;   /* a wrapped table header misaligns the whole column */
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--color-ink-500);
+  }
+
+  .field {
+    width: 100%;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-line-200);
+    background: var(--color-surface-0);
+    padding: 0 12px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--color-ink-800);
+    transition: border-color 120ms var(--ease-in-out), box-shadow 120ms var(--ease-in-out);
+  }
+  textarea.field { height: auto; padding: 9px 12px; line-height: 1.5; }
+  .field::placeholder { color: var(--color-ink-400); }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-ink-400);
+    box-shadow: 0 0 0 3px rgb(0 0 0 / 0.05);
+  }
+  .field:disabled { background: var(--color-surface-50); color: var(--color-ink-400); cursor: not-allowed; }
+  .field[aria-invalid="true"] { border-color: var(--color-danger-600); }
+
+  .skeleton {
+    background: linear-gradient(90deg,
+      var(--color-line-100) 25%, var(--color-surface-50) 37%, var(--color-line-100) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-md);
+  }
+}
+
+@keyframes shimmer { from { background-position: 100% 0 } to { background-position: 0 0 } }
+
+/* ─────────────────────────────── motion ──────────────────────────────────
+   THE RULE: an animation must never own the resting state.
+
+   `animation: rise ... both` applies the `from` keyframe BEFORE the animation
+   starts, so an element that never gets to animate — a throttled tab, a paused
+   document, a frame budget that slips — stays at opacity 0 for ever. That is
+   not hypothetical: the Drawer shipped that way earlier and rendered blank.
+
+   So every transition below is a Vue <Transition>: the classes are added, then
+   REMOVED when it finishes. What is left is ordinary CSS, and an element that
+   never animates is simply already in its final state.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* page — the house 8px lift, finally wired up. mode="out-in" in App.vue,
+   because two pages alive at once would teleport two page heads. */
+/*
+ * `page` IS GONE, deliberately, and this note is here so it is not re-added.
+ *
+ * All three SPAs now use a bare <RouterView />. A route transition is driven by
+ * a class swap on the NEXT ANIMATION FRAME, and a frame that never arrives — a
+ * backgrounded tab, low power mode, a throttled renderer — leaves the page
+ * stuck mid-transition at `opacity: 0`, or leaves the outgoing page mounted and
+ * the incoming one never created. Both were measured, on two different
+ * surfaces, months apart. The element being animated is the one that has just
+ * been created, so there is no `is-open`-style class trick to fall back on.
+ *
+ * An animation must never own the resting state. The other four transitions
+ * (veil, pop, slide, drop) are all on elements that already exist and are safe.
+ */
+
+/* backdrop — fades only. Never put the panel's motion on the same element:
+   the slide then fights the fade on the way out. */
+.veil-enter-active { transition: opacity var(--dur-base) var(--ease-in-out); }
+.veil-leave-active { transition: opacity var(--dur-fast) var(--ease-in-out); }
+.veil-enter-from, .veil-leave-to { opacity: 0; }
+
+/* modal + command palette — lift and settle */
+.pop-enter-active { transition: opacity var(--dur-base) var(--ease-in-out), transform var(--dur-base) var(--ease-in-out); }
+.pop-leave-active { transition: opacity var(--dur-fast) var(--ease-in-out), transform var(--dur-fast) var(--ease-in-out); }
+.pop-enter-from   { opacity: 0; transform: translateY(10px) scale(.985); }
+.pop-leave-to     { opacity: 0; transform: translateY(4px) scale(.99); }
+
+/* dropdown — a short hop from its trigger, quicker than a modal because the
+   pointer is already on its way to the list */
+.drop-enter-active { transition: opacity 130ms var(--ease-in-out), transform 130ms var(--ease-in-out); }
+.drop-leave-active { transition: opacity 90ms var(--ease-in-out), transform 90ms var(--ease-in-out); }
+.drop-enter-from, .drop-leave-to { opacity: 0; transform: translateY(-4px) scale(.98); }
+
+/* drawer — travels in from the edge it lives on */
+.slide-enter-active { transition: transform var(--dur-slow) var(--ease-in-out), opacity var(--dur-slow) var(--ease-in-out); }
+.slide-leave-active { transition: transform var(--dur-fast) var(--ease-in-out), opacity var(--dur-fast) var(--ease-in-out); }
+.slide-enter-from, .slide-leave-to { opacity: 0; transform: translateX(24px); }
+
+/* ─────────────────────────── arrival, the safe way ───────────────────────
+   `.reveal`, `.grow-x` and `.grow-y` are one-shot CSS keyframe animations
+   with NO fill mode. That is the whole trick: with `fill-mode: none` the
+   element's resting state is its ordinary style, the keyframes only borrow
+   it for 240ms, and an element whose animation never runs (a throttled tab,
+   reduced motion, a frame that never comes) is simply already where it
+   should be. Nothing here depends on JavaScript adding a class on the next
+   animation frame, which is the mechanism that stranded pages at opacity 0.
+
+   `.rise` (below) keeps `both` for the one place it is safe and is not to be
+   reached for by anything that mounts in a hidden document.
+   ───────────────────────────────────────────────────────────────────────── */
+@keyframes reveal { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+@keyframes reveal-flat { from { opacity: 0 } to { opacity: 1 } }
+@keyframes grow-x { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+@keyframes grow-y { from { transform: scaleY(0) } to { transform: scaleY(1) } }
+
+/* a page, a tab panel, a card's content once its data has landed */
+.reveal      { animation: reveal 240ms var(--ease-in-out); }
+/* rows that replace a skeleton: no travel, or the table would appear to shove */
+.reveal-flat { animation: reveal-flat 200ms var(--ease-in-out); }
+/* meters grow from the left, bars from the floor */
+.grow-x { transform-origin: left center;  animation: grow-x 480ms var(--ease-in-out); }
+.grow-y { transform-origin: center bottom; animation: grow-y 480ms var(--ease-in-out); }
+
+/* Kept for a one-shot reveal on an element that is definitely painting —
+   a hero, not a route. Anything that can be hidden when it mounts wants a
+   <Transition> or `.reveal`, not this. */
+@keyframes rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+.rise { animation: rise 420ms var(--ease-in-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .skeleton { animation: none; background: var(--color-line-100); }
+  .reveal, .reveal-flat, .grow-x, .grow-y { animation: none; }
+  /* Nothing may still be mid-travel when the transition is cut to nothing. */
+  .pop-enter-from, .slide-enter-from, .drop-enter-from,
+  .pop-leave-to, .slide-leave-to, .drop-leave-to { transform: none !important; }
+}

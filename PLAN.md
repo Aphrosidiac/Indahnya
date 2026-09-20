@@ -27,7 +27,7 @@ and accepted without discussion — change freely.
 | Vendor / photographer mode | not v1. Parked. |
 | Differentiators | last: face-search "cari gambar saya", WhatsApp reminders, disposable-camera mode, e-kad partner API. |
 | UI | **Exactly ANK Ops**: tokens, 33 primitives, transitions (veil/pop/drop/slide, `.reveal` no-fill keyframes, no route transitions), shell, composition rules. Guest pages use the same language one size warmer. |
-| Landing page | none yet, by decision. `/` redirects to `/app`. |
+| Landing page | **Built 2026-09-20** at `/` (BM default, `?lang=en`). Direction from the Awwwards study: Cosmos (gallery-as-hero), Opal/Polaroid (flow told visually), Daylight (warm ground + one accent), POV's section order. Photos are Unsplash-licensed (`public/landing/`) until real majlis photos exist. `/privasi` and `/terma` are still unwritten. |
 
 ## Pricing table
 

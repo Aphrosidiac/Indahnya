@@ -80,3 +80,18 @@ describe('OG renderer', () => {
     for (const buf of [a, b]) expect(buf.subarray(0, 2).toString('hex')).toBe('ffd8'); // a JPEG
   });
 });
+
+describe('RSVP rules', () => {
+  it('the deadline is the whole of that day in Malaysia', async () => {
+    const { rsvpDeadlinePassed } = await import('../server/utils/rsvp');
+    expect(rsvpDeadlinePassed(null)).toBe(false);
+    expect(rsvpDeadlinePassed('2026-11-07', Date.parse('2026-11-07T15:59:00Z'))).toBe(false); // 11:59 pm MYT
+    expect(rsvpDeadlinePassed('2026-11-07', Date.parse('2026-11-07T16:00:01Z'))).toBe(true); // 12:00 am MYT next day
+  });
+  it('sides are asked for weddings only, and the host overrides the defaults', async () => {
+    const { rsvpSettings } = await import('../server/utils/rsvp');
+    expect(rsvpSettings({ type: 'kahwin', settings: {} as never }).sides).toBe(true);
+    expect(rsvpSettings({ type: 'birthday', settings: {} as never }).sides).toBe(false);
+    expect(rsvpSettings({ type: 'kahwin', settings: { rsvp: { deadline: '2026-11-07', maxPax: 8, meals: ['Biasa'], sides: false } } as never }).maxPax).toBe(8);
+  });
+});

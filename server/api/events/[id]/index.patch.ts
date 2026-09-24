@@ -6,6 +6,7 @@ import { slugify, RESERVED } from '../../../utils/slug';
 import { PLANS, planClocks } from '../../../utils/plans';
 import { readBodyAs } from '../../../utils/validate';
 import { parseEventDate } from '../../../utils/dates';
+import { rsvpSettings } from '../../../utils/rsvp';
 
 /** Waze/Maps links are rendered as <a href> on a public page: http(s) only, never javascript:. */
 const Url = z.string().trim().max(500).refine(v => v === '' || /^https:\/\//i.test(v), 'Link mesti bermula dengan https://').optional();
@@ -22,6 +23,12 @@ const Body = z.object({
     modules: z.object({ gambar: z.boolean(), ucapan: z.boolean(), rsvp: z.boolean(), tempat: z.boolean(), kad: z.boolean() }).partial().optional(),
     slideshow: z.object({ intervalSec: z.number().int().min(3).max(60), showNames: z.boolean(), shuffle: z.boolean() }).partial().optional(),
     guestDeleteHours: z.number().int().min(0).max(72).optional(),
+    rsvp: z.object({
+      deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v), 'Tarikh tak sah').nullable(),
+      maxPax: z.number().int().min(1).max(30),
+      meals: z.array(z.string().trim().min(1).max(40)).max(6),
+      sides: z.boolean(),
+    }).partial().optional(),
   }).optional(),
 });
 
@@ -60,6 +67,7 @@ export default defineEventHandler(async (event) => {
       ...ev.settings, ...b.settings,
       modules: { ...ev.settings.modules, ...(b.settings.modules ?? {}) },
       slideshow: { ...ev.settings.slideshow, ...(b.settings.slideshow ?? {}) },
+      rsvp: { ...rsvpSettings(ev), ...(b.settings.rsvp ?? {}) },
     } as typeof ev.settings;
   }
   if (!Object.keys(patch).length) return ev;

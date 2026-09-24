@@ -145,15 +145,15 @@ async function destroy() {
           <div class="divide-y divide-line-100">
             <Toggle v-model="settings.modules.gambar" inset label="Gambar" hint="Galeri dan upload" />
             <Toggle v-model="settings.modules.kad" inset label="Kad jemputan" hint="Butiran majlis, lokasi, aturcara" />
-            <Toggle :model-value="false" inset disabled label="Ucapan" hint="Akan datang — ucapan tulis atau suara" />
-            <Toggle :model-value="false" inset disabled label="RSVP" hint="Akan datang — tetamu confirm kehadiran" />
-            <Toggle :model-value="false" inset disabled label="Tempat duduk" hint="Akan datang — tetamu cari nombor meja" />
+            <Toggle v-model="settings.modules.ucapan" inset label="Ucapan" hint="Tetamu tinggalkan ucapan tulis atau suara" />
+            <Toggle v-model="settings.modules.rsvp" inset label="RSVP" hint="Tetamu confirm kehadiran dan pax" />
+            <Toggle v-model="settings.modules.tempat" inset label="Tempat duduk" hint="Tetamu cari nombor meja sendiri — buka bila meja dah disusun" />
           </div>
           <template #footer><div class="flex justify-end"><Btn variant="primary" :loading="busy" @click="saveTetamu">Simpan</Btn></div></template>
         </Card>
         <Card title="Kawalan" flush>
           <div class="divide-y divide-line-100">
-            <Toggle v-model="settings.approvalMode" inset label="Approval mode" hint="Gambar disembunyikan sampai korang approve" />
+            <Toggle v-model="settings.approvalMode" inset label="Approval mode" hint="Gambar dan ucapan disembunyikan sampai korang approve" />
             <div class="px-5 py-3.5">
               <Field v-slot="{ id: f }" label="Tetamu boleh padam gambar sendiri dalam" suffix="jam" hint="0 untuk tak benarkan">
                 <input :id="f" v-model.number="settings.guestDeleteHours" type="number" min="0" max="72" class="num" />

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   pgTable, text, timestamp, integer, bigint, boolean, jsonb, primaryKey, index, uniqueIndex,
 } from 'drizzle-orm/pg-core';
@@ -26,6 +27,8 @@ export interface EventSettings {
   notified?: string[];
   /** The landing's sample gallery: readable by anyone, never accepts uploads. */
   demo?: boolean;
+  /** RSVP form: closes after `deadline` (YYYY-MM-DD, end of that day MYT); pax per reply; optional meal choices; ask which side. */
+  rsvp?: { deadline: string | null; maxPax: number; meals: string[]; sides: boolean };
 }
 
 export const users = pgTable('users', {
@@ -130,7 +133,17 @@ export const messages = pgTable('messages', {
   kind: text('kind').$type<'text' | 'audio'>().notNull(),
   body: text('body'),
   mediaId: text('media_id').references(() => media.id, { onDelete: 'set null' }),
-  status: text('status').$type<'visible' | 'hidden'>().notNull().default('visible'),
+  /**
+   * visible / hidden as for photos (hidden audio lives in the private bucket);
+   * `pending` is a voice note whose upload has not landed yet, `processing`
+   * one being transcoded, `failed` one that could not be read. Only
+   * `visible` is ever shown to guests.
+   */
+  status: text('status').$type<'visible' | 'hidden' | 'pending' | 'processing' | 'failed' | 'deleted'>().notNull().default('visible'),
+  /** Voice ucapan: the processed m4a (public while visible) and the upload it came from (private). */
+  audioKey: text('audio_key'),
+  audioSrcKey: text('audio_src_key'),
+  durationSec: integer('duration_sec'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [index('messages_event_idx').on(t.eventId, t.createdAt)]);
 
@@ -154,8 +167,18 @@ export const rsvps = pgTable('rsvps', {
   meal: text('meal'),
   note: text('note'),
   tableId: text('table_id').references(() => tables.id, { onDelete: 'set null' }),
+  /** Digits-only form of `phone` (60123456789), so a guest on a second phone finds their own reply. */
+  phoneKey: text('phone_key'),
+  /** Who wrote it: a guest's browser, or the host adding a reply taken by phone. */
+  source: text('source').$type<'guest' | 'host'>().notNull().default('guest'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, t => [index('rsvps_event_idx').on(t.eventId)]);
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [
+  index('rsvps_event_idx').on(t.eventId),
+  /** One reply per browser, enforced by the database: two open tabs cannot make two. */
+  uniqueIndex('rsvps_guest_uq').on(t.eventId, t.guestId).where(sql`${t.guestId} is not null`),
+  index('rsvps_phone_idx').on(t.eventId, t.phoneKey),
+]);
 
 export const kad = pgTable('kad', {
   eventId: text('event_id').primaryKey().references(() => events.id, { onDelete: 'cascade' }),

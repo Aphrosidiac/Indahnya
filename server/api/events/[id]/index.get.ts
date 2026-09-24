@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     mediaCounts(ev.id), uploadsUsed(ev.id),
     db.select({ userId: eventMembers.userId, role: eventMembers.role, email: users.email, name: users.name }).from(eventMembers)
       .innerJoin(users, eq(users.id, eventMembers.userId)).where(eq(eventMembers.eventId, ev.id)),
-    db.select({ n: count(), pax: sql<number>`coalesce(sum(case when ${rsvps.attending} then ${rsvps.pax} else 0 end),0)` }).from(rsvps).where(eq(rsvps.eventId, ev.id)),
+    db.select({ n: count(), yes: sql<number>`count(*) filter (where ${rsvps.attending})`, pax: sql<number>`coalesce(sum(case when ${rsvps.attending} then ${rsvps.pax} else 0 end),0)` }).from(rsvps).where(eq(rsvps.eventId, ev.id)),
     db.select({ n: count() }).from(messages).where(and(eq(messages.eventId, ev.id), eq(messages.status, 'visible'))),
   ]);
   const plan = PLANS[ev.plan];
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   return {
     ...ev, settings, isOwner: ev.ownerId === user.id, members, counts,
     uploads: { used, cap: plan.uploadCap, open: uploadsOpen(ev) },
-    rsvp: { n: Number(rsvp?.n ?? 0), pax: Number(rsvp?.pax ?? 0) },
+    rsvp: { n: Number(rsvp?.n ?? 0), yes: Number(rsvp?.yes ?? 0), pax: Number(rsvp?.pax ?? 0) },
     ucapan: Number(ucapan?.n ?? 0),
     planInfo: plan,
     offers: offers(ev),

@@ -10,7 +10,7 @@ import KadView from '~/components/kad/KadView.vue';
  * the plain hub: the day, the place, the door into the gallery.
  */
 definePageMeta({ layout: 'bare' });
-const { ev, t, lang, displayName, ready, setMeta } = await useGuestEvent();
+const { ev, me, t, lang, displayName, ready, setMeta } = await useGuestEvent();
 const { data: k } = await useFetch<{ kad: KadViewData; ogUrl: string | null; enabled: boolean }>(() => `/api/g/${ev.value.slug}/kad`, { key: `kad:${ev.value.slug}` });
 const when = ev.value.date ? fmtDate(ev.value.date, undefined, lang.value) : '';
 const kadOn = computed(() => !!k.value?.enabled && !!k.value.kad);
@@ -23,7 +23,7 @@ const toGambar = computed(() => `/${ev.value.slug}/gambar`);
 </script>
 
 <template>
-  <KadView v-if="kadOn" :view="k!.kad" :ready="ready" />
+  <KadView v-if="kadOn" :view="k!.kad" :ready="ready" :guest-name="me?.name" />
 
   <GuestShell v-else :ev="ev" :title="displayName" :t="t">
     <div class="reveal mx-auto max-w-[520px] pt-6">

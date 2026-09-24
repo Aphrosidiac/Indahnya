@@ -16,7 +16,7 @@ import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 import { eq, inArray } from 'drizzle-orm';
 import { S3Client, PutObjectCommand, DeleteObjectsCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import { useDb, users, events, eventMembers, guests, media, reactions, kad } from '../server/db';
+import { useDb, users, events, eventMembers, guests, media, reactions, kad, messages } from '../server/db';
 import { KadFields, kadDefaults, kadPrefix } from '../server/utils/kad';
 import { renderKadOg } from '../server/utils/kad-og';
 import { composeKad } from '../shared/utils/kad-view';
@@ -114,6 +114,19 @@ for (const [i, id] of [...PHOTOS].reverse().entries()) {
   });
   const fans = guestIds.filter((_, k) => (k * 7 + i * 3) % 5 === 0 && guestIds[k] !== guestId);
   if (fans.length) await db.insert(reactions).values(fans.map((g, k) => ({ mediaId: mid, guestId: g, kind: (['love', 'party', 'cry'] as const)[(i + k) % 3] })));
+}
+
+// a few wishes on the wall (written ones only: a voice note would need a real voice)
+await db.delete(messages).where(eq(messages.eventId, ev.id));
+const WISHES = [
+  'Selamat pengantin baru Aina & Hakim! Semoga berkekalan hingga ke jannah 🤲',
+  'Tahniah korang berdua. Majlis cantik sangat, makanan pun sedap!',
+  'Barakallahu lakuma wa baraka alaikuma wa jama\'a bainakuma fi khair.',
+  'Congrats both! So happy for you. Jaga Aina elok-elok ya Hakim 😄',
+];
+for (const [i, body] of WISHES.entries()) {
+  const at = new Date(start + (i + 3) * 40 * 60_000);
+  await db.insert(messages).values({ id: ulid(at.getTime()), eventId: ev.id, guestId: guestIds[i + 1]!, name: NAMES[i + 1]!, kind: 'text', body, status: 'visible', createdAt: at });
 }
 
 // the e-kad: cover + four photos processed the way the kad editor does, then its WhatsApp preview.

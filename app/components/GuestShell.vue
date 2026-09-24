@@ -19,7 +19,7 @@ const tabs = computed(() => {
     { key: 'gambar', to: `${base.value}/gambar`, label: props.t('tabs.gambar' as never), icon: Images, on: m.gambar },
     { key: 'ucapan', to: `${base.value}/ucapan`, label: props.t('tabs.ucapan' as never), icon: MessageSquareHeart, on: m.ucapan },
     { key: 'rsvp', to: `${base.value}/rsvp`, label: props.t('tabs.rsvp' as never), icon: Users, on: m.rsvp },
-    { key: 'tempat', to: `${base.value}/tempat`, label: props.t('tabs.tempat' as never), icon: Armchair, on: m.tempat },
+    { key: 'tempat', to: `${base.value}/tempat`, label: props.t('tabs.tempat' as never), short: props.t('tabs.tempat.short' as never), icon: Armchair, on: m.tempat },
   ];
   // a module the host switched on but that is not built yet (Phase B) gets no tab
   return all.filter(t => t.on && isBuilt(t.key));
@@ -63,7 +63,7 @@ const active = (to: string) => route.path === to || (to !== base.value && route.
           <span class="grid h-7 w-12 place-items-center rounded-full transition-colors duration-[160ms]" :class="active(tb.to) && 'bg-primary-400'">
             <component :is="tb.icon" class="size-[18px]" :stroke-width="active(tb.to) ? 2 : 1.75" aria-hidden="true" />
           </span>
-          {{ tb.label }}
+          {{ 'short' in tb && tabs.length > 4 ? tb.short : tb.label }}
         </NuxtLink>
       </div>
     </nav>

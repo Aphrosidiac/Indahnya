@@ -87,7 +87,8 @@ Wedibox uses. Upgrade is a Stripe Checkout session; webhook flips `plan`.
 ## Layer B
 
 - **RSVP**: hadir/tidak, pax, side (lelaki/perempuan/rakan), meal, note.
-  Guest search by name to find an existing entry. CSV export.
+  (Guest search by name was dropped: it would list who is coming to anyone
+  with the link.) CSV export.
 - **Tempat duduk**: tables (name, capacity) → assign RSVP entries by drag-drop;
   guest-facing "cari nama" → table number.
 - **Ucapan**: text + optional photo; **audio ucapan** recorded in-browser
@@ -150,6 +151,36 @@ payments         id, event_id, stripe_session_id, amount, plan, status
 /tv/[slug]?token=         slideshow (fullscreen, autoplay, reconnecting)
 /api/...                  route handlers; webhooks at /api/stripe/webhook
 ```
+
+## Phase B — RSVP, seating, ucapan (built 2026-09-24)
+
+- **RSVP** (`/[slug]/rsvp`, and a sheet inside the kad): hadir / tak hadir,
+  pax (host sets the max), pihak (weddings), meal (host-defined choices, off
+  when empty), note, and an optional wish sent with it. One reply per
+  browser (unique index + lock: two tabs never make two). A phone number
+  only claims a reply the HOST entered from a call — matching any reply by
+  number would let anyone who knows a number rewrite that person's RSVP.
+  No public name search for RSVP. Deadline = end of that day, MYT.
+  Purging an event deletes its RSVPs, wishes, tables and guest rows too.
+  Host `/app/[id]/rsvp`: totals (hadir / pax / sides / seated), filter +
+  search, drawer to edit or add replies taken by phone, CSV (UTF-8 BOM,
+  formula-safe), "Tetapan RSVP".
+- **Tempat duduk**: host `/app/[id]/tempat` — tables (bulk "30 × 10" or one
+  by one), drag guests onto tables on a desk, a "Meja" picker per guest on a
+  phone, capacity meter (over capacity is shown, not blocked), print view.
+  Guest `/[slug]/tempat` + kad section: type ≥3 letters → name, pax, table
+  (at most 5 matches; nothing else about anyone leaves the server).
+- **Ucapan** (`/[slug]/ucapan`, and a section + sheet in the kad): written
+  (≤500) or voice (MediaRecorder, ≤60 s; WebM/Opus or MP4 → mono AAC m4a,
+  transcoded in the request with ffprobe sniffing and a timeout, at most two
+  at once process-wide; `processing` is its own state so a delete mid-
+  transcode stays deleted). Approval
+  mode holds wishes like photos; hidden voice notes move to the private
+  bucket. Host `/app/[id]/ucapan`: hide / show / delete, "Download semua"
+  zip = ucapan.txt + every voice note. Photo-with-ucapan was left out: the
+  gallery already takes photos.
+- The kad's bar keeps five buttons by priority (Lagu, RSVP, Gambar, Salam
+  kaut, Lokasi, Hubungi, Ucapan); everything dropped is still a page section.
 
 ## Phase C — e-kad (built 2026-09-24)
 
@@ -275,7 +306,7 @@ run before a top-level `await` inside a composable.
   zip download, slideshow, QR templates, Stripe upgrade, retention cron.
   Preview at `<id>.indahnya.pages.dev`-style URL or `preview.indahnya.my`.
 - **C** — e-kad editor + 5 templates + OG images + salam kaut + embed link. **Built 2026-09-24.**
-- **B** — RSVP, seating, ucapan text + audio.
+- **B** — RSVP, seating, ucapan text + audio. **Built 2026-09-24.**
 - **Launch** — marketing site, BM/EN copy, TikTok/Lemon8 demo kad, Portal
   Kahwin outreach.
 - **Later** — CN, face search, WA reminders, disposable mode, vendor credits,

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Phone, MapPin, Music2, Pause, Gift, Images, CalendarPlus, Navigation, Copy, Check, X, MessageCircle, Camera, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Phone, MapPin, Music2, Pause, Gift, Images, CalendarPlus, Navigation, Copy, Check, X, MessageCircle, Camera, ChevronLeft, ChevronRight, MailCheck, MessageSquareHeart, Armchair } from 'lucide-vue-next';
+import RsvpForm from '~/components/guest/RsvpForm.vue';
+import UcapanBox from '~/components/guest/UcapanBox.vue';
+import SeatSearch from '~/components/guest/SeatSearch.vue';
 import '@fontsource/great-vibes/latin-400.css';
 import '@fontsource/cormorant-garamond/latin-400.css';
 import '@fontsource/cormorant-garamond/latin-500.css';
@@ -26,13 +29,13 @@ import KadOrnament from './KadOrnament.vue';
  * positioning still means the phone's screen): the cover shows only when
  * asked for, nothing autoplays and nothing animates in.
  */
-const props = withDefaults(defineProps<{ view: KadView; mode?: 'page' | 'preview'; ready?: number; showCover?: boolean }>(), { mode: 'page', ready: 0, showCover: true });
+const props = withDefaults(defineProps<{ view: KadView; mode?: 'page' | 'preview'; ready?: number; showCover?: boolean; guestName?: string | null }>(), { mode: 'page', ready: 0, showCover: true, guestName: null });
 
 const t = computed(() => KAD_THEMES[props.view.template]);
 const en = computed(() => props.view.locale === 'en');
 const L = computed(() => en.value
-  ? { open: 'Open invitation', date: 'Date', time: 'Time', venue: 'Venue', save: 'Save the date', google: 'Google Calendar', countdown: 'Counting down', days: 'days', hours: 'hours', minutes: 'min', seconds: 'sec', today: 'It is today!', past: 'Thank you for celebrating with us', programme: 'Programme', photos: 'Our moments', doa: 'Prayer', dress: 'Dress code', gift: 'Gift', contact: 'Contact', location: 'Location', music: 'Song', gallery: 'Photos', galleryTitle: 'Event photos', gallerySub: 'Took a photo at the event? Upload it here — it goes straight into one gallery.', galleryCta: 'Upload & see photos', photosCount: 'photos so far', copy: 'Copy', copied: 'Copied', qr: 'Scan with any banking app', whatsapp: 'WhatsApp', call: 'Call', badge: 'Made with Indahnya', to: 'to', close: 'Close' }
-  : { open: 'Buka jemputan', date: 'Tarikh', time: 'Masa', venue: 'Tempat', save: 'Simpan tarikh', google: 'Google Calendar', countdown: 'Menghitung hari', days: 'hari', hours: 'jam', minutes: 'minit', seconds: 'saat', today: 'Hari ni la harinya!', past: 'Terima kasih kerana meraikan bersama kami', programme: 'Aturcara majlis', photos: 'Kenangan kami', doa: 'Doa', dress: 'Tema pakaian', gift: 'Salam kaut', contact: 'Hubungi', location: 'Lokasi', music: 'Lagu', gallery: 'Gambar', galleryTitle: 'Gambar majlis', gallerySub: 'Ada snap gambar masa majlis? Upload kat sini — semua masuk satu galeri.', galleryCta: 'Upload & tengok gambar', photosCount: 'gambar setakat ni', copy: 'Copy', copied: 'Dah copy', qr: 'Scan dengan mana-mana app bank', whatsapp: 'WhatsApp', call: 'Call', badge: 'Dibuat dengan Indahnya', to: 'hingga', close: 'Tutup' });
+  ? { open: 'Open invitation', date: 'Date', time: 'Time', venue: 'Venue', save: 'Save the date', google: 'Google Calendar', countdown: 'Counting down', days: 'days', hours: 'hours', minutes: 'min', seconds: 'sec', today: 'It is today!', past: 'Thank you for celebrating with us', programme: 'Programme', photos: 'Our moments', doa: 'Prayer', dress: 'Dress code', gift: 'Gift', contact: 'Contact', location: 'Location', music: 'Song', gallery: 'Photos', galleryTitle: 'Event photos', gallerySub: 'Took a photo at the event? Upload it here — it goes straight into one gallery.', galleryCta: 'Upload & see photos', photosCount: 'photos so far', copy: 'Copy', copied: 'Copied', qr: 'Scan with any banking app', whatsapp: 'WhatsApp', call: 'Call', badge: 'Made with Indahnya', to: 'to', close: 'Close', rsvp: 'RSVP', rsvpTitle: 'Will you be there?', rsvpSub: 'Let us know so we can prepare a seat for you.', rsvpCta: 'RSVP now', wishes: 'Wishes', wishesSub: 'Leave a few words, or record your voice.', wishCta: 'Write a wish', allWishes: 'All wishes', seat: 'Seating', seatTitle: 'Find your table', preview: 'Preview — the form works on the real card.' }
+  : { open: 'Buka jemputan', date: 'Tarikh', time: 'Masa', venue: 'Tempat', save: 'Simpan tarikh', google: 'Google Calendar', countdown: 'Menghitung hari', days: 'hari', hours: 'jam', minutes: 'minit', seconds: 'saat', today: 'Hari ni la harinya!', past: 'Terima kasih kerana meraikan bersama kami', programme: 'Aturcara majlis', photos: 'Kenangan kami', doa: 'Doa', dress: 'Tema pakaian', gift: 'Salam kaut', contact: 'Hubungi', location: 'Lokasi', music: 'Lagu', gallery: 'Gambar', galleryTitle: 'Gambar majlis', gallerySub: 'Ada snap gambar masa majlis? Upload kat sini — semua masuk satu galeri.', galleryCta: 'Upload & tengok gambar', photosCount: 'gambar setakat ni', copy: 'Copy', copied: 'Dah copy', qr: 'Scan dengan mana-mana app bank', whatsapp: 'WhatsApp', call: 'Call', badge: 'Dibuat dengan Indahnya', to: 'hingga', close: 'Tutup', rsvp: 'RSVP', rsvpTitle: 'Sudi hadir?', rsvpSub: 'Maklumkan kehadiran supaya kami boleh sediakan tempat.', rsvpCta: 'RSVP sekarang', wishes: 'Ucapan', wishesSub: 'Tinggalkan sepatah dua kata, atau rakam suara.', wishCta: 'Tulis ucapan', allWishes: 'Semua ucapan', seat: 'Tempat duduk', seatTitle: 'Cari nombor meja', preview: 'Pratonton — borang aktif pada kad sebenar.' });
 
 const vars = computed(() => ({
   '--k-bg': t.value.bg, '--k-band': t.value.band, '--k-ink': t.value.ink, '--k-muted': t.value.muted,
@@ -79,6 +82,10 @@ if (props.mode === 'page') {
   watch(opened, (o) => { if (import.meta.client) document.documentElement.style.overflow = o ? '' : 'hidden'; }, { immediate: true });
   onBeforeUnmount(() => { document.documentElement.style.overflow = ''; });
 }
+/* a voice wish playing silences the song (the guest came to hear the wish) */
+function onVoice() { audio.value?.pause(); }
+onMounted(() => addEventListener('indahnya:voice', onVoice));
+onBeforeUnmount(() => removeEventListener('indahnya:voice', onVoice));
 function toggleSong() {
   const a = audio.value; if (!a) return;
   if (a.paused) a.play().catch(() => {}); else a.pause();
@@ -99,13 +106,14 @@ const count = computed(() => {
 });
 
 /* ── sheets ───────────────────────────────────────────────────────── */
-type Sheet = 'contact' | 'location' | 'gift';
+type Sheet = 'contact' | 'location' | 'gift' | 'rsvp' | 'ucapan' | 'tempat';
 const sheet = ref<Sheet | null>(null);
 const copied = ref<string | null>(null);
 async function copy(v: string) {
   try { await navigator.clipboard.writeText(v.replace(/\s/g, '')); copied.value = v; setTimeout(() => { if (copied.value === v) copied.value = null; }, 1500); } catch { /* no clipboard */ }
 }
 const toGallery = computed(() => `/${props.view.slug}/gambar`);
+const sheetTitle = computed(() => ({ contact: L.value.contact, location: L.value.location, gift: L.value.gift, rsvp: L.value.rsvpTitle, ucapan: L.value.wishes, tempat: L.value.seat } as Record<Sheet, string>)[sheet.value ?? 'contact']);
 
 /* ── photo viewer ─────────────────────────────────────────────────── */
 const viewing = ref<number | null>(null);
@@ -127,13 +135,26 @@ onMounted(() => {
   onBeforeUnmount(() => io.disconnect());
 });
 
-const tools = computed(() => [
-  props.view.contacts.length ? { key: 'contact', label: L.value.contact, icon: Phone } : null,
-  props.view.venue.name || props.view.venue.address ? { key: 'location', label: L.value.location, icon: MapPin } : null,
-  props.view.music ? { key: 'music', label: L.value.music, icon: playing.value ? Pause : Music2 } : null,
-  props.view.gift ? { key: 'gift', label: L.value.gift, icon: Gift } : null,
-  props.view.gambar ? { key: 'gambar', label: L.value.gallery, icon: Images } : null,
-].filter(Boolean) as { key: string; label: string; icon: unknown }[]);
+/**
+ * The bar holds five at most — a sixth does not fit a phone's width. When
+ * there are more, the ones that matter most stay (the song, because a guest
+ * must be able to stop it; then RSVP and the gallery) and the rest are still
+ * on the page as sections. Shown in the genre's order.
+ */
+const tools = computed(() => {
+  const v = props.view;
+  const all = [
+    v.contacts.length ? { key: 'contact', label: L.value.contact, icon: Phone, rank: 6 } : null,
+    v.venue.name || v.venue.address ? { key: 'location', label: L.value.location, icon: MapPin, rank: 5 } : null,
+    v.music ? { key: 'music', label: L.value.music, icon: playing.value ? Pause : Music2, rank: 1 } : null,
+    v.gift ? { key: 'gift', label: L.value.gift, icon: Gift, rank: 4 } : null,
+    v.ucapan ? { key: 'ucapan', label: L.value.wishes, icon: MessageSquareHeart, rank: 7 } : null,
+    v.rsvp ? { key: 'rsvp', label: L.value.rsvp, icon: MailCheck, rank: 2 } : null,
+    v.gambar ? { key: 'gambar', label: L.value.gallery, icon: Images, rank: 3 } : null,
+  ].filter(Boolean) as { key: string; label: string; icon: unknown; rank: number }[];
+  const keep = new Set([...all].sort((a, b) => a.rank - b.rank).slice(0, 5).map(t => t.key));
+  return all.filter(t => keep.has(t.key));
+});
 function tool(k: string) {
   if (k === 'music') return toggleSong();
   if (k === 'gambar') return props.mode === 'page' ? navigateTo(toGallery.value) : undefined;
@@ -225,6 +246,14 @@ function tool(k: string) {
         </ClientOnly>
       </section>
 
+      <!-- RSVP -->
+      <section v-if="view.rsvp" data-arrive class="kad-section kad-center">
+        <span class="kad-icon-disc"><MailCheck class="size-5" :stroke-width="1.6" aria-hidden="true" /></span>
+        <h2 class="kad-h2 mt-3">{{ L.rsvpTitle }}</h2>
+        <p class="kad-p mt-2">{{ L.rsvpSub }}</p>
+        <button type="button" class="kad-btn kad-btn-solid mt-5" @click="sheet = 'rsvp'">{{ L.rsvpCta }}</button>
+      </section>
+
       <!-- ATURCARA -->
       <section v-if="view.aturcara.length" data-arrive class="kad-section kad-center">
         <h2 class="kad-h2">{{ L.programme }}</h2>
@@ -253,6 +282,25 @@ function tool(k: string) {
         <p v-if="ready" class="kad-small mt-3">{{ ready }} {{ L.photosCount }}</p>
       </section>
 
+      <!-- UCAPAN -->
+      <section v-if="view.ucapan" data-arrive class="kad-section kad-center">
+        <h2 class="kad-h2">{{ L.wishes }}</h2>
+        <KadOrnament :kind="t.ornament" class="mt-2" />
+        <p class="kad-p mt-3">{{ L.wishesSub }}</p>
+        <div class="mt-5 text-left"><UcapanBox v-if="mode === 'page'" :slug="view.slug" :locale="view.locale" :limit="3" :show-form="false" :allow-more="false" /></div>
+        <div class="kad-actions">
+          <button v-if="!view.demo" type="button" class="kad-btn kad-btn-solid" @click="sheet = 'ucapan'">{{ L.wishCta }}</button>
+          <button type="button" class="kad-btn" @click="sheet = 'ucapan'">{{ L.allWishes }}</button>
+        </div>
+      </section>
+
+      <!-- SEATING -->
+      <section v-if="view.tempat" data-arrive class="kad-section kad-center">
+        <span class="kad-icon-disc"><Armchair class="size-5" :stroke-width="1.6" aria-hidden="true" /></span>
+        <h2 class="kad-h2 mt-3">{{ L.seatTitle }}</h2>
+        <div class="mt-5 text-left"><SeatSearch v-if="mode === 'page'" :slug="view.slug" :locale="view.locale" /><p v-else class="kad-small">{{ L.preview }}</p></div>
+      </section>
+
       <!-- DOA -->
       <section v-if="view.doa" data-arrive class="kad-section kad-center">
         <h2 class="kad-h2">{{ L.doa }}</h2>
@@ -274,6 +322,18 @@ function tool(k: string) {
         <button type="button" class="kad-btn kad-btn-solid mt-5" @click="sheet = 'gift'"><Gift class="size-4" :stroke-width="1.75" aria-hidden="true" />{{ L.gift }}</button>
       </section>
 
+      <!-- CONTACTS: always on the page too — the bar may not have room for them -->
+      <section v-if="view.contacts.length" data-arrive class="kad-section kad-center">
+        <h2 class="kad-h2">{{ L.contact }}</h2>
+        <div class="kad-contacts">
+          <div v-for="c in view.contacts" :key="c.phone + c.name" class="kad-row">
+            <div class="min-w-0 flex-1 text-left"><p class="kad-row-title">{{ c.name }}</p><p v-if="c.role" class="kad-small">{{ c.role }}</p></div>
+            <a :href="c.wa" target="_blank" rel="noopener" class="kad-btn kad-btn-sm" :aria-label="`${L.whatsapp} ${c.name}`"><MessageCircle class="size-4" :stroke-width="1.75" aria-hidden="true" /><span class="max-[360px]:hidden">{{ L.whatsapp }}</span></a>
+            <a :href="c.tel" class="kad-btn kad-btn-sm" :aria-label="`${L.call} ${c.name}`"><Phone class="size-4" :stroke-width="1.75" aria-hidden="true" /></a>
+          </div>
+        </div>
+      </section>
+
       <footer class="kad-foot">
         <KadOrnament :kind="t.ornament" flip />
         <p class="kad-names kad-names-foot">{{ couple ? `${view.names.a} & ${view.names.b}` : view.names.a }}</p>
@@ -291,9 +351,9 @@ function tool(k: string) {
     <!-- SHEETS -->
     <Transition name="veil"><div v-if="sheet" class="kad-veil" @click="sheet = null" /></Transition>
     <Transition name="kad-sheet">
-      <div v-if="sheet" class="kad-sheet" role="dialog" aria-modal="true" :aria-label="sheet === 'contact' ? L.contact : sheet === 'location' ? L.location : L.gift">
+      <div v-if="sheet" class="kad-sheet" role="dialog" aria-modal="true" :aria-label="sheetTitle">
         <div class="kad-sheet-head">
-          <p class="kad-h2">{{ sheet === 'contact' ? L.contact : sheet === 'location' ? L.location : L.gift }}</p>
+          <p class="kad-h2">{{ sheetTitle }}</p>
           <button type="button" class="kad-x" :aria-label="L.close" @click="sheet = null"><X class="size-5" :stroke-width="1.75" /></button>
         </div>
         <div v-if="sheet === 'contact'" class="kad-sheet-body">
@@ -310,6 +370,14 @@ function tool(k: string) {
             <a v-if="view.venue.waze" :href="view.venue.waze" target="_blank" rel="noopener" class="kad-btn kad-btn-solid"><Navigation class="size-4" :stroke-width="1.75" aria-hidden="true" />Waze</a>
             <a v-if="view.venue.gmaps" :href="view.venue.gmaps" target="_blank" rel="noopener" class="kad-btn"><MapPin class="size-4" :stroke-width="1.75" aria-hidden="true" />Google Maps</a>
           </div>
+        </div>
+        <div v-else-if="sheet === 'rsvp'" class="kad-sheet-body">
+          <RsvpForm v-if="mode === 'page'" :slug="view.slug" :locale="view.locale" :with-ucapan="view.ucapan" />
+          <p v-else class="kad-small kad-center">{{ L.preview }}</p>
+        </div>
+        <div v-else-if="sheet === 'ucapan'" class="kad-sheet-body">
+          <UcapanBox v-if="mode === 'page'" :slug="view.slug" :locale="view.locale" :show-form="!view.demo" :guest-name="guestName" />
+          <p v-else class="kad-small kad-center">{{ L.preview }}</p>
         </div>
         <div v-else-if="sheet === 'gift' && view.gift" class="kad-sheet-body">
           <p v-if="view.gift.note" class="kad-p kad-center">{{ view.gift.note }}</p>
@@ -451,6 +519,7 @@ function tool(k: string) {
 .kad-row:last-child { border-bottom: 0; }
 .kad-row-title { font-family: var(--k-heading); font-size: 18px; font-weight: 600; line-height: 1.3; }
 .kad-num { font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.kad-contacts { margin: 16px auto 0; max-width: 400px; }
 .kad-qr { margin: 16px auto 8px; max-width: 260px; text-align: center; }
 .kad-qr img { width: 100%; border-radius: 12px; background: #fff; padding: 10px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--k-ink) 10%, transparent); }
 .kad-qr p { margin-top: 8px; }
@@ -460,6 +529,16 @@ function tool(k: string) {
 .kad-viewer img { max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain; }
 .kad-viewer-x { position: absolute; top: 12px; right: 12px; color: #fff; width: 44px; height: 44px; display: grid; place-items: center; }
 .kad-viewer-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; width: 44px; height: 44px; display: grid; place-items: center; background: rgb(255 255 255 / .12); border-radius: 999px; }
+
+/* the guest forms (RSVP, ucapan, seat search) wear the template */
+.kad :deep(.gf) {
+  --f-ink: var(--k-ink); --f-muted: var(--k-muted); --f-accent: var(--k-accent); --f-on-accent: var(--k-on-accent);
+  --f-line: color-mix(in srgb, var(--k-ink) 18%, transparent); --f-field: color-mix(in srgb, var(--k-bg) 92%, var(--k-ink));
+  --f-soft: var(--k-band); font-family: var(--k-body);
+}
+.kad-garden :deep(.gf), .kad-klasik :deep(.gf), .kad-moden :deep(.gf), .kad-minimal :deep(.gf) { --f-field: #fff; }
+.kad-moden :deep(.gf), .kad-minimal :deep(.gf) { --f-radius: 2px; }
+.kad :deep(.gf .gf-btn) { font-family: var(--k-heading); letter-spacing: .02em; }
 
 @media (prefers-reduced-motion: reduce) {
   .kad-cover-leave-active, .kad-sheet-enter-active, .kad-sheet-leave-active { transition: none; }

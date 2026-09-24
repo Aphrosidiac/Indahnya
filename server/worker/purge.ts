@@ -1,5 +1,5 @@
 import { and, eq, lt, or, isNull, isNotNull, sql, inArray } from 'drizzle-orm';
-import { useDb, media, events, jobs } from '../db';
+import { useDb, media, events, jobs, messages, rsvps, tables, guests } from '../db';
 import { del, delEverywhere, listAll } from '../utils/storage';
 import { enqueue } from '../utils/jobs';
 import { PUT_TTL_SEC } from '../utils/storage';
@@ -10,6 +10,12 @@ export async function purgeEvent(eventId: string) {
   const [pub, priv] = await Promise.all([listAll(prefix, 'public'), listAll(prefix, 'private')]);
   await Promise.all([del(pub, 'public'), del(priv, 'private')]);
   await useDb().update(media).set({ status: 'deleted', key: null, thumbKey: null, posterKey: null }).where(eq(media.eventId, eventId));
+  // the people go too: names, phone numbers and wishes are not kept past the photos
+  await useDb().delete(messages).where(eq(messages.eventId, eventId));
+  await useDb().delete(rsvps).where(eq(rsvps.eventId, eventId));
+  await useDb().delete(tables).where(eq(tables.eventId, eventId));
+  await useDb().update(media).set({ guestId: null }).where(eq(media.eventId, eventId));
+  await useDb().delete(guests).where(eq(guests.eventId, eventId));
   await useDb().update(events).set({ purgedAt: sql`coalesce(${events.purgedAt}, now())` }).where(eq(events.id, eventId));
 }
 
@@ -32,6 +38,18 @@ export async function sweep() {
     .where(and(eq(media.status, 'pending'), lt(media.createdAt, new Date(Date.now() - PUT_TTL_SEC * 1000 - 600_000))))
     .returning({ originalKey: media.originalKey });
   if (stale.length) await del(stale.map(s => s.originalKey), 'private');
+
+  // voice ucapan whose recording never arrived, or whose transcode died with the process
+  // (read the keys first: RETURNING after the SET would hand back the nulls)
+  const voiceCut = new Date(Date.now() - PUT_TTL_SEC * 1000 - 600_000);
+  const staleVoice = await db.select({ id: messages.id, src: messages.audioSrcKey }).from(messages)
+    .where(and(inArray(messages.status, ['pending', 'processing']), lt(messages.createdAt, voiceCut))).limit(500);
+  if (staleVoice.length) {
+    await db.update(messages).set({ status: 'failed', audioSrcKey: null })
+      .where(and(inArray(messages.id, staleVoice.map(v => v.id)), inArray(messages.status, ['pending', 'processing'])));
+    const voiceKeys = staleVoice.map(v => v.src).filter((k): k is string => !!k);
+    if (voiceKeys.length) await del(voiceKeys, 'private');
+  }
 
   const gone = await db.select().from(media).where(and(eq(media.status, 'deleted'), sql`(${media.key} is not null or ${media.thumbKey} is not null or ${media.posterKey} is not null)`)).limit(500);
   for (const m of gone) {

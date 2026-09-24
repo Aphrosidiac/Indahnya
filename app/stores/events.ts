@@ -20,7 +20,7 @@ export interface EventDetail extends Omit<EventRow, 'mediaCount'> {
   members: { userId: string; role: 'owner' | 'cohost'; email: string; name: string | null }[];
   counts: { ready: number; hidden: number; pending: number; uploaded: number; failed: number; deleted: number };
   uploads: { used: number; cap: number | null; open: boolean };
-  rsvp: { n: number; pax: number };
+  rsvp: { n: number; yes: number; pax: number };
   ucapan: number;
   planInfo: { name: string; priceCents: number; uploadCap: number | null; uploadWindowDays: number; storageDays: number; cohosts: number; customSlug: boolean; badgeFree: boolean };
   /** What this majlis can buy right now (an upgrade, at the difference, or a renewal). */

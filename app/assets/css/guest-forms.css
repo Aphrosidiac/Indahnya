@@ -1,0 +1,48 @@
+/*
+ * The guest forms (RSVP, ucapan, seat search) live in two places: the plain
+ * guest pages (ANK language) and inside the e-kad (the template's language).
+ * They are written once against these variables; the kad re-points them at
+ * its template (see KadView: `.kad .gf`).
+ */
+.gf {
+  --f-ink: var(--color-ink-900);
+  --f-muted: var(--color-ink-500);
+  --f-line: var(--color-line-200);
+  --f-field: var(--color-surface-0);
+  --f-accent: var(--color-ink-700);
+  --f-on-accent: #fff;
+  --f-soft: var(--color-surface-50);
+  --f-radius: 10px;
+  --f-font: inherit;
+  color: var(--f-ink);
+}
+.gf-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--f-ink); }
+.gf-hint { margin-top: 6px; font-size: 13px; line-height: 1.4; color: var(--f-muted); }
+.gf-err { margin-top: 6px; font-size: 13px; line-height: 1.4; color: #b42318; }
+.gf-input {
+  width: 100%; height: 44px; border-radius: var(--f-radius); border: 1px solid var(--f-line); background: var(--f-field);
+  padding: 0 14px; font: inherit; font-size: 16px; color: var(--f-ink); transition: border-color .12s, box-shadow .12s;
+}
+textarea.gf-input { height: auto; padding: 11px 14px; line-height: 1.5; resize: vertical; }
+.gf-input::placeholder { color: color-mix(in srgb, var(--f-muted) 80%, transparent); }
+.gf-input:focus { outline: none; border-color: var(--f-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--f-accent) 16%, transparent); }
+.gf-input[aria-invalid="true"] { border-color: #b42318; }
+.gf-seg { display: grid; gap: 8px; }
+.gf-seg > button {
+  min-height: 48px; border-radius: var(--f-radius); border: 1px solid var(--f-line); background: var(--f-field);
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--f-ink); padding: 8px 10px; transition: background-color .12s, border-color .12s, color .12s;
+}
+.gf-seg > button[aria-pressed="true"] { background: var(--f-accent); border-color: var(--f-accent); color: var(--f-on-accent); }
+.gf-stepper { display: inline-flex; align-items: center; border: 1px solid var(--f-line); border-radius: var(--f-radius); background: var(--f-field); overflow: hidden; }
+.gf-stepper button { width: 48px; height: 44px; display: grid; place-items: center; color: var(--f-ink); font-size: 20px; }
+.gf-stepper button:disabled { opacity: .35; }
+.gf-stepper output { min-width: 48px; text-align: center; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.gf-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px;
+  background: var(--f-accent); color: var(--f-on-accent); font: inherit; font-size: 15px; font-weight: 600; transition: transform .12s, opacity .12s;
+}
+.gf-btn:active { transform: scale(.98); }
+.gf-btn:disabled { opacity: .5; }
+.gf-btn-ghost { background: transparent; color: var(--f-ink); border: 1px solid var(--f-line); }
+.gf-card { border: 1px solid var(--f-line); border-radius: calc(var(--f-radius) + 4px); background: var(--f-field); padding: 16px; }
+.gf-soft { background: var(--f-soft); border-radius: calc(var(--f-radius) + 4px); padding: 16px; }

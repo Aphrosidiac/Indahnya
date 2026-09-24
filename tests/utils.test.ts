@@ -41,7 +41,7 @@ describe('parseEventDate', () => {
 describe('small helpers', () => {
   it('slugify', () => expect(slugify('Aina & Hakim')).toBe('aina-dan-hakim'));
   it('escapeHtml', () => expect(escapeHtml('<b>"Aina" & Hakim</b>')).toBe('&lt;b&gt;&quot;Aina&quot; &amp; Hakim&lt;/b&gt;'));
-  it('isBuilt', () => { expect(isBuilt('gambar')).toBe(true); expect(isBuilt('rsvp')).toBe(false); });
+  it('isBuilt', () => { expect(isBuilt('gambar')).toBe(true); expect(isBuilt('rsvp')).toBe(true); expect(isBuilt('nope')).toBe(false); });
   it('downloadName is Malaysia time and filesystem-safe', () => {
     const n = downloadName({ id: '01M391582T404GKCJ3MQSDKX93', takenAt: new Date('2026-11-14T06:03:22Z'), createdAt: new Date() }, 'jpg', 'Makcik Ros / "Team"');
     expect(n).toBe('2026-11-14-14-03-22-Makcik-Ros-Team-sdkx93.jpg');

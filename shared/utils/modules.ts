@@ -1,9 +1,8 @@
 /**
- * The guest modules that exist today. The rest (ucapan, RSVP, seating) are
- * Phase B: their switches are kept in settings, but no tab links to a page
- * that is not there yet.
+ * The guest modules, and which of them are built (all of them since Phase B).
+ * A module missing from BUILT keeps its switch in settings but gets no tab.
  */
 export const GUEST_MODULES = ['kad', 'gambar', 'ucapan', 'rsvp', 'tempat'] as const;
 export type GuestModule = typeof GUEST_MODULES[number];
-export const BUILT_MODULES: readonly GuestModule[] = ['kad', 'gambar'];
+export const BUILT_MODULES: readonly GuestModule[] = ['kad', 'gambar', 'ucapan', 'rsvp', 'tempat'];
 export const isBuilt = (m: string) => (BUILT_MODULES as readonly string[]).includes(m);

@@ -9,8 +9,9 @@ sheets, and a one-time RM price. Built by [FF Dev Studio](https://ffdev.studio).
 
 > Status: Phase A (gallery, uploads, slideshow, QR, moderation, payments,
 > retention), Phase C (e-kad: 5 templates, editor with live preview,
-> salam kaut, WhatsApp previews, embed widget) and the landing page are
-> built and verified locally. Phase B (RSVP, seating, ucapan) is next. See [PLAN.md](PLAN.md)
+> salam kaut, WhatsApp previews, embed widget), Phase B (RSVP, seating,
+> written and voice ucapan) and the landing page are built and verified
+> locally. Next: launch (domain, R2, Stripe, SMTP). See [PLAN.md](PLAN.md)
 > for every decision, the pricing table, the data model and the phase plan.
 
 ## Stack
@@ -86,7 +87,7 @@ app/
     privasi.vue  privacy notice, terma.vue terms (BM + EN)
     masuk.vue    sign-in (also spends the emailed token)
     app/         host dashboard: /app, /app/[id]/{gambar,slideshow,qr,tetapan,…}
-    [slug]/      the e-kad (index) and the gallery
+    [slug]/      the e-kad (index), gambar, rsvp, ucapan, tempat
     embed/       the gallery widget for kad on other platforms
     tv/          the venue slideshow
   composables/   useUploader, useGuestEvent, useT (BM/EN strings), …

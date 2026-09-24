@@ -26,7 +26,7 @@ export interface KadEventShape {
   slug: string; type: string; date: string | Date | null;
   names: { a: string; b?: string };
   venue: { name?: string; address?: string; waze?: string; gmaps?: string };
-  settings: { locale: 'ms' | 'en'; modules: { gambar: boolean } };
+  settings: { locale: 'ms' | 'en'; modules: { gambar: boolean; rsvp?: boolean; ucapan?: boolean; tempat?: boolean }; approvalMode?: boolean; demo?: boolean };
 }
 
 const fill = (v: string | undefined, d: string) => (v === undefined ? d : v);
@@ -66,6 +66,10 @@ export function composeKad(ev: KadEventShape, template: string, f: KadFieldsShap
     countdown: f.countdown && !!ev.date,
     badge,
     gambar: ev.settings.modules.gambar,
+    rsvp: !!ev.settings.modules.rsvp,
+    ucapan: !!ev.settings.modules.ucapan,
+    tempat: !!ev.settings.modules.tempat,
+    demo: !!ev.settings.demo,
   };
 }
 export type KadView = ReturnType<typeof composeKad>;

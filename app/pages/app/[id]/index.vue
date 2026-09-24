@@ -76,7 +76,7 @@ const uploadPct = computed(() => ev.value?.uploads.cap ? Math.min(100, Math.roun
         <Stat label="Upload digunakan" :value="ev.uploads.cap ? `${ev.uploads.used} / ${ev.uploads.cap}` : ev.uploads.used" :icon="Sparkles"
           :sub="ev.uploads.cap ? 'pakej percuma' : 'tanpa had'"
           :delta="ev.uploads.cap && uploadPct >= 80 ? 'hampir penuh' : undefined" delta-tone="amber" />
-        <Stat label="RSVP" :value="ev.rsvp.n" :unit="ev.rsvp.pax ? `· ${ev.rsvp.pax} pax` : undefined" :icon="Users" sub="tetamu confirm" />
+        <Stat label="RSVP hadir" :value="ev.rsvp.yes" :unit="ev.rsvp.pax ? `· ${ev.rsvp.pax} pax` : undefined" :icon="Users" :sub="`${ev.rsvp.n} jawapan`" />
         <Stat label="Ucapan" :value="ev.ucapan" :icon="MessageSquareHeart" sub="dari tetamu" />
       </KpiStrip>
 

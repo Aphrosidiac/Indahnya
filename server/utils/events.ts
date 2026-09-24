@@ -8,6 +8,7 @@ export const defaultSettings = (): EventSettings => ({
   modules: { gambar: true, ucapan: true, rsvp: true, tempat: false, kad: true },
   slideshow: { intervalSec: 7, showNames: true, shuffle: false },
   guestDeleteHours: 24,
+  rsvp: { deadline: null, maxPax: 5, meals: [], sides: true },
 });
 
 export async function mediaCounts(eventId: string) {

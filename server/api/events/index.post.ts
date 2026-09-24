@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
       date, venue: b.venue, settings, tvToken: newToken(), ...planClocks('free', new Date(), date),
     }).returning();
     await tx.insert(eventMembers).values({ eventId: row!.id, userId: u.id, role: 'owner' });
-    await tx.insert(kad).values({ eventId: row!.id });
+    await tx.insert(kad).values({ eventId: row!.id, template: 'garden' });
     return row!;
   });
   const { tvToken: _t, ...out } = ev;

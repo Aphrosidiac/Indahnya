@@ -23,7 +23,7 @@ export async function useGuestEvent() {
    * below (a top-level await in a composable, not in <script setup>). So the
    * meta is registered FIRST, reading from a ref the page fills in later.
    */
-  const meta = ref<{ title: string; description?: string }>({ title: 'Indahnya' });
+  const meta = ref<{ title: string; description?: string; image?: string | null }>({ title: 'Indahnya' });
   const req = useFetch<GuestInfo>(() => `/api/g/${slug.value}`, { key: `g:${slug.value}` });
   const { data, error, refresh } = req;
   const site = useRuntimeConfig().public.siteUrl;
@@ -32,7 +32,7 @@ export async function useGuestEvent() {
     title: () => meta.value.title, ogTitle: () => meta.value.title,
     description: () => meta.value.description, ogDescription: () => meta.value.description,
     ogType: 'website', ogSiteName: 'Indahnya', ogUrl: () => `${site}${route.path}`,
-    ogImage: `${site}/og.jpg`, ogImageWidth: 1200, ogImageHeight: 630, twitterCard: 'summary_large_image',
+    ogImage: () => meta.value.image || `${site}/og.jpg`, ogImageWidth: 1200, ogImageHeight: 630, twitterCard: 'summary_large_image',
     robots: 'noindex, nofollow',
   });
   await req;
@@ -44,7 +44,7 @@ export async function useGuestEvent() {
   const displayName = computed(() => ev.value.names.b ? `${ev.value.names.a} & ${ev.value.names.b}` : ev.value.title);
   return {
     slug, ev, me, lang, ready: computed(() => data.value?.ready ?? 0), t, displayName, refresh,
-    setMeta(m: { title: string; description?: string }) { meta.value = m; },
+    setMeta(m: { title: string; description?: string; image?: string | null }) { meta.value = m; },
     setMe(m: { id: string; name: string | null }) { if (data.value) data.value.me = m; },
   };
 }

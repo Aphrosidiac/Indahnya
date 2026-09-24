@@ -12,6 +12,9 @@ const link = computed(() => ev.value ? `${siteUrl()}/${ev.value.slug}${target.va
 const svgUrl = computed(() => `/api/events/${id.value}/qr?to=${target.value}`);
 const pngUrl = computed(() => `/api/events/${id.value}/qr?to=${target.value}&format=png&size=2048`);
 
+const galleryLink = computed(() => (ev.value ? `${siteUrl()}/${ev.value.slug}/gambar` : ''));
+const embedCode = computed(() => (ev.value ? `<iframe src="${siteUrl()}/embed/${ev.value.slug}" title="Gambar majlis" style="width:100%;max-width:480px;height:420px;border:0;border-radius:12px" loading="lazy"></iframe>` : ''));
+async function copyStr(s: string, what: string) { if (await copyText(s)) ui.ok(`${what} dah copy`); }
 const copied = ref(false);
 async function copy() { if (await copyText(link.value)) { copied.value = true; ui.ok('Link dah copy'); setTimeout(() => { copied.value = false; }, 1500); } }
 
@@ -70,6 +73,27 @@ const TEMPLATES = [
             <li class="px-5 py-3"><span class="font-medium text-ink-900">Dalam kad jemputan</span> — QR "Gambar sahaja" kalau kad dari tempat lain, atau share link terus kat group WhatsApp.</li>
             <li class="px-5 py-3"><span class="font-medium text-ink-900">Atas TV</span> — bila slideshow jalan, tetamu nampak gambar naik dan nak ikut.</li>
           </ul>
+        </Card>
+
+        <Card title="Kad dari tempat lain?" :icon="Link2" sub="Letak galeri Indahnya dalam e-kad Jemputan.me, SayaKahwin dan lain-lain">
+          <div class="space-y-4">
+            <div>
+              <p class="mb-1.5 text-[13px] font-medium leading-5 text-ink-800">Link galeri</p>
+              <div class="flex gap-2">
+                <input :value="galleryLink" readonly class="field flex-1 text-[13px]" aria-label="Link galeri" @focus="($event.target as HTMLInputElement).select()" />
+                <Btn variant="secondary" aria-label="Copy link galeri" @click="copyStr(galleryLink, 'Link galeri')"><Copy class="size-4" :stroke-width="1.75" /></Btn>
+              </div>
+              <p class="mt-1.5 text-[12px] leading-4 text-ink-500">Paste kat ruangan "link" atau "butang" dalam e-kad korang.</p>
+            </div>
+            <div>
+              <p class="mb-1.5 text-[13px] font-medium leading-5 text-ink-800">Kod embed</p>
+              <div class="flex gap-2">
+                <textarea :value="embedCode" readonly rows="3" class="field flex-1 font-mono text-[12px]" aria-label="Kod embed" @focus="($event.target as HTMLTextAreaElement).select()" />
+                <Btn variant="secondary" aria-label="Copy kod embed" @click="copyStr(embedCode, 'Kod embed')"><Copy class="size-4" :stroke-width="1.75" /></Btn>
+              </div>
+              <p class="mt-1.5 text-[12px] leading-4 text-ink-500">Untuk platform yang benarkan HTML: tunjuk gambar terkini dengan butang upload.</p>
+            </div>
+          </div>
         </Card>
 
         <Alert tone="muted"><span class="inline-flex items-center gap-1.5"><Link2 class="size-4" :stroke-width="1.75" aria-hidden="true" />Link pendek sendiri (contoh <span class="font-medium text-ink-900">{{ shortSite() }}/aina-hakim</span>) ada dalam pakej berbayar — tukar kat Tetapan.</span></Alert>

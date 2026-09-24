@@ -46,6 +46,8 @@ export default defineNuxtConfig({
     '/masuk': { ssr: false, headers: { 'x-robots-tag': 'noindex' } },
     '/tv/**': { ssr: false, headers: { 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer' } },
     '/api/**': { headers: { 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'no-store' } },
+    /** The gallery widget couples paste into an e-kad on another platform: framing allowed, here only. */
+    '/embed/**': { headers: { 'content-security-policy': 'frame-ancestors *', 'x-frame-options': 'ALLOWALL', 'x-robots-tag': 'noindex' } },
   },
   /**
    * Defaults are for local dev only. Every value is overridden at RUNTIME by

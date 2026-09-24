@@ -115,6 +115,18 @@ export async function delEverywhere(keys: string[]) {
   await Promise.all([del(keys, 'public'), del(keys, 'private')]);
 }
 
+/** Keys with their age, for cleaning up what nothing points at any more. */
+export async function listDated(prefix: string, where: Where) {
+  const out: { key: string; at: Date }[] = [];
+  let token: string | undefined;
+  do {
+    const r = await s3().send(new ListObjectsV2Command({ Bucket: bucket(where), Prefix: prefix, ContinuationToken: token }));
+    for (const o of r.Contents ?? []) if (o.Key) out.push({ key: o.Key, at: o.LastModified ?? new Date(0) });
+    token = r.IsTruncated ? r.NextContinuationToken : undefined;
+  } while (token);
+  return out;
+}
+
 export async function listAll(prefix: string, where: Where) {
   const keys: string[] = [];
   let token: string | undefined;

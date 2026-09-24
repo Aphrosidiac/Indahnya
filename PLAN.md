@@ -151,6 +151,37 @@ payments         id, event_id, stripe_session_id, amount, plan, status
 /api/...                  route handlers; webhooks at /api/stripe/webhook
 ```
 
+## Phase C — e-kad (built 2026-09-24)
+
+- `/[slug]` IS the e-kad when the kad module is on (default); off → the plain
+  hub. Genre structure, checked against Jemputan.me: tap-to-open cover (the
+  gesture that starts the song), invitation (hosts, full names), the day
+  (+ Waze / Google Maps / .ics / Google Calendar), countdown, aturcara,
+  couple photos, the guests' gallery (Indahnya's edge), doa, dress code +
+  colours, salam kaut (accounts + DuitNow QR), and a bottom bar Hubungi ·
+  Lokasi · Lagu · Salam kaut · Gambar.
+- 5 templates in `shared/utils/kad-templates.ts` (Garden, Klasik, Moden,
+  Emas, Minimal), all text colours ≥ 4.5:1. Fonts self-hosted (Fontsource).
+- Editor `/app/[id]/kad`: ANK Ops form + a phone-frame iframe running the
+  real guest component on the draft (`composeKad` shared by server + editor).
+  Text equal to the default is stored as "default" so a language switch
+  re-words the kad.
+- Assets (cover, ≤12 photos, DuitNow QR, song) upload like guest media
+  (private `kad-src/`) and are processed into public `kad/` (WebP, lossless
+  PNG, AAC m4a ≤ 8 min). Save validates every key belongs to the event.
+- WhatsApp preview per kad (`server/utils/kad-og.ts`): fontkit → SVG
+  outlines → sharp, fonts bundled in `server/assets/fonts`, identical on a
+  font-less VPS. Re-drawn on every save.
+- Embed: `/embed/[slug]` widget (framing allowed only there) + gallery link,
+  both on the QR page for couples whose kad lives elsewhere.
+- Saves take a row lock and carry the version they were based on (a stale
+  tab or a co-host gets 409, never a silent overwrite). Uploads a host never
+  saves are removed by a `kad_gc` job booked a day after any kad upload.
+  Audio is sniffed by ffprobe (mp3/m4a/wav/ogg only, local file only, 60 s
+  timeout). Module off → the guest API returns no kad data at all.
+- Demo `/aina-hakim` seeds a full kad. Not in v1 of C: music by link
+  (upload only — hot-linked audio breaks), ucapan/RSVP inside the kad (Phase B).
+
 ## Audit (2026-09-24)
 
 Full audit of Phase A + landing; everything below was fixed and verified in
@@ -243,7 +274,7 @@ run before a top-level `await` inside a composable.
 - **A** — auth, event wizard, upload pipeline, gallery, reactions, moderation,
   zip download, slideshow, QR templates, Stripe upgrade, retention cron.
   Preview at `<id>.indahnya.pages.dev`-style URL or `preview.indahnya.my`.
-- **C** — e-kad editor + 5 templates + OG images + salam kaut + embed link.
+- **C** — e-kad editor + 5 templates + OG images + salam kaut + embed link. **Built 2026-09-24.**
 - **B** — RSVP, seating, ucapan text + audio.
 - **Launch** — marketing site, BM/EN copy, TikTok/Lemon8 demo kad, Portal
   Kahwin outreach.

@@ -133,7 +133,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
           <Btn to="/app?new=1" variant="accent" size="lg"><Sparkles class="size-[18px]" :stroke-width="1.75" aria-hidden="true" />{{ L.hero.cta }}</Btn>
           <Btn to="/aina-hakim/gambar" variant="secondary" size="lg">{{ L.hero.demo }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></Btn>
         </div>
-        <p class="mt-4 text-[13px] leading-[18px] text-ink-500">{{ L.hero.trust }}</p>
+        <p class="mt-4 text-[13px] leading-[18px] text-ink-500">{{ L.hero.trust }} <NuxtLink to="/aina-hakim" class="font-medium text-ink-700 underline underline-offset-2 hover:text-ink-900">{{ L.hero.demoKad }}</NuxtLink></p>
       </div>
 
       <!-- the gallery that fills itself -->

@@ -3,6 +3,7 @@ import { useDb, jobs, media } from '../db';
 import { processMedia } from '../worker/process-media';
 import { purgeEvent, sweep } from '../worker/purge';
 import { notifyExpiring } from '../worker/notify';
+import { kadGc } from '../worker/kad-gc';
 
 /**
  * The worker lives inside the app process: one VPS, one PM2 entry. Jobs are
@@ -37,6 +38,7 @@ export default defineNitroPlugin((nitro) => {
         try {
           if (j.kind === 'process_media') await processMedia(j.ref);
           else if (j.kind === 'purge_event') await purgeEvent(j.ref);
+          else if (j.kind === 'kad_gc') await kadGc(j.ref);
           await db.update(jobs).set({ doneAt: new Date(), lockedAt: null, error: null }).where(eq(jobs.id, j.id));
         } catch (e) {
           const msg = (e as Error).message?.slice(0, 500);

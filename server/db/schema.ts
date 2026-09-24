@@ -159,7 +159,7 @@ export const rsvps = pgTable('rsvps', {
 
 export const kad = pgTable('kad', {
   eventId: text('event_id').primaryKey().references(() => events.id, { onDelete: 'cascade' }),
-  template: text('template').notNull().default('minimal'),
+  template: text('template').notNull().default('garden'),
   fields: jsonb('fields').$type<Record<string, unknown>>().notNull().default({}),
   musicKey: text('music_key'),
   ogKey: text('og_key'),
@@ -181,7 +181,7 @@ export const payments = pgTable('payments', {
 /** Work for the media worker. A row per upload; claimed with SKIP LOCKED. */
 export const jobs = pgTable('jobs', {
   id: text('id').primaryKey(),
-  kind: text('kind').$type<'process_media' | 'purge_event' | 'zip_event'>().notNull(),
+  kind: text('kind').$type<'process_media' | 'purge_event' | 'zip_event' | 'kad_gc'>().notNull(),
   ref: text('ref').notNull(),
   attempts: integer('attempts').notNull().default(0),
   runAfter: timestamp('run_after', { withTimezone: true }).notNull().defaultNow(),

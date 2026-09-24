@@ -1,6 +1,6 @@
 /**
  * The landing's sample gallery at /aina-hakim ("Tengok galeri contoh", and
- * the QR on the print mock-ups). A real event, owned by demo@indahnya.my,
+ * the QR on the print mock-ups), and its e-kad. A real event, owned by demo@indahnya.my,
  * flagged `demo` so it never accepts uploads, never gets retention mail and
  * never expires. The photos are the landing's Unsplash-licensed frames,
  * processed the way the worker processes a guest's upload.
@@ -17,6 +17,9 @@ import { ulid } from 'ulid';
 import { eq, inArray } from 'drizzle-orm';
 import { S3Client, PutObjectCommand, DeleteObjectsCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { useDb, users, events, eventMembers, guests, media, reactions, kad } from '../server/db';
+import { KadFields, kadDefaults, kadPrefix } from '../server/utils/kad';
+import { renderKadOg } from '../server/utils/kad-og';
+import { composeKad } from '../shared/utils/kad-view';
 
 const SLUG = 'aina-hakim';
 const EMAIL = 'demo@indahnya.my';
@@ -66,7 +69,7 @@ const fields = {
 if (!ev) {
   ev = (await db.insert(events).values({ id: ulid(), ownerId: owner.id, tvToken: randomBytes(24).toString('base64url'), ...fields }).returning())[0]!;
   await db.insert(eventMembers).values({ eventId: ev.id, userId: owner.id, role: 'owner' });
-  await db.insert(kad).values({ eventId: ev.id });
+  await db.insert(kad).values({ eventId: ev.id, template: 'garden' });
 } else {
   await db.update(events).set({ ...fields, purgedAt: null, deletedAt: null }).where(eq(events.id, ev.id));
 }
@@ -113,5 +116,35 @@ for (const [i, id] of [...PHOTOS].reverse().entries()) {
   if (fans.length) await db.insert(reactions).values(fans.map((g, k) => ({ mediaId: mid, guestId: g, kind: (['love', 'party', 'cry'] as const)[(i + k) % 3] })));
 }
 
-console.log(`demo ready: /${SLUG} (${PHOTOS.length} photos, event ${ev.id})`);
+// the e-kad: cover + four photos processed the way the kad editor does, then its WhatsApp preview.
+// No contacts, bank details or song: a made-up phone or account number could be someone's real one.
+const kp = kadPrefix(ev.id);
+const kadAsset = async (file: string) => {
+  const key = `${kp}${ulid().toLowerCase()}.webp`;
+  await put(PUBLIC, key, await sharp(readFileSync(`public/landing/${file}.jpg`)).rotate().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toBuffer(), 'image/webp');
+  return key;
+};
+const coverKey = await kadAsset('g08');
+const photoKeys = await Promise.all(['g04', 'g21', 'g02', 'g13'].map(kadAsset));
+const kadFields = KadFields.parse({
+  hosts: 'Ahmad bin Ismail\n&\nRohana binti Musa',
+  fullNames: { a: 'Nur Aina binti Ahmad', b: 'Muhammad Hakim bin Hassan' },
+  time: { start: '11:00', end: '16:00' },
+  aturcara: [
+    { time: '11:00', item: 'Ketibaan tetamu' }, { time: '12:30', item: 'Ketibaan pengantin' },
+    { time: '13:00', item: 'Makan beradab' }, { time: '14:00', item: 'Sesi bergambar' }, { time: '16:00', item: 'Majlis bersurai' },
+  ],
+  dressCode: 'Tona earth — sage, krim, coklat', colours: ['#8a9a78', '#e8dcc4', '#8b6b4a'],
+  coverKey, photos: photoKeys, countdown: true,
+});
+const [fresh] = await db.select().from(events).where(eq(events.id, ev.id));
+const publicBase = v('S3_PUBLIC_BASE') || 'http://localhost:3180/media';
+const view = composeKad(fresh!, 'garden', kadFields, kadDefaults(fresh!), k => `${publicBase}/${k}`, true);
+const og = await renderKadOg(view, readFileSync('public/landing/g08.jpg'), async f => readFileSync(`server/assets/fonts/${f}`));
+const ogKey = `${kp}og-${Date.now().toString(36)}.jpg`;
+await put(PUBLIC, ogKey, og, 'image/jpeg');
+await db.insert(kad).values({ eventId: ev.id, template: 'garden', fields: kadFields, ogKey, updatedAt: new Date() })
+  .onConflictDoUpdate({ target: kad.eventId, set: { template: 'garden', fields: kadFields, ogKey, updatedAt: new Date() } });
+
+console.log(`demo ready: /${SLUG} (${PHOTOS.length} photos + kad, event ${ev.id})`);
 process.exit(0);

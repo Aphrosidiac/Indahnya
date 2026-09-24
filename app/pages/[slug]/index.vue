@@ -1,21 +1,31 @@
 <script setup lang="ts">
 import { Images, MapPin, Navigation, CalendarDays, ArrowRight } from 'lucide-vue-next';
 import { Btn } from '~/ui';
+import type { KadView as KadViewData } from '~~/shared/utils/kad-view';
+import KadView from '~/components/kad/KadView.vue';
 
 /**
- * The hub. Phase A: the essentials of a kad — names, date, venue with Waze
- * and Google Maps, and the door into the gallery. Phase C replaces this with
- * the full e-kad (templates, aturcara, salam kaut, music) on the same route.
+ * The majlis link. With the kad module on (the default) it IS the e-kad;
+ * with it off — a couple whose invitation lives on another platform — it is
+ * the plain hub: the day, the place, the door into the gallery.
  */
 definePageMeta({ layout: 'bare' });
 const { ev, t, lang, displayName, ready, setMeta } = await useGuestEvent();
+const { data: k } = await useFetch<{ kad: KadViewData; ogUrl: string | null; enabled: boolean }>(() => `/api/g/${ev.value.slug}/kad`, { key: `kad:${ev.value.slug}` });
 const when = ev.value.date ? fmtDate(ev.value.date, undefined, lang.value) : '';
-setMeta({ title: `${displayName.value} · Indahnya`, description: [typeName(ev.value.type, lang.value), when, ev.value.venue.name].filter(Boolean).join(' · ') });
+const kadOn = computed(() => !!k.value?.enabled && !!k.value.kad);
+setMeta({
+  title: kadOn.value ? `${k.value!.kad.title} · ${displayName.value}` : `${displayName.value} · Indahnya`,
+  description: [typeName(ev.value.type, lang.value), when, ev.value.venue.name].filter(Boolean).join(' · '),
+  image: k.value?.ogUrl,
+});
 const toGambar = computed(() => `/${ev.value.slug}/gambar`);
 </script>
 
 <template>
-  <GuestShell :ev="ev" :title="displayName" :t="t">
+  <KadView v-if="kadOn" :view="k!.kad" :ready="ready" />
+
+  <GuestShell v-else :ev="ev" :title="displayName" :t="t">
     <div class="reveal mx-auto max-w-[520px] pt-6">
       <div class="card overflow-hidden">
         <div class="bg-callout-green px-6 pb-6 pt-8 text-center">

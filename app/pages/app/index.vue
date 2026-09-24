@@ -34,7 +34,7 @@ async function create() {
   try {
     const ev = await $fetch<{ id: string }>('/api/events', { method: 'POST', body: {
       type: form.type, names: { a: form.a.trim(), b: couple.value && form.b.trim() ? form.b.trim() : undefined },
-      date: form.date ? new Date(form.date).toISOString() : null,
+      date: form.date || null,
       venue: form.venueName ? { name: form.venueName } : {}, locale: form.locale,
     } });
     open.value = false;
@@ -74,7 +74,8 @@ async function create() {
             <h3 class="truncate text-[16px] font-semibold leading-6 text-ink-900">{{ e.title }}</h3>
             <p class="truncate text-[12px] leading-4 text-ink-500">{{ shortSite() }}/{{ e.slug }}</p>
           </div>
-          <Chip :tone="e.plan === 'free' ? 'neutral' : 'green'" size="sm">{{ planName(e.plan) }}</Chip>
+          <Chip v-if="e.purgedAt" tone="neutral" size="sm">Tamat</Chip>
+          <Chip v-else :tone="e.plan === 'free' ? 'neutral' : 'green'" size="sm">{{ planName(e.plan) }}</Chip>
         </div>
         <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-600">
           <span class="inline-flex items-center gap-1.5"><Images class="size-4 text-ink-400" :stroke-width="1.5" aria-hidden="true" /><span class="num">{{ e.mediaCount }}</span> gambar</span>
@@ -95,10 +96,10 @@ async function create() {
       </Field>
       <div class="grid grid-cols-1 gap-4" :class="couple && 'sm:grid-cols-2'">
         <Field v-slot="{ id }" :label="couple ? 'Nama pengantin (1)' : 'Nama / tajuk'" required :error="errors.a">
-          <input :id="id" v-model="form.a" type="text" :placeholder="couple ? 'Aina' : 'Aqiqah Adam'" :aria-invalid="!!errors.a" autofocus />
+          <input :id="id" v-model="form.a" type="text" maxlength="60" :placeholder="couple ? 'Aina' : 'Aqiqah Adam'" :aria-invalid="!!errors.a" autofocus />
         </Field>
         <Field v-if="couple" v-slot="{ id }" label="Nama pengantin (2)">
-          <input :id="id" v-model="form.b" type="text" placeholder="Hakim" />
+          <input :id="id" v-model="form.b" type="text" maxlength="60" placeholder="Hakim" />
         </Field>
       </div>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -110,8 +111,9 @@ async function create() {
         </Field>
       </div>
       <Field v-slot="{ id }" label="Tempat" hint="Nama dewan / hotel / rumah">
-        <input :id="id" v-model="form.venueName" type="text" placeholder="Dewan Seri Melati, Shah Alam" />
+        <input :id="id" v-model="form.venueName" type="text" maxlength="120" placeholder="Dewan Seri Melati, Shah Alam" />
       </Field>
+      <p class="text-[12px] leading-4 text-ink-500">Pakej percuma: tetamu boleh upload sampai 30 hari selepas tarikh majlis.</p>
       <div class="flex justify-end gap-2 pt-2">
         <Btn variant="secondary" @click="open = false">Batal</Btn>
         <Btn type="submit" variant="primary" :loading="busy">Buat majlis</Btn>

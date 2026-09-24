@@ -4,7 +4,8 @@ import { ChevronRight } from 'lucide-vue-next';
  * A white row with a leading icon, a title, a grey line under it and a
  * chevron — the reference's "Blocking her discharge" list and its "Staff
  * tasks". Renders as a button (or a RouterLink when `to` is given) because
- * the whole row is the target.
+ * the whole row is the target. Indahnya: `href` makes it a plain <a> (a
+ * file download, an API route) rather than wrapping a button in a link.
  */
 withDefaults(defineProps<{
   title: string;
@@ -12,6 +13,8 @@ withDefaults(defineProps<{
   icon?: unknown;
   tone?: 'neutral' | 'amber' | 'red' | 'green' | 'blue';
   to?: string;
+  href?: string;
+  download?: boolean;
   /** Inside a card: no border, hairline between rows. Standalone: a bordered white tile. */
   inset?: boolean;
 }>(), { tone: 'neutral' });
@@ -22,7 +25,7 @@ const TONE = {
 </script>
 
 <template>
-  <component :is="to ? 'RouterLink' : 'button'" :to="to" :type="to ? undefined : 'button'"
+  <component :is="to ? 'RouterLink' : href ? 'a' : 'button'" :to="to" :href="href" :download="href && download ? '' : undefined" :type="to || href ? undefined : 'button'"
     class="group flex w-full items-center gap-3 text-left transition-colors"
     :class="inset
       ? 'px-5 py-3 hover:bg-surface-50'

@@ -25,7 +25,7 @@ const TEMPLATES = [
 <template>
   <Teleport defer to="#page-head">
     <PageHead title="QR & link" sub="Apa yang tetamu scan">
-      <a v-if="ev" :href="pngUrl" download><Btn variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />PNG</Btn></a>
+      <Btn v-if="ev" :href="pngUrl" download variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />PNG</Btn>
     </PageHead>
   </Teleport>
 
@@ -39,11 +39,11 @@ const TEMPLATES = [
         </div>
         <div class="mt-4 flex gap-2">
           <input :value="link" readonly class="field flex-1 text-[13px]" aria-label="Link" @focus="($event.target as HTMLInputElement).select()" />
-          <Btn variant="secondary" aria-label="Copy" @click="copy"><component :is="copied ? Check : Copy" class="size-4" :stroke-width="1.75" /></Btn>
+          <Btn variant="secondary" aria-label="Copy link" @click="copy"><component :is="copied ? Check : Copy" class="size-4" :stroke-width="1.75" /></Btn>
         </div>
         <div class="mt-3 flex flex-wrap gap-2">
-          <a :href="pngUrl" download><Btn variant="secondary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />PNG (2048px)</Btn></a>
-          <a :href="svgUrl" download><Btn variant="secondary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />SVG</Btn></a>
+          <Btn :href="pngUrl" download variant="secondary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />PNG (2048px)</Btn>
+          <Btn :href="svgUrl" download variant="secondary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />SVG</Btn>
         </div>
         <p class="mt-3 text-[12px] leading-4 text-ink-500">{{ target === 'hub' ? 'Tetamu buka kad jemputan, dengan tab gambar, ucapan dan RSVP.' : 'Tetamu terus masuk galeri — sesuai kalau kad jemputan dah ada dari tempat lain.' }}</p>
       </Card>

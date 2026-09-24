@@ -4,12 +4,13 @@ export interface EventRow {
   id: string; slug: string; type: string; title: string; names: { a: string; b?: string; short?: string };
   date: string | null; venue: { name?: string; address?: string; waze?: string; gmaps?: string };
   plan: 'free' | 'std' | 'full'; planPaidAt: string | null;
-  uploadWindowEndsAt: string; storageEndsAt: string; purgedAt: string | null; createdAt: string;
+  uploadWindowEndsAt: string; storageEndsAt: string; purgedAt: string | null; deletedAt: string | null; createdAt: string;
   settings: {
     locale: 'ms' | 'en'; approvalMode: boolean;
     modules: { gambar: boolean; ucapan: boolean; rsvp: boolean; tempat: boolean; kad: boolean };
     slideshow: { intervalSec: number; showNames: boolean; shuffle: boolean };
     guestDeleteHours: number;
+    demo?: boolean;
   };
   mediaCount: number; isOwner: boolean;
 }
@@ -22,6 +23,8 @@ export interface EventDetail extends Omit<EventRow, 'mediaCount'> {
   rsvp: { n: number; pax: number };
   ucapan: number;
   planInfo: { name: string; priceCents: number; uploadCap: number | null; uploadWindowDays: number; storageDays: number; cohosts: number; customSlug: boolean; badgeFree: boolean };
+  /** What this majlis can buy right now (an upgrade, at the difference, or a renewal). */
+  offers: { plan: 'std' | 'full'; kind: 'upgrade' | 'renew'; cents: number }[];
 }
 
 /**

@@ -23,7 +23,10 @@ and accepted without discussion — change freely.
 | Languages | BM (colloquial MY register, English trade words) + EN in v1. CN later. |
 | Event types | kahwin front door; aqiqah / birthday / corporate / graduation as types with copy tweaks only. |
 | Media | video ≤60 s and ≤100 MB/clip; photos stored at original res; HEIC → JPEG server-side; client resizes for preview only. |
-| Retention | window ends → 30-day grace with email warnings → hard delete from R2. Extend by paying again. |
+| Retention | window ends → 30-day grace with email warnings → hard delete from R2. Extend by paying again (renewal offered in the last 30 days of storage and in the grace month). |
+| Clocks | Upload + storage windows run from the LATER of payment/creation and the end of the majlis day (capped at 2 years' lead). Decided in the 2026-09-24 audit: clocks from creation expired free galleries before the wedding. |
+| Upgrade price | std → full charges the difference (RM40). *default*, 2026-09-24 audit. |
+| Storage split | Two buckets: public (served copies of ready media, behind media.indahnya.my) and private (originals with EXIF/GPS, hidden and approval-pending media). 2026-09-24 audit. |
 | Vendor / photographer mode | not v1. Parked. |
 | Differentiators | last: face-search "cari gambar saya", WhatsApp reminders, disposable-camera mode, e-kad partner API. |
 | UI | **Exactly ANK Ops**: tokens, 33 primitives, transitions (veil/pop/drop/slide, `.reveal` no-fill keyframes, no route transitions), shell, composition rules. Guest pages use the same language one size warmer. |
@@ -34,8 +37,8 @@ and accepted without discussion — change freely.
 | | Percuma | Indahnya RM59 | Indahnya Lengkap RM99 |
 |---|---|---|---|
 | Uploads | 50 | unlimited | unlimited |
-| Upload window | 30 days | 6 months | 12 months |
-| Storage | 30 days | 12 months | 24 months |
+| Upload window | 30 days after the majlis | 6 months | 12 months |
+| Storage | 30 days after the majlis | 12 months | 24 months |
 | Video | ✓ (counts as upload) | ✓ | ✓ |
 | Live slideshow | ✓ | ✓ | ✓ |
 | E-kad + RSVP + seating + guestbook | ✓ | ✓ | ✓ |
@@ -127,9 +130,11 @@ payments         id, event_id, stripe_session_id, amount, plan, status
 4. Worker (same VPS, pg-boss or a simple cron loop): HEIC→JPEG, EXIF strip +
    `taken_at`, thumb (WebP 480/1200), video poster frame + ffprobe duration,
    audio transcode → `ready`. Slideshow and gallery only show `ready`.
-5. Delivery through a public R2 custom domain (`media.indahnya.my`) with
-   unguessable keys `events/<event-ulid>/<media-ulid>.<ext>`; hidden media is
-   moved under `hidden/` so old links die.
+5. Delivery through a public R2 custom domain (`media.indahnya.my`) on the
+   PUBLIC bucket only, keys `events/<event-ulid>/<media-ulid>.<ext>`.
+   Originals and hidden media live in the PRIVATE bucket (no public access);
+   hiding moves the served copies across buckets so old links die and cannot
+   be guessed back. Hosts read private objects through short presigned GETs.
 
 ## Routes
 
@@ -145,6 +150,66 @@ payments         id, event_id, stripe_session_id, amount, plan, status
 /tv/[slug]?token=         slideshow (fullscreen, autoplay, reconnecting)
 /api/...                  route handlers; webhooks at /api/stripe/webhook
 ```
+
+## Audit (2026-09-24)
+
+Full audit of Phase A + landing; everything below was fixed and verified in
+the running app (curl probes + browser at 375 and desktop). The ordering is
+by severity.
+
+- **Hidden photos were still public**: hiding moved a key to `hidden/<key>`
+  in the same public bucket (guessable from the old link), and the original
+  (full EXIF, GPS) sat at `events/<id>/orig/<id>.<ext>` in that bucket too.
+  → two buckets.
+- **Free galleries expired before the wedding**: clocks ran from creation;
+  a free event made 8 weeks early closed uploads 3 weeks before the day.
+  → clocks from the majlis date; migration 0002 backfills.
+- **Open redirect** after sign-in (`next=//evil.com`), and in the Google flow.
+- **Magic link spent by mail scanners** (GET consumed it). → /masuk spends it with a POST.
+- **Presigned PUT had no size bound** (5 GB into a 3 MB slot). → Content-Length signed.
+- Upload cap race (check-then-insert), `javascript:` Waze/Maps links on the
+  public hub, zod errors as 500s, no rate limits, sign-in links logged in
+  production when SMTP is missing, HTML-unescaped titles in mails,
+  nodemailer high CVEs, no security headers, guest pages indexable.
+- Renewal impossible (checkout refused same/lower plan) despite the retention
+  mails saying "lanjutkan"; std→full charged full price; reconcile never ran
+  on the return from Stripe (event not loaded at mount); retention `notified`
+  never reset after paying; deleted events stayed in the host's list.
+- TV kept showing hidden photos until reloaded; rotating the TV link did not
+  blank old screens; zip opened every S3 stream at once; video held whole in
+  memory; EXIF time read in the server's zone (8 h off); >30 files in one
+  pick failed the whole batch; files with no MIME type (Android HEIC) refused;
+  "retry when back online" promised on the landing but not implemented.
+- Guest tabs linked to Ucapan/RSVP pages that do not exist; /privasi and
+  /terma 404'd; the landing's sample gallery 404'd without seed data;
+  buttons nested in links; toggle knob overflowing its track; drawer shadow
+  bleeding on phones.
+
+- **Runtime config ignored the server's env**: nuxt.config read
+  `process.env.STRIPE_SECRET_KEY` etc. at BUILD time; at runtime only `NUXT_*`
+  names override. A signed Stripe webhook was rejected by a prod build. →
+  every runtime value is a `NUXT_*` env var (see .env.example); nothing is
+  baked into `.output`.
+- Second pass (independent review of the fixes): an upgrade near expiry was
+  cheaper than a renewal and restarted the clock (→ an upgrade keeps the paid
+  plan's anchor); re-dating a finished event bought storage (→ only while
+  the majlis is ahead; lead capped at 18 months); a transient bucket error
+  failed a photo for good (→ only content errors fail; the rest retry);
+  copies written for a row deleted mid-processing were orphaned; host
+  delete left bytes public for up to an hour; hide/show raced (→ per-photo
+  advisory lock, idempotent moves); a cancelled zip hung a socket; approved
+  or re-shown photos never reached the TV (→ fetched by id from `live`);
+  payments landing on purged/deleted events are logged `REFUND NEEDED`.
+  Failed uploads now go in the zip under `gagal/`, as sent.
+  `scripts/migrate-split-buckets.ts` moves any pre-split data.
+
+Added: `/privasi` + `/terma` (BM/EN, PDPA), error page, demo seed, OG card +
+favicons + manifest, sitemap + robots, JSON-LD, WebP landing thumbs, vitest
+(29 tests), migrations 0001 (`deleted_at`) and 0002 (clock backfill).
+
+**Needs Fakhrul before launch:** review the refund line in /terma (AP wrote
+"full refund if the gallery fails on the day because of us, within 14 days")
+and add the SSM number to both legal pages once FF Dev Studio's is final.
 
 ## Status (2026-09-20)
 

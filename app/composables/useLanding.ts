@@ -76,7 +76,7 @@ export const LANDING = {
       title: 'Bayar sekali. Untuk satu majlis.',
       body: 'Tak ada subscription, tak ada per-tetamu. Mula percuma dengan semua ciri, upgrade bila galeri dah penuh.',
       plans: [
-        { name: 'Percuma', price: 'RM0', tag: 'Untuk cuba', rows: ['50 upload', 'Upload 30 hari', 'Simpan 30 hari', 'Semua ciri, termasuk slideshow & kad'], cta: 'Mula percuma', hot: false },
+        { name: 'Percuma', price: 'RM0', tag: 'Untuk cuba', rows: ['50 upload', 'Upload sampai 30 hari selepas majlis', 'Simpan 30 hari selepas majlis', 'Semua ciri, termasuk slideshow & kad'], cta: 'Mula percuma', hot: false },
         { name: 'Indahnya', price: 'RM59', tag: 'Paling ramai pilih', rows: ['Upload tanpa had', 'Upload 6 bulan', 'Simpan 1 tahun', 'Link sendiri', '1 co-host'], cta: 'Pilih Indahnya', hot: true },
         { name: 'Indahnya Lengkap', price: 'RM99', tag: 'Untuk majlis besar', rows: ['Upload tanpa had', 'Upload 12 bulan', 'Simpan 2 tahun', 'Link sendiri', '5 co-host', 'Tanpa badge Indahnya'], cta: 'Pilih Lengkap', hot: false },
       ],
@@ -87,9 +87,9 @@ export const LANDING = {
       title: 'Yang orang selalu tanya.',
       items: [
         { q: 'Tetamu kena download app ke?', a: 'Tak. Scan QR, browser phone terus buka galeri. iPhone, Android, phone lama makcik — semua jalan.' },
-        { q: 'Kalau tetamu tak ada internet kat dewan?', a: 'Gambar yang tak sempat upload akan cuba lagi bila ada line. Untuk TV, guna hotspot phone — slideshow tetap jalan dengan gambar yang dah ada.' },
+        { q: 'Kalau tetamu tak ada internet kat dewan?', a: 'Gambar yang tak sempat upload akan sambung sendiri bila line kembali — asalkan page galeri masih terbuka. Untuk TV, guna hotspot phone — slideshow tetap jalan dengan gambar yang dah ada.' },
         { q: 'Boleh tapis gambar yang tak sesuai?', a: 'Boleh. Sembunyi atau padam dari dashboard, atau on approval mode supaya gambar hanya naik selepas korang tengok.' },
-        { q: 'Gambar disimpan berapa lama?', a: 'Percuma: 30 hari. RM59: setahun. RM99: dua tahun. Kami email 14 hari sebelum tamat, dan korang boleh download semua bila-bila.' },
+        { q: 'Gambar disimpan berapa lama?', a: 'Percuma: 30 hari selepas majlis. RM59: setahun. RM99: dua tahun. Kiraan bermula dari hari majlis, bukan hari korang buat akaun. Kami email 14 hari sebelum tamat, dan korang boleh download semua atau lanjutkan bila-bila.' },
         { q: 'Video boleh?', a: 'Boleh, sampai 60 saat setiap satu. Kami tukar ke format yang main kat semua phone, jadi video iPhone pun boleh tengok kat Android.' },
         { q: 'Kad jemputan dah buat kat tempat lain, boleh guna galeri je?', a: 'Boleh. Ada QR dan link "Gambar sahaja" yang terus masuk galeri — paste dalam e-kad korang.' },
         { q: 'Siapa yang buat Indahnya?', a: 'FF Dev Studio, studio kecil di Malaysia. Kalau ada masalah, WhatsApp kami — orang yang bina benda ni yang jawab.' },
@@ -170,7 +170,7 @@ export const LANDING = {
       title: 'Pay once. For one event.',
       body: 'No subscription, no per-guest fee. Start free with every feature, upgrade when the gallery fills up.',
       plans: [
-        { name: 'Free', price: 'RM0', tag: 'To try it', rows: ['50 uploads', '30-day upload window', '30-day storage', 'Every feature, slideshow & card included'], cta: 'Start free', hot: false },
+        { name: 'Free', price: 'RM0', tag: 'To try it', rows: ['50 uploads', 'Uploads until 30 days after the event', 'Kept 30 days after the event', 'Every feature, slideshow & card included'], cta: 'Start free', hot: false },
         { name: 'Indahnya', price: 'RM59', tag: 'Most popular', rows: ['Unlimited uploads', '6-month upload window', '1-year storage', 'Your own link', '1 co-host'], cta: 'Choose Indahnya', hot: true },
         { name: 'Indahnya Lengkap', price: 'RM99', tag: 'For big events', rows: ['Unlimited uploads', '12-month upload window', '2-year storage', 'Your own link', '5 co-hosts', 'No Indahnya badge'], cta: 'Choose Lengkap', hot: false },
       ],
@@ -181,9 +181,9 @@ export const LANDING = {
       title: 'What people ask.',
       items: [
         { q: 'Do guests need to install an app?', a: 'No. Scan the QR and the gallery opens in the phone browser. iPhone, Android, an aunty\'s old phone — all fine.' },
-        { q: 'What if the venue has no signal?', a: 'Photos that did not make it retry when there is a connection. For the TV, use a phone hotspot — the slideshow keeps going with what it already has.' },
+        { q: 'What if the venue has no signal?', a: 'Photos that did not make it resume on their own when the connection comes back — as long as the gallery page stays open. For the TV, use a phone hotspot — the slideshow keeps going with what it already has.' },
         { q: 'Can I filter out photos that do not belong?', a: 'Yes. Hide or delete from the dashboard, or turn on approval mode so photos only show after you have seen them.' },
-        { q: 'How long are photos kept?', a: 'Free: 30 days. RM59: a year. RM99: two years. We email you 14 days before the end, and you can download everything any time.' },
+        { q: 'How long are photos kept?', a: 'Free: 30 days after the event. RM59: a year. RM99: two years. The clock starts on the event day, not the day you sign up. We email you 14 days before the end, and you can download everything or extend any time.' },
         { q: 'Are videos supported?', a: 'Yes, up to 60 seconds each. We convert them to a format every phone plays, so an iPhone video works on Android too.' },
         { q: 'I already made an invitation elsewhere — can I use just the gallery?', a: 'Yes. There is a "photos only" QR and link that goes straight to the gallery — paste it into your e-invite.' },
         { q: 'Who makes Indahnya?', a: 'FF Dev Studio, a small studio in Malaysia. If something breaks, WhatsApp us — the person who built it answers.' },

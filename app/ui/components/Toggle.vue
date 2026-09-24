@@ -17,7 +17,7 @@ withDefaults(defineProps<{ label?: string; hint?: string; disabled?: boolean; in
     <button type="button" role="switch" :aria-checked="model" :aria-label="label" :disabled="disabled"
       class="relative h-6 w-11 shrink-0 rounded-full transition-colors duration-[160ms] ease-[cubic-bezier(.2,.8,.2,1)]"
       :class="model ? 'bg-primary-400' : 'bg-line-200'" @click="model = !model">
-      <span class="absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-[160ms] ease-[cubic-bezier(.2,.8,.2,1)]"
+      <span class="absolute left-0 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-[160ms] ease-[cubic-bezier(.2,.8,.2,1)]"
         :class="model ? 'translate-x-[22px]' : 'translate-x-0.5'" />
     </button>
   </label>

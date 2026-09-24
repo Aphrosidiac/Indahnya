@@ -22,6 +22,10 @@ export interface EventSettings {
   modules: { gambar: boolean; ucapan: boolean; rsvp: boolean; tempat: boolean; kad: boolean };
   slideshow: { intervalSec: number; showNames: boolean; shuffle: boolean };
   guestDeleteHours: number;
+  /** Retention mails already sent for the current storage clock (reset when a payment moves it). */
+  notified?: string[];
+  /** The landing's sample gallery: readable by anyone, never accepts uploads. */
+  demo?: boolean;
 }
 
 export const users = pgTable('users', {
@@ -66,6 +70,8 @@ export const events = pgTable('events', {
   tvToken: text('tv_token').notNull(),
   /** Set when the retention sweep has purged R2; the row stays for the host's history. */
   purgedAt: timestamp('purged_at', { withTimezone: true }),
+  /** Set when the owner deletes the majlis. Unlike a retention purge, a deleted majlis leaves the host's list. */
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [uniqueIndex('events_slug_uq').on(t.slug), index('events_owner_idx').on(t.ownerId)]);
 
@@ -90,7 +96,11 @@ export const media = pgTable('media', {
   guestId: text('guest_id').references(() => guests.id, { onDelete: 'set null' }),
   kind: text('kind').$type<MediaKind>().notNull(),
   status: text('status').$type<MediaStatus>().notNull().default('pending'),
-  /** Where the original lives. Never served directly for photos — `key` is the processed one. */
+  /**
+   * The original, always in the PRIVATE bucket (it still carries EXIF, GPS
+   * included). `key`/`thumbKey`/`posterKey` are the served copies: in the
+   * public bucket while `ready`, in the private one while `hidden`.
+   */
   originalKey: text('original_key').notNull(),
   key: text('key'),
   thumbKey: text('thumb_key'),

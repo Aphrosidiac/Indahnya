@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEvents } from '~/stores/events';
 import { Sparkles, Check, Trash2, Settings2, Users, Link2 } from 'lucide-vue-next';
 import { PageHead, Btn, Card, Field, Select, Toggle, Alert, Chip, Modal, Sk, Tabs, useUi } from '~/ui';
 
@@ -12,10 +13,16 @@ const tab = ref<Tab>('pakej');
 
 /* ── plan ─────────────────────────────────────────────────────────── */
 const PLANS = [
-  { key: 'free', name: 'Percuma', price: 'RM0', rows: ['50 upload', 'Upload 30 hari', 'Simpan 30 hari', 'Semua feature'] },
+  { key: 'free', name: 'Percuma', price: 'RM0', rows: ['50 upload', 'Upload sampai 30 hari selepas majlis', 'Simpan 30 hari selepas majlis', 'Semua feature'] },
   { key: 'std', name: 'Indahnya', price: 'RM59', rows: ['Upload tanpa had', 'Upload 6 bulan', 'Simpan 1 tahun', 'Link sendiri', '1 co-host'] },
   { key: 'full', name: 'Indahnya Lengkap', price: 'RM99', rows: ['Upload tanpa had', 'Upload 12 bulan', 'Simpan 2 tahun', 'Link sendiri', '5 co-host', 'Tanpa badge Indahnya'] },
 ] as const;
+const offerFor = (plan: string) => ev.value?.offers.find(o => o.plan === plan);
+function offerLabel(o: { plan: string; kind: string; cents: number }) {
+  if (o.kind === 'renew') return `Lanjutkan — ${fmtRM(o.cents)}`;
+  if (ev.value?.plan !== 'free') return `Upgrade — tambah ${fmtRM(o.cents)}`;
+  return `Pilih ${o.plan === 'std' ? 'Indahnya' : 'Lengkap'} — ${fmtRM(o.cents)}`;
+}
 const paying = ref<string | null>(null);
 async function checkout(plan: 'std' | 'full') {
   paying.value = plan;
@@ -32,16 +39,17 @@ const form = reactive({ title: '', a: '', b: '', type: 'kahwin', date: '', venue
 const settings = reactive({ approvalMode: false, guestDeleteHours: 24, modules: { gambar: true, ucapan: true, rsvp: true, tempat: false, kad: true } });
 watch(ev, (e) => {
   if (!e) return;
-  Object.assign(form, { title: e.title, a: e.names.a, b: e.names.b ?? '', type: e.type, date: e.date ? new Date(e.date).toISOString().slice(0, 10) : '', venueName: e.venue.name ?? '', venueAddress: e.venue.address ?? '', waze: e.venue.waze ?? '', gmaps: e.venue.gmaps ?? '', slug: e.slug, locale: e.settings.locale });
+  Object.assign(form, { title: e.title, a: e.names.a, b: e.names.b ?? '', type: e.type, date: dateInput(e.date), venueName: e.venue.name ?? '', venueAddress: e.venue.address ?? '', waze: e.venue.waze ?? '', gmaps: e.venue.gmaps ?? '', slug: e.slug, locale: e.settings.locale });
   settings.approvalMode = e.settings.approvalMode; settings.guestDeleteHours = e.settings.guestDeleteHours; Object.assign(settings.modules, e.settings.modules);
 }, { immediate: true });
 
 const busy = ref(false);
 async function saveMajlis() {
+  if (!form.a.trim() || !form.title.trim()) { ui.error('Tak jadi', 'Nama dan tajuk tak boleh kosong'); return; }
   busy.value = true;
   try {
     await $fetch(`/api/events/${id.value}`, { method: 'PATCH', body: {
-      title: form.title, names: { a: form.a, b: form.b || undefined }, type: form.type, date: form.date ? new Date(form.date).toISOString() : null,
+      title: form.title.trim(), names: { a: form.a.trim(), b: form.b.trim() || undefined }, type: form.type, date: form.date || null,
       venue: { name: form.venueName, address: form.venueAddress, waze: form.waze, gmaps: form.gmaps }, settings: { locale: form.locale },
       ...(ev.value?.planInfo.customSlug && form.slug !== ev.value.slug ? { slug: form.slug } : {}),
     } });
@@ -80,7 +88,8 @@ async function destroy() {
     <div v-else :key="tab" class="reveal mt-4">
       <!-- PAKEJ -->
       <template v-if="tab === 'pakej'">
-        <Alert v-if="ev.plan === 'free'" tone="info" title="Bayar sekali je, untuk satu majlis" class="mb-4">Tak ada subscription. Upgrade bila-bila — jam upload dan simpanan dikira dari tarikh bayar.</Alert>
+        <Alert v-if="ev.plan === 'free'" tone="info" title="Bayar sekali je, untuk satu majlis" class="mb-4">Tak ada subscription. Upgrade bila-bila — tempoh upload dan simpanan dikira dari tarikh majlis atau tarikh bayar, yang mana lebih lewat.</Alert>
+        <Alert v-else-if="offerFor(ev.plan)?.kind === 'renew'" tone="warning" title="Simpanan hampir tamat" class="mb-4">Gambar disimpan sampai {{ fmtDate(ev.storageEndsAt) }}. Lanjutkan pakej untuk tambah {{ ev.planInfo.storageDays === 730 ? 'dua tahun' : 'setahun' }} lagi dari tarikh tu.</Alert>
         <div class="grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
           <Card v-for="p in PLANS" :key="p.key" :tone="ev.plan === p.key ? 'green' : 'default'" class="flex flex-col">
             <div class="flex items-start justify-between gap-2">
@@ -90,8 +99,8 @@ async function destroy() {
             <ul class="mt-4 flex-1 space-y-2 text-[13px] leading-[18px] text-ink-600">
               <li v-for="r in p.rows" :key="r" class="flex items-center gap-2"><Check class="size-4 shrink-0 text-success-600" :stroke-width="2" aria-hidden="true" />{{ r }}</li>
             </ul>
-            <Btn v-if="p.key !== 'free' && ev.plan !== 'full' && ev.plan !== p.key" :variant="p.key === 'std' ? 'primary' : 'accent'" block class="mt-5" :loading="paying === p.key" @click="checkout(p.key)">
-              {{ ev.plan === 'std' && p.key === 'full' ? 'Upgrade ke Lengkap' : `Pilih ${p.name}` }}
+            <Btn v-if="p.key !== 'free' && offerFor(p.key)" :variant="p.key === 'std' ? 'primary' : 'accent'" block class="mt-5" :loading="paying === p.key" @click="checkout(p.key)">
+              {{ offerLabel(offerFor(p.key)!) }}
             </Btn>
             <p v-else-if="p.key === 'free' && ev.plan === 'free'" class="mt-5 text-center text-[12px] leading-4 text-ink-500">Pakej semasa</p>
           </Card>
@@ -116,8 +125,8 @@ async function destroy() {
             <Field v-slot="{ id: f }" label="Tempat"><input :id="f" v-model="form.venueName" type="text" placeholder="Dewan Seri Melati" /></Field>
             <Field v-slot="{ id: f }" label="Alamat"><textarea :id="f" v-model="form.venueAddress" rows="2" /></Field>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field v-slot="{ id: f }" label="Link Waze"><input :id="f" v-model="form.waze" type="url" placeholder="https://waze.com/ul/…" /></Field>
-              <Field v-slot="{ id: f }" label="Link Google Maps"><input :id="f" v-model="form.gmaps" type="url" placeholder="https://maps.app.goo.gl/…" /></Field>
+              <Field v-slot="{ id: f }" label="Link Waze" hint="Mesti bermula dengan https://"><input :id="f" v-model="form.waze" type="url" placeholder="https://waze.com/ul/…" /></Field>
+              <Field v-slot="{ id: f }" label="Link Google Maps" hint="Mesti bermula dengan https://"><input :id="f" v-model="form.gmaps" type="url" placeholder="https://maps.app.goo.gl/…" /></Field>
             </div>
           </div>
           <template #footer><div class="flex justify-end"><Btn variant="primary" :loading="busy" @click="saveMajlis">Simpan</Btn></div></template>
@@ -136,9 +145,9 @@ async function destroy() {
           <div class="divide-y divide-line-100">
             <Toggle v-model="settings.modules.gambar" inset label="Gambar" hint="Galeri dan upload" />
             <Toggle v-model="settings.modules.kad" inset label="Kad jemputan" hint="Butiran majlis, lokasi, aturcara" />
-            <Toggle v-model="settings.modules.ucapan" inset label="Ucapan" hint="Tetamu tinggalkan ucapan tulis atau suara" />
-            <Toggle v-model="settings.modules.rsvp" inset label="RSVP" hint="Tetamu confirm kehadiran" />
-            <Toggle v-model="settings.modules.tempat" inset label="Tempat duduk" hint="Tetamu cari nombor meja" />
+            <Toggle :model-value="false" inset disabled label="Ucapan" hint="Akan datang — ucapan tulis atau suara" />
+            <Toggle :model-value="false" inset disabled label="RSVP" hint="Akan datang — tetamu confirm kehadiran" />
+            <Toggle :model-value="false" inset disabled label="Tempat duduk" hint="Akan datang — tetamu cari nombor meja" />
           </div>
           <template #footer><div class="flex justify-end"><Btn variant="primary" :loading="busy" @click="saveTetamu">Simpan</Btn></div></template>
         </Card>

@@ -8,10 +8,11 @@ const ui = useUi();
 
 const tvUrl = computed(() => ev.value ? `${siteUrl()}/tv/${ev.value.slug}?token=${ev.value.tvToken}` : '');
 const copied = ref(false);
-async function copy() { if (await copyText(tvUrl.value)) { copied.value = true; setTimeout(() => { copied.value = false; }, 1500); } }
+async function copy() { if (await copyText(tvUrl.value)) { copied.value = true; ui.ok('Link TV dah copy'); setTimeout(() => { copied.value = false; }, 1500); } }
 
 const form = reactive({ intervalSec: 7, showNames: true, shuffle: false });
 watch(ev, (e) => { if (e) Object.assign(form, e.settings.slideshow); }, { immediate: true });
+const valid = computed(() => Number.isInteger(form.intervalSec) && form.intervalSec >= 3 && form.intervalSec <= 60);
 const dirty = computed(() => !!ev.value && (form.intervalSec !== ev.value.settings.slideshow.intervalSec || form.showNames !== ev.value.settings.slideshow.showNames || form.shuffle !== ev.value.settings.slideshow.shuffle));
 const busy = ref(false);
 async function save() {
@@ -21,17 +22,19 @@ async function save() {
   finally { busy.value = false; }
 }
 async function rotate() {
-  if (!confirm('Tukar link TV? Link lama akan terus mati.')) return;
-  await $fetch(`/api/events/${id.value}/tv-token`, { method: 'POST' });
-  await refresh();
-  ui.ok('Link TV baru dah sedia');
+  if (!confirm('Tukar link TV? Skrin yang buka link lama akan terus kosong.')) return;
+  try {
+    await $fetch(`/api/events/${id.value}/tv-token`, { method: 'POST' });
+    await refresh();
+    ui.ok('Link TV baru dah sedia');
+  } catch (e) { ui.error('Tak jadi', apiError(e)); }
 }
 </script>
 
 <template>
   <Teleport defer to="#page-head">
     <PageHead title="Slideshow" sub="Gambar tetamu naik live kat skrin dewan">
-      <a v-if="ev" :href="tvUrl" target="_blank" rel="noopener"><Btn variant="primary" size="sm"><MonitorPlay class="size-4" :stroke-width="1.75" aria-hidden="true" />Buka slideshow</Btn></a>
+      <Btn v-if="ev" :href="tvUrl" target="_blank" variant="primary" size="sm"><MonitorPlay class="size-4" :stroke-width="1.75" aria-hidden="true" />Buka slideshow</Btn>
     </PageHead>
   </Teleport>
 
@@ -42,8 +45,8 @@ async function rotate() {
         <Card title="Link untuk TV / projektor" :icon="MonitorPlay" sub="Buka kat laptop yang sambung ke skrin, tekan F11 untuk fullscreen">
           <div class="flex gap-2">
             <input :value="tvUrl" readonly class="field flex-1 font-mono text-[12px]" aria-label="Link TV" @focus="($event.target as HTMLInputElement).select()" />
-            <Btn variant="secondary" @click="copy"><component :is="copied ? Check : Copy" class="size-4" :stroke-width="1.75" aria-hidden="true" /></Btn>
-            <a :href="tvUrl" target="_blank" rel="noopener"><Btn variant="secondary" aria-label="Buka"><ExternalLink class="size-4" :stroke-width="1.75" /></Btn></a>
+            <Btn variant="secondary" aria-label="Copy link TV" @click="copy"><component :is="copied ? Check : Copy" class="size-4" :stroke-width="1.75" aria-hidden="true" /></Btn>
+            <Btn :href="tvUrl" target="_blank" variant="secondary" aria-label="Buka slideshow"><ExternalLink class="size-4" :stroke-width="1.75" /></Btn>
           </div>
           <p class="mt-3 text-[13px] leading-[18px] text-ink-500">Link ni ada kod rahsia — sesiapa yang ada boleh tengok slideshow. Kalau terbocor, tukar link.</p>
           <template #footer>
@@ -54,13 +57,13 @@ async function rotate() {
         <Card title="Tetapan" divided>
           <div class="space-y-4">
             <Field v-slot="{ id: fid }" label="Tukar gambar setiap" suffix="saat" hint="7 saat sesuai untuk dewan; 4 untuk parti">
-              <input :id="fid" v-model.number="form.intervalSec" type="number" min="3" max="60" class="num" />
+              <input :id="fid" v-model.number="form.intervalSec" type="number" min="3" max="60" inputmode="numeric" class="num" />
             </Field>
             <Toggle v-model="form.showNames" label="Tunjuk nama tetamu" hint="Nama yang tetamu isi masa upload" />
             <Toggle v-model="form.shuffle" label="Shuffle" hint="Off: gambar terbaru dulu, yang lama berulang" />
           </div>
           <template #footer>
-            <div class="flex justify-end"><Btn variant="primary" :disabled="!dirty" :loading="busy" @click="save">Simpan</Btn></div>
+            <div class="flex justify-end"><Btn variant="primary" :disabled="!dirty || !valid" :loading="busy" @click="save">Simpan</Btn></div>
           </template>
         </Card>
       </div>

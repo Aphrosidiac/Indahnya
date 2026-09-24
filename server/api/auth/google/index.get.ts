@@ -4,8 +4,8 @@ export default defineEventHandler((event) => {
   const { google, public: pub } = useRuntimeConfig();
   if (!google.clientId) throw createError({ statusCode: 501, statusMessage: 'Google belum disambung' });
   const state = newToken();
-  const next = (getQuery(event).next as string) || '/app';
-  setCookie(event, 'indahnya_oauth', JSON.stringify({ state, next }), { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 600 });
+  const next = safeNext(getQuery(event).next);
+  setCookie(event, 'indahnya_oauth', JSON.stringify({ state, next }), { httpOnly: true, sameSite: 'lax', secure: !import.meta.dev, path: '/', maxAge: 600 });
   const u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   u.searchParams.set('client_id', google.clientId);
   u.searchParams.set('redirect_uri', `${pub.siteUrl}/api/auth/google/callback`);

@@ -83,9 +83,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey));
   <Teleport defer to="#page-head">
     <PageHead title="Gambar" :sub="ev ? `${ev.counts.ready} dipaparkan · ${ev.counts.hidden} disembunyikan` : undefined">
       <Btn variant="secondary" size="sm" @click="load(); refresh()"><RefreshCw class="size-4" :stroke-width="1.75" aria-hidden="true" /><span class="max-sm:hidden">Refresh</span></Btn>
-      <a v-if="ev" :href="`/api/events/${ev.id}/download`">
-        <Btn variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />Download semua</Btn>
-      </a>
+      <Btn v-if="ev && ev.counts.ready + ev.counts.hidden" :href="`/api/events/${ev.id}/download`" download variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />Download semua</Btn>
     </PageHead>
   </Teleport>
 
@@ -122,10 +120,11 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey));
     <div v-else class="reveal-flat mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
       <div v-for="m in items" :key="m.id" class="group relative aspect-square overflow-hidden rounded-[10px] bg-sand ring-offset-2 ring-offset-surface-50 transition-[box-shadow] duration-[120ms]"
         :class="selected.has(m.id) && 'ring-2 ring-ink-900'">
-        <button type="button" class="absolute inset-0" :aria-label="m.guestName ? `Gambar oleh ${m.guestName}` : 'Gambar'" @click="m.status === 'ready' || m.status === 'hidden' ? viewing = m : toggle(m, $event)">
+        <button type="button" class="absolute inset-0" :aria-label="m.status === 'failed' ? `Gagal: ${m.error ?? 'tak diketahui'}` : m.guestName ? `Gambar oleh ${m.guestName}` : 'Gambar'" :title="m.status === 'failed' ? m.error ?? undefined : undefined" @click="m.status === 'ready' || m.status === 'hidden' ? viewing = m : toggle(m, $event)">
           <img v-if="m.thumb ?? m.poster" :src="(m.thumb ?? m.poster)!" alt="" class="size-full object-cover" loading="lazy" />
           <span v-else-if="m.status === 'failed'" class="grid size-full place-items-center text-danger-600"><AlertCircle class="size-6" :stroke-width="1.5" aria-hidden="true" /></span>
           <span v-else class="skeleton block size-full rounded-none" />
+          <span v-if="m.status === 'failed' && m.error" class="sr-only">{{ m.error }}</span>
         </button>
         <button type="button" class="absolute left-1.5 top-1.5 grid size-6 place-items-center rounded-[6px] bg-white/90 text-ink-900 shadow-xs transition-opacity duration-[120ms]"
           :class="selected.has(m.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 max-lg:opacity-100'"
@@ -147,14 +146,14 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey));
   <!-- lightbox -->
   <Teleport to="body">
     <Transition name="veil">
-      <div v-if="viewing" class="fixed inset-0 z-[60] bg-ink-900/95" @click.self="viewing = null">
+      <div v-if="viewing" class="fixed inset-0 z-[60] bg-ink-900/95" role="dialog" aria-modal="true" :aria-label="viewing.guestName ? `Gambar oleh ${viewing.guestName}` : 'Gambar'" @click.self="viewing = null">
         <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 p-3 text-white">
           <div class="min-w-0 px-1">
             <p class="truncate text-[13px] font-medium leading-5">{{ viewing.guestName || 'Tetamu' }}</p>
             <p class="truncate text-[12px] leading-4 text-white/60">{{ fmtDateTime(viewing.takenAt ?? viewing.createdAt) }} · {{ fmtBytes(viewing.bytes) }}<span v-if="viewing.width"> · {{ viewing.width }}×{{ viewing.height }}</span></p>
           </div>
           <div class="flex shrink-0 items-center gap-1">
-            <a :href="viewing.url!" download class="grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white" aria-label="Download"><Download class="size-[18px]" :stroke-width="1.75" /></a>
+            <a :href="`/api/events/${id}/media/${viewing.id}/original`" class="grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white" aria-label="Download asal"><Download class="size-[18px]" :stroke-width="1.75" /></a>
             <button v-if="viewing.status === 'ready'" type="button" class="grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white" aria-label="Sembunyi" @click="act('hide', [viewing.id])"><EyeOff class="size-[18px]" :stroke-width="1.75" /></button>
             <button v-else type="button" class="grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white" aria-label="Paparkan" @click="act('show', [viewing.id])"><Eye class="size-[18px]" :stroke-width="1.75" /></button>
             <button type="button" class="grid size-9 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white" aria-label="Padam" @click="selected.clear(); selected.add(viewing.id); confirmDelete = true"><Trash2 class="size-[18px]" :stroke-width="1.75" /></button>

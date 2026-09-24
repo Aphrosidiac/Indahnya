@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import {
   LayoutDashboard, Images, MonitorPlay, QrCode, Mail, Users, Armchair, MessageSquareHeart,
   Settings2, Menu, LogOut, PanelLeft, ChevronsUpDown, Plus, Check,
 } from 'lucide-vue-next';
-import { Logo, Count, useUi } from '~/ui';
+import { Logo, Count, useUi, useMedia } from '~/ui';
 import { useAuth } from '~/stores/auth';
 import { useEvents } from '~/stores/events';
 
@@ -26,6 +26,8 @@ const ui = useUi();
 const events = useEvents();
 const route = useRoute();
 const router = useRouter();
+/** Off-canvas below lg: the parked drawer must not take Tab focus. */
+const isDesktop = useMedia('(min-width: 1024px)');
 const menuOpen = ref(false);
 const pickerOpen = ref(false);
 
@@ -77,22 +79,24 @@ function pick(id: string) {
   router.push(`/app/${id}${tail}`);
 }
 
-/** Close the popovers on an outside click. */
-onMounted(() => {
-  addEventListener('pointerdown', (e) => {
-    const t = e.target as HTMLElement;
-    if (!t.closest('[data-user-menu]')) menuOpen.value = false;
-    if (!t.closest('[data-picker]')) pickerOpen.value = false;
-  });
-});
+/** Close the popovers on an outside click, or on Escape. */
+function onPointer(e: PointerEvent) {
+  const t = e.target as HTMLElement;
+  if (!t.closest('[data-user-menu]')) menuOpen.value = false;
+  if (!t.closest('[data-picker]')) pickerOpen.value = false;
+}
+function onKey(e: KeyboardEvent) { if (e.key === 'Escape') { menuOpen.value = false; pickerOpen.value = false; ui.navOpen = false; } }
+onMounted(() => { addEventListener('pointerdown', onPointer); addEventListener('keydown', onKey); });
+onBeforeUnmount(() => { removeEventListener('pointerdown', onPointer); removeEventListener('keydown', onKey); });
 </script>
 
 <template>
   <div class="flex min-h-screen bg-surface-50">
     <!-- Sidebar — 256px, the same ground as the page, no border. Collapses to a drawer below lg. -->
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col bg-surface-50 transition-[transform,width] duration-[180ms] ease-[cubic-bezier(.2,.8,.2,1)] max-lg:w-[256px] max-lg:shadow-lg lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
-      :class="[ui.navOpen ? 'translate-x-0' : '-translate-x-full', ui.navCollapsed ? 'lg:w-[72px]' : 'lg:w-[256px]']">
+      class="fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col bg-surface-50 transition-[transform,width] duration-[180ms] ease-[cubic-bezier(.2,.8,.2,1)] max-lg:w-[256px] lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
+      :class="[ui.navOpen ? 'translate-x-0 max-lg:shadow-lg' : '-translate-x-full lg:translate-x-0', ui.navCollapsed ? 'lg:w-[72px]' : 'lg:w-[256px]']"
+      :inert="!ui.navOpen && !isDesktop ? true : undefined">
       <div class="flex h-16 shrink-0 items-center justify-between pr-3" :class="ui.navCollapsed ? 'max-lg:pl-5 lg:justify-center lg:pr-0' : 'pl-5'">
         <NuxtLink to="/app" class="flex items-center rounded-sm" :class="ui.navCollapsed && 'lg:hidden'"><Logo :size="26" /></NuxtLink>
         <button type="button" class="grid size-8 place-items-center rounded-[8px] text-ink-500 transition-colors hover:bg-sand hover:text-ink-900 max-lg:hidden"
@@ -126,7 +130,7 @@ onMounted(() => {
               @click="pick(e.id)">
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-[13px] leading-[18px] text-ink-900">{{ e.title }}</span>
-                <span class="block truncate text-[11px] leading-4 text-ink-500">{{ e.mediaCount }} gambar · {{ e.plan === 'free' ? 'Percuma' : e.plan === 'std' ? 'Indahnya' : 'Lengkap' }}</span>
+                <span class="block truncate text-[11px] leading-4 text-ink-500">{{ e.mediaCount }} gambar · {{ e.purgedAt ? 'Tamat' : planName(e.plan) }}</span>
               </span>
               <Check v-if="e.id === eventId" class="size-4 shrink-0 text-ink-900" :stroke-width="2" aria-hidden="true" />
             </button>

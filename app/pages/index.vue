@@ -23,13 +23,48 @@ const L = computed(() => LANDING[lang.value]);
 const other = computed(() => (lang.value === 'ms' ? { path: '/', query: { lang: 'en' } } : { path: '/' }));
 
 const site = useRuntimeConfig().public.siteUrl;
-useHead({ htmlAttrs: { lang: () => lang.value } });
+const canonical = computed(() => (lang.value === 'en' ? `${site}/?lang=en` : `${site}/`));
+useHead({
+  htmlAttrs: { lang: () => lang.value },
+  link: [
+    { rel: 'canonical', href: canonical },
+    { rel: 'alternate', hreflang: 'ms', href: `${site}/` },
+    { rel: 'alternate', hreflang: 'en', href: `${site}/?lang=en` },
+    { rel: 'alternate', hreflang: 'x-default', href: `${site}/` },
+  ],
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: () => JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'Organization', '@id': `${site}/#org`, name: 'FF Dev Studio', url: 'https://ffdev.studio' },
+        {
+          '@type': 'SoftwareApplication', name: 'Indahnya', url: `${site}/`, applicationCategory: 'MultimediaApplication', operatingSystem: 'Web',
+          inLanguage: lang.value === 'en' ? 'en-MY' : 'ms-MY', description: L.value.hero.sub, publisher: { '@id': `${site}/#org` },
+          offers: [0, 59, 99].map(price => ({ '@type': 'Offer', price: String(price), priceCurrency: 'MYR' })),
+        },
+        {
+          '@type': 'FAQPage',
+          mainEntity: L.value.faq.items.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+        },
+      ],
+    }),
+  }],
+});
 useSeoMeta({
   title: () => lang.value === 'ms' ? 'Indahnya — galeri gambar majlis dengan QR' : 'Indahnya — QR photo gallery for your event',
   description: () => L.value.hero.sub,
   ogTitle: () => `Indahnya — ${L.value.hero.h1a} ${L.value.hero.h1b} ${L.value.hero.h1c}`,
   ogDescription: () => L.value.hero.sub,
-  ogImage: `${site}/landing/g08.jpg`,
+  ogUrl: canonical,
+  ogType: 'website',
+  ogSiteName: 'Indahnya',
+  ogLocale: () => (lang.value === 'en' ? 'en_MY' : 'ms_MY'),
+  ogImage: `${site}/og.jpg`,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: 'Indahnya — galeri gambar majlis dengan QR',
+  twitterCard: 'summary_large_image',
 });
 
 /* ── the photos: free-to-use Unsplash frames, Malaysian where we could find them ── */
@@ -38,7 +73,7 @@ const NAMES = ['Makcik Ros', 'Aiman', 'Team Office', 'Kak Yati', 'Pak Long', 'Na
 const ORDER = ['g08', 'g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g20', 'g13', 'g01', 'g02', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07'];
 interface Tile { key: number; src: string; name: string; tall: boolean }
 let seq = 0;
-const mk = (id: string): Tile => ({ key: ++seq, src: `/landing/${id}.jpg`, name: NAMES[seq % NAMES.length]!, tall: META[id]![1] > META[id]![0] });
+const mk = (id: string): Tile => ({ key: ++seq, src: `/landing/s/${id}.webp`, name: NAMES[seq % NAMES.length]!, tall: META[id]![1] > META[id]![0] });
 const tiles = ref<Tile[]>(ORDER.slice(0, 9).map(mk));
 const liveCount = ref(127);
 let cursor = 9;
@@ -81,7 +116,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
         <div class="flex items-center gap-2">
           <NuxtLink :to="other" class="rounded-sm px-2.5 py-2 text-[13px] font-medium text-ink-500 transition-colors hover:bg-sand hover:text-ink-900">{{ L.nav.lang }}</NuxtLink>
           <NuxtLink to="/masuk" class="hidden rounded-sm px-3 py-2 text-[14px] text-ink-600 transition-colors hover:bg-sand hover:text-ink-900 sm:block">{{ L.nav.login }}</NuxtLink>
-          <NuxtLink to="/app?new=1"><Btn variant="accent">{{ L.nav.cta }}</Btn></NuxtLink>
+          <Btn to="/app?new=1" variant="accent">{{ L.nav.cta }}</Btn>
         </div>
       </div>
     </header>
@@ -95,8 +130,8 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
         </h1>
         <p class="mt-6 max-w-[520px] text-[17px] leading-[1.55] text-ink-600">{{ L.hero.sub }}</p>
         <div class="mt-8 flex flex-wrap items-center gap-3">
-          <NuxtLink to="/app?new=1"><Btn variant="accent" size="lg"><Sparkles class="size-[18px]" :stroke-width="1.75" aria-hidden="true" />{{ L.hero.cta }}</Btn></NuxtLink>
-          <NuxtLink to="/aina-hakim/gambar"><Btn variant="secondary" size="lg">{{ L.hero.demo }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></Btn></NuxtLink>
+          <Btn to="/app?new=1" variant="accent" size="lg"><Sparkles class="size-[18px]" :stroke-width="1.75" aria-hidden="true" />{{ L.hero.cta }}</Btn>
+          <Btn to="/aina-hakim/gambar" variant="secondary" size="lg">{{ L.hero.demo }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></Btn>
         </div>
         <p class="mt-4 text-[13px] leading-[18px] text-ink-500">{{ L.hero.trust }}</p>
       </div>
@@ -110,7 +145,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
           </div>
           <TransitionGroup tag="div" class="grid grid-cols-4 gap-1 bg-line-100 p-1" name="tile" move-class="tile-move">
             <div v-for="(t, i) in tiles" :key="t.key" class="relative aspect-square overflow-hidden rounded-[8px] bg-sand" :class="i === 0 && 'col-span-2 row-span-2'">
-              <img :src="t.src" alt="" class="size-full object-cover" :loading="i < 8 ? 'eager' : 'lazy'" decoding="async" />
+              <img :src="i === 0 ? t.src.replace('/s/', '/').replace('.webp', '.jpg') : t.src" alt="" class="size-full object-cover" :loading="i < 8 ? 'eager' : 'lazy'" :fetchpriority="i === 0 ? 'high' : undefined" decoding="async" />
               <span class="pointer-events-none absolute bottom-1.5 left-1.5 max-w-[85%] truncate rounded-full bg-ink-900/60 px-1.5 text-[10px] leading-5 text-white backdrop-blur-sm">{{ t.name }}</span>
             </div>
           </TransitionGroup>
@@ -128,7 +163,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
     <div class="strip overflow-hidden py-2" aria-hidden="true">
       <div class="strip-track flex w-max gap-2">
         <template v-for="rep in 2" :key="rep">
-          <img v-for="id in ORDER" :key="`${rep}-${id}`" :src="`/landing/${id}.jpg`" alt="" class="h-[120px] w-auto rounded-[10px] object-cover sm:h-[160px]" loading="lazy" decoding="async" />
+          <img v-for="id in ORDER" :key="`${rep}-${id}`" :src="`/landing/s/${id}.webp`" alt="" :width="Math.round(160 * META[id]![0] / META[id]![1])" height="160" class="h-[120px] w-auto rounded-[10px] object-cover sm:h-[160px]" loading="lazy" decoding="async" />
         </template>
       </div>
     </div>
@@ -162,7 +197,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
                 <div class="flex items-center gap-2"><span class="grid size-8 shrink-0 place-items-center rounded-[9px] bg-primary-400 text-ink-900"><Camera class="size-4" :stroke-width="1.75" aria-hidden="true" /></span><span class="min-w-0"><span class="block text-[11px] font-semibold leading-4 text-ink-900">{{ L.how.phone.title }}</span><span class="block truncate text-[9px] leading-3 text-ink-500">{{ L.how.phone.sub }}</span></span></div>
               </div>
               <div class="mt-2 grid grid-cols-3 gap-1">
-                <img v-for="id in ['g18', 'g11', 'g20', 'g08', 'g03', 'g15']" :key="id" :src="`/landing/${id}.jpg`" alt="" class="aspect-square w-full rounded-[6px] object-cover" loading="lazy" />
+                <img v-for="id in ['g18', 'g11', 'g20', 'g08', 'g03', 'g15']" :key="id" :src="`/landing/s/${id}.webp`" alt="" class="aspect-square w-full rounded-[6px] object-cover" loading="lazy" />
               </div>
               <div class="card mt-2 p-2.5">
                 <p class="text-[10px] font-medium leading-4 text-ink-900">{{ L.how.phone.uploading }}</p>
@@ -224,7 +259,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
               <Card class="xl:col-span-2" :title="L.host.recent" :icon="Images" :count="318" :sub="L.host.recentSub" flush>
                 <div class="grid grid-cols-4 gap-px bg-line-100 sm:grid-cols-6">
                   <div v-for="id in ['g13', 'g20', 'g17', 'g11', 'g21', 'g18', 'g09', 'g03', 'g14', 'g15', 'g10', 'g01']" :key="id" class="relative aspect-square overflow-hidden bg-surface-0">
-                    <img :src="`/landing/${id}.jpg`" alt="" class="size-full object-cover" loading="lazy" />
+                    <img :src="`/landing/s/${id}.webp`" alt="" class="size-full object-cover" loading="lazy" />
                   </div>
                 </div>
               </Card>
@@ -293,7 +328,7 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
           <ul class="mt-5 flex-1 space-y-2.5 text-[14px] leading-5" :class="p.hot ? 'text-white/85' : 'text-ink-600'">
             <li v-for="r in p.rows" :key="r" class="flex items-start gap-2"><Check class="mt-0.5 size-4 shrink-0" :class="p.hot ? 'text-primary-400' : 'text-success-600'" :stroke-width="2" aria-hidden="true" />{{ r }}</li>
           </ul>
-          <NuxtLink to="/app?new=1" class="mt-6"><Btn :variant="p.hot ? 'accent' : 'secondary'" block>{{ p.cta }}</Btn></NuxtLink>
+          <Btn to="/app?new=1" :variant="p.hot ? 'accent' : 'secondary'" block class="mt-6">{{ p.cta }}</Btn>
         </div>
       </div>
       <p data-arrive class="mt-5 text-[13px] leading-[18px] text-ink-500">{{ L.pricing.note }}</p>
@@ -325,14 +360,14 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
       <div data-arrive class="relative overflow-hidden rounded-lg bg-ink-900 px-6 py-14 text-center text-white sm:px-12 lg:py-20">
         <div class="pointer-events-none absolute inset-0 opacity-20" aria-hidden="true">
           <div class="grid grid-cols-6 gap-1 p-1 sm:grid-cols-9">
-            <img v-for="id in [...ORDER, ...ORDER.slice(0, 10)]" :key="id + 'cta'" :src="`/landing/${id}.jpg`" alt="" class="aspect-square w-full rounded-[6px] object-cover" loading="lazy" />
+            <img v-for="id in [...ORDER, ...ORDER.slice(0, 10)]" :key="id + 'cta'" :src="`/landing/s/${id}.webp`" alt="" class="aspect-square w-full rounded-[6px] object-cover" loading="lazy" />
           </div>
         </div>
         <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/85 to-ink-900/55" aria-hidden="true" />
         <div class="relative">
           <h2 class="text-[32px] font-semibold leading-[1.08] tracking-[-0.03em] text-white sm:text-[44px]">{{ L.cta.title }}</h2>
           <p class="mx-auto mt-4 max-w-[480px] text-[16px] leading-[1.5] text-white/70">{{ L.cta.body }}</p>
-          <NuxtLink to="/app?new=1" class="mt-8 inline-block"><Btn variant="accent" size="lg"><Sparkles class="size-[18px]" :stroke-width="1.75" aria-hidden="true" />{{ L.cta.button }}</Btn></NuxtLink>
+          <Btn to="/app?new=1" variant="accent" size="lg" class="mt-8 inline-block"><Sparkles class="size-[18px]" :stroke-width="1.75" aria-hidden="true" />{{ L.cta.button }}</Btn>
         </div>
       </div>
     </section>
@@ -341,8 +376,8 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
       <div class="flex flex-col items-start justify-between gap-6 border-t border-line-200 pt-8 sm:flex-row sm:items-center">
         <div><Logo :size="24" /><p class="mt-2 text-[13px] leading-[18px] text-ink-500">{{ L.footer.tagline }}</p></div>
         <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-ink-500">
-          <a href="/privasi" class="hover:text-ink-900">{{ L.footer.links.privacy }}</a>
-          <a href="/terma" class="hover:text-ink-900">{{ L.footer.links.terms }}</a>
+          <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="hover:text-ink-900">{{ L.footer.links.privacy }}</NuxtLink>
+          <NuxtLink :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="hover:text-ink-900">{{ L.footer.links.terms }}</NuxtLink>
           <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="hover:text-ink-900">{{ L.footer.links.contact }}</a>
           <span class="text-ink-400">{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-medium text-ink-600 hover:text-ink-900">FF Dev Studio</a> · © {{ new Date().getFullYear() }}</span>
         </div>

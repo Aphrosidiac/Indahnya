@@ -16,7 +16,7 @@ const link = computed(() => ev.value ? `${shortSite()}/${ev.value.slug}${to === 
 const ms = computed(() => (ev.value?.settings.locale ?? 'ms') === 'ms');
 const headline = computed(() => ms.value ? 'Snap & share gambar majlis kami' : 'Snap & share our photos');
 const line = computed(() => ms.value ? 'Scan QR ni, upload gambar & video korang. Tak payah download apa-apa.' : 'Scan this QR to upload your photos & videos. Nothing to install.');
-const hashtag = computed(() => ev.value ? `#${(ev.value.names.a + (ev.value.names.b ?? '')).replace(/[^a-z0-9]/gi, '')}` : '');
+const hashtag = computed(() => ev.value ? `#${(ev.value.names.a + (ev.value.names.b ?? '')).normalize('NFKD').replace(/[^a-z0-9]/gi, '')}` : '');
 const doPrint = () => window.print();
 onMounted(() => { document.title = `Indahnya QR — ${ev.value?.title ?? ''}`; });
 </script>
@@ -25,7 +25,7 @@ onMounted(() => { document.title = `Indahnya QR — ${ev.value?.title ?? ''}`; }
   <div class="sheet" :class="tpl">
     <div v-for="n in (tpl === 'tent' ? 2 : 1)" :key="n" class="panel">
       <div class="names">{{ ev?.names.a }}<span v-if="ev?.names.b"> &amp; {{ ev.names.b }}</span></div>
-      <div v-if="ev?.date" class="date">{{ fmtDate(ev.date) }}</div>
+      <div v-if="ev?.date" class="date">{{ fmtDate(ev.date, undefined, ev.settings.locale) }}</div>
       <div class="headline">{{ headline }}</div>
       <img :src="svg" alt="QR" class="qr" />
       <div class="link">{{ link }}</div>

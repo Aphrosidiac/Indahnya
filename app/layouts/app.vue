@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEvents } from '~/stores/events';
 /**
  * The dashboard. Auth is restored by the `auth` middleware before any page
  * here renders; the event list loads once for the picker.

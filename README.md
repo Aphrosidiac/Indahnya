@@ -18,9 +18,12 @@ sheets, and a one-time RM price. Built by [FF Dev Studio](https://ffdev.studio).
   for the host dashboard
 - **Postgres + Drizzle** — schema in `server/db/schema.ts`, migrations in
   `server/db/migrations`
-- **S3-compatible object storage** — Cloudflare R2 in production, Garage or
-  MinIO locally; the browser PUTs to presigned URLs, the app never touches
-  the bytes
+- **S3-compatible object storage, two buckets** — Cloudflare R2 in
+  production, Garage locally. The *public* bucket holds only the served
+  copies of visible media and sits behind `media.indahnya.my`; the *private*
+  bucket holds originals (full EXIF, GPS included) and hidden media and has
+  no public access at all. The browser PUTs originals to presigned URLs
+  (type and exact size signed); the app never touches the bytes
 - **In-process worker** (`server/plugins/worker.ts`) — sharp, heic-convert,
   ffmpeg; claims jobs with `SKIP LOCKED`
 - **Stripe** (MY) — one-time Checkout per event, webhook + reconcile
@@ -34,16 +37,42 @@ S3-compatible store on `:9000` (Garage: `brew install garage`, see
 `PLAN.md` → Status for the config).
 
 ```bash
-cp .env.example .env        # fill DATABASE_URL and the S3_* keys
+cp .env.example .env        # fill DATABASE_URL and the NUXT_S3_* keys
 createdb indahnya
 npm install
 npm run db:migrate
-node scripts/dev-bucket.mjs # sets CORS on the dev bucket
+node scripts/dev-bucket.mjs # sets CORS on both dev buckets
+node --env-file=.env --import tsx scripts/seed-demo.ts   # the landing's sample gallery at /aina-hakim
 npm run dev                 # http://localhost:3180
+npm test                    # unit tests: clocks, prices, redirects, EXIF time, slugs
 ```
 
-Sign-in is by magic link. Without `SMTP_URL` the link is printed to the
-server log instead of mailed — copy it from there.
+Garage needs both buckets and one key with read/write on each:
+`garage bucket create indahnya-media`, `garage bucket create indahnya-private`,
+`garage bucket allow --read --write --owner <bucket> --key <key>`.
+
+Sign-in is by magic link. In dev, without `NUXT_SMTP_URL`, the link is printed to
+the server log instead of mailed — copy it from there. In production a
+missing `NUXT_SMTP_URL` is an error: sign-in links never go to a log.
+
+## Production checklist
+
+- **R2**: two buckets. Custom domain (`media.indahnya.my`) on the public one
+  ONLY. CORS on the private bucket: `PUT` from `https://indahnya.my` with
+  headers `content-type, content-length`. The dev `/media` route does not
+  exist in a production build.
+- **Env**: everything in `.env.example`, set in the environment the server
+  STARTS with (PM2 `env`/`env_file`). Runtime config is only read from
+  `NUXT_*` names at startup — a bare `STRIPE_SECRET_KEY` is ignored, and
+  nothing is taken from the build machine. Needs `NUXT_SMTP_URL`, the Stripe
+  keys and webhook secret (`checkout.session.completed`,
+  `checkout.session.async_payment_succeeded`, `…async_payment_failed`,
+  `…expired` → `/api/stripe/webhook`).
+- **nginx**: HSTS, `client_max_body_size` small (uploads never pass through
+  the app), `X-Forwarded-For` set (rate limits read it).
+- **Demo**: run `scripts/seed-demo.ts` once so `/aina-hakim` exists.
+- One PM2 process runs the web app *and* the worker; set `WORKER=0` on any
+  extra web-only instance.
 
 ## Layout
 
@@ -53,7 +82,8 @@ app/
   components/    AppShell (host dashboard), GuestShell (guest pages)
   pages/
     index.vue    landing (BM default, ?lang=en)
-    masuk.vue    sign-in
+    privasi.vue  privacy notice, terma.vue terms (BM + EN)
+    masuk.vue    sign-in (also spends the emailed token)
     app/         host dashboard: /app, /app/[id]/{gambar,slideshow,qr,tetapan,…}
     [slug]/      guest hub and gallery
     tv/          the venue slideshow
@@ -61,9 +91,13 @@ app/
 server/
   api/           route handlers (auth, events, g/[slug] guest API, tv, stripe)
   worker/        media processing, purge/retention sweep, expiry mails
-  utils/         storage (S3), sessions, guests, plans, slugs
+  utils/         storage (two buckets), sessions, guests, plans + clocks,
+                 validation, rate limits, slugs
+shared/utils/    code both sides use: safeNext (redirects), built modules
+tests/           vitest unit tests
   db/            Drizzle schema + migrations
-public/landing/  landing photos (Unsplash-licensed stand-ins)
+public/landing/  landing photos (Unsplash-licensed stand-ins); s/ = WebP copies
+scripts/         dev-bucket (CORS), seed-demo, build-assets (icons, og.jpg)
 ```
 
 ## Design

@@ -7,23 +7,47 @@
  *               The one obvious next step on a page, never two of them.
  *   ghost     — text only, for a row's quiet actions.
  * Danger keeps its two forms from RackForge; nothing in the reference destroys.
+ *
+ * Indahnya addition: `to` (an in-app route) or `href` (anything else) renders
+ * the same skin as a link, so a navigating button is ONE focusable element —
+ * never a <button> nested in an <a>, which is invalid and double-tabs.
  */
-withDefaults(defineProps<{
+import { NuxtLink } from '#components';
+
+const props = withDefaults(defineProps<{
   variant?: 'primary' | 'secondary' | 'accent' | 'ghost' | 'danger' | 'danger-ghost';
   size?: 'xs' | 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
   block?: boolean;
   type?: 'button' | 'submit';
+  to?: string;
+  href?: string;
+  target?: string;
+  download?: boolean | string;
 }>(), { variant: 'secondary', size: 'md', type: 'button' });
+
+const off = computed(() => props.disabled || props.loading);
+const attrs = computed(() => {
+  if (props.to) return { to: off.value ? undefined : props.to, 'aria-disabled': off.value || undefined };
+  if (props.href) {
+    return {
+      href: off.value ? undefined : props.href, target: props.target, 'aria-disabled': off.value || undefined,
+      rel: props.target === '_blank' ? 'noopener' : undefined,
+      download: props.download === true ? '' : props.download || undefined,
+    };
+  }
+  return { type: props.type, disabled: off.value };
+});
 </script>
 
 <template>
-  <button
-    :type="type" :disabled="disabled || loading" :aria-busy="loading || undefined"
+  <component :is="to ? NuxtLink : href ? 'a' : 'button'"
+    v-bind="attrs" :aria-busy="loading || undefined"
     class="inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap
            font-medium transition-[background-color,border-color,color,transform,opacity] duration-[120ms] ease-[cubic-bezier(.2,.8,.2,1)]
-           active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+           active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100
+           aria-disabled:pointer-events-none aria-disabled:opacity-40"
     :class="[
       block && 'w-full',
       size === 'xs' ? 'h-[28px] rounded-[8px] px-2.5 text-[12px]'
@@ -48,5 +72,5 @@ withDefaults(defineProps<{
       <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
     </svg>
     <slot />
-  </button>
+  </component>
 </template>

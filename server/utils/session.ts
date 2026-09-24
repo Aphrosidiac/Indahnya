@@ -39,12 +39,15 @@ export async function requireUser(event: H3Event) {
   return u;
 }
 
-/** A host may act on an event they own or co-host. Returns the event row. */
+/**
+ * A host may act on an event they own or co-host. Returns the event row.
+ * A deleted majlis is gone for its hosts too: its id answers 404.
+ */
 export async function requireEventAccess(event: H3Event, eventId: string) {
   const u = await requireUser(event);
   const db = useDb();
   const [ev] = await db.select().from(events).where(eq(events.id, eventId));
-  if (!ev) throw createError({ statusCode: 404, statusMessage: 'Majlis tak jumpa' });
+  if (!ev || ev.deletedAt) throw createError({ statusCode: 404, statusMessage: 'Majlis tak jumpa' });
   if (ev.ownerId !== u.id) {
     const [m] = await db.select().from(eventMembers).where(and(eq(eventMembers.eventId, eventId), eq(eventMembers.userId, u.id)));
     if (!m) throw createError({ statusCode: 403, statusMessage: 'Bukan majlis anda' });

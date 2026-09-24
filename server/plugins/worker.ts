@@ -1,5 +1,5 @@
-import { and, eq, isNull, lte, sql, or, lt } from 'drizzle-orm';
-import { useDb, jobs } from '../db';
+import { and, eq, sql } from 'drizzle-orm';
+import { useDb, jobs, media } from '../db';
 import { processMedia } from '../worker/process-media';
 import { purgeEvent, sweep } from '../worker/purge';
 import { notifyExpiring } from '../worker/notify';
@@ -9,11 +9,12 @@ import { notifyExpiring } from '../worker/notify';
  * claimed with SKIP LOCKED so two instances never take the same one. Set
  * WORKER=0 on a web-only instance.
  */
-export default defineNitroPlugin(() => {
-  if (process.env.WORKER === '0' || (import.meta.prerender)) return;
+export default defineNitroPlugin((nitro) => {
+  if (process.env.WORKER === '0' || import.meta.prerender) return;
   const db = useDb();
   let busy = 0;
   const MAX = 2;
+  const MAX_ATTEMPTS = 3;
 
   async function claim() {
     return db.transaction(async (tx) => {
@@ -40,15 +41,24 @@ export default defineNitroPlugin(() => {
         } catch (e) {
           const msg = (e as Error).message?.slice(0, 500);
           console.error(`[worker] ${j.kind} ${j.ref}:`, msg);
-          const giveUp = j.attempts + 1 >= 3;
+          const giveUp = j.attempts + 1 >= MAX_ATTEMPTS;
           await db.update(jobs).set({ lockedAt: null, error: msg, doneAt: giveUp ? new Date() : null, runAfter: new Date(Date.now() + 60_000 * (j.attempts + 1)) }).where(eq(jobs.id, j.id));
+          // a photo whose job is abandoned must not sit "processing" forever, holding a slot of the cap
+          if (giveUp && j.kind === 'process_media') {
+            await db.update(media).set({ status: 'failed', error: 'Gagal proses' }).where(and(eq(media.id, j.ref), eq(media.status, 'uploaded')));
+          }
         } finally { busy--; setTimeout(tick, 0); }
       })();
     }
   }
 
-  setInterval(() => { void tick(); }, 2000);
-  setInterval(() => { sweep().catch(e => console.error('[sweep]', e)); notifyExpiring().catch(e => console.error('[notify]', e)); }, 3_600_000);
-  setTimeout(() => { sweep().catch(e => console.error('[sweep]', e)); }, 15_000);
-  void or; void lt; void lte; void and; void isNull;
+  const timers = [
+    setInterval(() => { void tick(); }, 2000),
+    setInterval(() => { sweep().catch(e => console.error('[sweep]', e)); notifyExpiring().catch(e => console.error('[notify]', e)); }, 3_600_000),
+  ];
+  const first = setTimeout(() => {
+    sweep().catch(e => console.error('[sweep]', e));
+    notifyExpiring().catch(e => console.error('[notify]', e));
+  }, 15_000);
+  nitro.hooks.hook('close', () => { timers.forEach(clearInterval); clearTimeout(first); });
 });

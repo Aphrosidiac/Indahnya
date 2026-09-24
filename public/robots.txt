@@ -1,2 +1,8 @@
-User-Agent: *
-Disallow:
+User-agent: *
+Disallow: /app
+Disallow: /api/
+Disallow: /tv/
+Disallow: /masuk
+Allow: /
+
+Sitemap: https://indahnya.my/sitemap.xml

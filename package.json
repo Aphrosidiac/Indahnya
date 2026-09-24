@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "nuxt dev --port 3180",
     "build": "nuxt build",
@@ -13,7 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "worker": "tsx server/worker/run.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3",
@@ -24,8 +26,7 @@
     "exifr": "^7",
     "heic-convert": "^2",
     "lucide-vue-next": "^1.0.0",
-    "nanoid": "^5",
-    "nodemailer": "^7",
+    "nodemailer": "^10.0.10",
     "nuxt": "^4.5.2",
     "pg": "^8",
     "pinia": "^4",
@@ -41,13 +42,14 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/archiver": "^6",
     "@types/heic-convert": "^2",
-    "@types/nodemailer": "^7",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8",
     "@types/qrcode": "^1.5",
     "drizzle-kit": "^0.31",
     "tailwindcss": "^4.3.3",
     "tsx": "^4",
     "typescript": "~5.9",
+    "vitest": "^3.2.7",
     "vue-tsc": "^3"
   }
 }

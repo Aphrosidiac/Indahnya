@@ -1,7 +1,7 @@
 export interface GuestEvent {
   id: string; slug: string; type: string; title: string; names: { a: string; b?: string; short?: string };
   date: string | null; venue: { name?: string; address?: string; waze?: string; gmaps?: string };
-  plan: string; badge: boolean; demo: boolean;
+  plan: string; badge: boolean; demo: boolean; kadTemplate: string | null;
   settings: { locale: 'ms' | 'en'; modules: { gambar: boolean; ucapan: boolean; rsvp: boolean; tempat: boolean; kad: boolean }; approvalMode: boolean; guestDeleteHours: number };
   uploadsOpen: boolean; uploadWindowEndsAt: string; storageEndsAt: string; purged: boolean;
 }

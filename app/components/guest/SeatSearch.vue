@@ -2,15 +2,16 @@
 import { Search, Armchair } from 'lucide-vue-next';
 
 /** "Cari nama, dapat nombor meja" — for the guest at the door with a phone and a queue behind them. */
-const props = defineProps<{ slug: string; locale: 'ms' | 'en' }>();
+/** `tryNames`: on the sample, names that are on its list, as one-tap chips. */
+const props = defineProps<{ slug: string; locale: 'ms' | 'en'; tryNames?: string[] }>();
 const q = ref('');
 const items = ref<{ name: string; table: string }[] | null>(null);
 let seq = 0;
 const busy = ref(false);
 const en = computed(() => props.locale === 'en');
 const L = computed(() => en.value
-  ? { label: 'Type your name', ph: 'At least 3 letters', none: 'Not found. Try another spelling, or ask the host at the entrance.', table: 'Table', people: 'people' }
-  : { label: 'Taip nama korang', ph: 'Sekurang-kurangnya 3 huruf', none: 'Tak jumpa. Cuba ejaan lain, atau tanya tuan majlis kat pintu masuk.', table: 'Meja', people: 'orang' });
+  ? { try: 'Try:', label: 'Type your name', ph: 'At least 3 letters', none: 'Not found. Try another spelling, or ask the host at the entrance.', table: 'Table', people: 'people' }
+  : { try: 'Cuba:', label: 'Taip nama korang', ph: 'Sekurang-kurangnya 3 huruf', none: 'Tak jumpa. Cuba ejaan lain, atau tanya tuan majlis kat pintu masuk.', table: 'Meja', people: 'orang' });
 let t: ReturnType<typeof setTimeout> | undefined;
 watch(q, (v) => {
   clearTimeout(t);
@@ -32,6 +33,9 @@ watch(q, (v) => {
       <Search class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" :style="{ color: 'var(--f-muted)' }" :stroke-width="1.75" aria-hidden="true" />
       <input :id="`seat-${slug}`" v-model="q" class="gf-input !pl-10" type="search" autocomplete="off" :placeholder="L.ph" />
     </div>
+    <p v-if="tryNames?.length" class="mt-2.5 flex flex-wrap items-center gap-1.5 text-[13px]" :style="{ color: 'var(--f-muted)' }">
+      {{ L.try }}<button v-for="n in tryNames" :key="n" type="button" class="gf-chip" @click="q = n">{{ n }}</button>
+    </p>
     <div class="mt-4" aria-live="polite">
       <p v-if="items && !items.length && !busy" class="text-[14px] leading-5" :style="{ color: 'var(--f-muted)' }">{{ L.none }}</p>
       <ul v-else-if="items" class="space-y-2">
@@ -44,3 +48,8 @@ watch(q, (v) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.gf-chip { height: 28px; padding: 0 11px; border-radius: 999px; font-weight: 600; color: var(--f-ink); background: color-mix(in srgb, var(--f-ink) 7%, transparent); transition: background-color .15s; }
+.gf-chip:hover { background: color-mix(in srgb, var(--f-ink) 12%, transparent); }
+</style>

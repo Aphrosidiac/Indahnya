@@ -3,6 +3,7 @@ import { Images, MapPin, Navigation, CalendarDays, ArrowRight } from 'lucide-vue
 import { Btn } from '~/ui';
 import type { KadView as KadViewData } from '~~/shared/utils/kad-view';
 import KadView from '~/components/kad/KadView.vue';
+import DemoGuide from '~/components/guest/DemoGuide.vue';
 
 /**
  * The majlis link. With the kad module on (the default) it IS the e-kad;
@@ -23,7 +24,10 @@ const toGambar = computed(() => `/${ev.value.slug}/gambar`);
 </script>
 
 <template>
-  <KadView v-if="kadOn" :view="k!.kad" :ready="ready" :guest-name="me?.name" />
+  <template v-if="kadOn">
+    <DemoGuide v-if="ev.demo" :ev="ev" />
+    <KadView :view="k!.kad" :ready="ready" :guest-name="me?.name" />
+  </template>
 
   <GuestShell v-else :ev="ev" :title="displayName" :t="t">
     <div class="reveal mx-auto max-w-[520px] pt-6">

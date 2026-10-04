@@ -11,7 +11,7 @@ setMeta({ title: `${t('tabs.ucapan')} · ${displayName.value}` });
   <GuestShell :ev="ev" :title="displayName" :t="t">
     <div class="reveal mx-auto max-w-[560px] pt-4">
       <h1 class="text-[22px] font-semibold leading-7 tracking-[-0.02em] text-ink-900">{{ t('tabs.ucapan') }}</h1>
-      <p class="mt-1 text-[14px] leading-5 text-ink-500">{{ lang === 'en' ? 'Leave a wish — write it, or say it.' : 'Tinggalkan ucapan — tulis, atau rakam suara.' }}</p>
+      <p class="mt-1 text-[14px] leading-5 text-ink-500">{{ lang === 'en' ? 'Leave a wish. Write it, or say it.' : 'Tinggalkan ucapan, tulis atau rakam suara.' }}</p>
       <div class="mt-4"><UcapanBox :slug="ev.slug" :locale="lang" :show-form="!ev.demo" :guest-name="me?.name" /></div>
     </div>
   </GuestShell>

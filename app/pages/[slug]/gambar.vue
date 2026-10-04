@@ -146,11 +146,8 @@ const total = (m: Item) => Object.values(m.reactions).reduce((a, b) => a + b, 0)
         <Tabs v-model="filter" :items="[{ key: 'all', label: t('gallery.all') }, { key: 'mine', label: t('gallery.mine') }]" />
       </div>
 
-      <Alert v-if="ev.demo" tone="success" :title="t('demo.title')" class="mt-3">
-        {{ t('demo.body') }}
-        <span class="mt-2.5 block"><Btn to="/app?new=1" variant="primary" size="sm">{{ t('demo.cta') }}</Btn></span>
-      </Alert>
-      <Alert v-else-if="!ev.uploadsOpen" tone="muted" :title="t('gallery.closed')" class="mt-3">{{ t('gallery.closed.sub') }}</Alert>
+      <!-- the sample says what it is in its guide bar (DemoGuide), not here -->
+      <Alert v-if="!ev.demo && !ev.uploadsOpen" tone="muted" :title="t('gallery.closed')" class="mt-3">{{ t('gallery.closed.sub') }}</Alert>
 
       <!-- the one obvious thing to do: green, ink text, once on the page -->
       <button v-if="ev.uploadsOpen" type="button"

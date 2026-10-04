@@ -299,7 +299,7 @@ function tool(k: string) {
       <section v-if="view.tempat" data-arrive class="kad-section kad-center">
         <span class="kad-icon-disc"><Armchair class="size-5" :stroke-width="1.6" aria-hidden="true" /></span>
         <h2 class="kad-h2 mt-3">{{ L.seatTitle }}</h2>
-        <div class="mt-5 text-left"><SeatSearch v-if="mode === 'page'" :slug="view.slug" :locale="view.locale" /><p v-else class="kad-small">{{ L.preview }}</p></div>
+        <div class="mt-5 text-left"><SeatSearch v-if="mode === 'page'" :slug="view.slug" :locale="view.locale" :try-names="view.demo ? ['Ros', 'Lim', 'Priya', 'Faiz'] : undefined" /><p v-else class="kad-small">{{ L.preview }}</p></div>
       </section>
 
       <!-- DOA -->
@@ -405,6 +405,7 @@ function tool(k: string) {
 
 <style scoped>
 .kad { background: var(--k-bg); color: var(--k-ink); font-family: var(--k-body); min-height: 100vh; min-height: 100dvh; position: relative; -webkit-font-smoothing: antialiased; }
+.kad-page .kad-column { padding-top: var(--demo-h, 0px); }
 .kad-column { max-width: 480px; margin: 0 auto; padding-bottom: calc(88px + env(safe-area-inset-bottom)); background: var(--k-bg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--k-ink) 6%, transparent); }
 @media (min-width: 520px) { .kad-page { background: color-mix(in srgb, var(--k-band) 70%, var(--k-bg)); } }
 
@@ -418,7 +419,7 @@ function tool(k: string) {
 .kad-minimal .kad-names { font-weight: 400; letter-spacing: -.01em; }
 
 /* cover */
-.kad-cover { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; background: var(--k-bg); overflow: hidden; text-align: center; }
+.kad-cover { position: fixed; inset: var(--demo-h, 0px) 0 0; z-index: 70; display: grid; place-items: center; background: var(--k-bg); overflow: hidden; text-align: center; }
 .kad-cover-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .22; }
 .kad-cover-inner { position: relative; padding: 32px 28px; max-width: 420px; }
 .kad-seal { width: 88px; height: 88px; margin: 28px auto 20px; border-radius: 999px; display: grid; place-items: center; background: var(--k-accent); color: var(--k-on-accent); font-family: var(--k-heading); font-size: 26px; letter-spacing: .08em; box-shadow: 0 0 0 6px color-mix(in srgb, var(--k-accent) 18%, transparent); }

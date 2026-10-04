@@ -22,8 +22,8 @@ const sent = ref<boolean | null>(null);
 
 const en = computed(() => props.locale === 'en');
 const L = computed(() => en.value
-  ? { title: 'Will you be there?', deadline: 'Please reply by', closed: 'RSVP closed', closedSub: 'Replies are no longer being taken. Contact the host if your plans change.', demo: 'This is a sample card', demoSub: 'On your own card, guests reply right here — and you see every answer in your dashboard.', name: 'Your name', namePh: 'e.g. Aina & family', phone: 'Phone (optional)', phoneHint: 'So you can change your reply from another phone.', yes: 'Attending', no: 'Can\'t make it', pax: 'How many people, including you?', side: 'You are from', lelaki: 'Groom\'s side', perempuan: 'Bride\'s side', rakan: 'Friends', meal: 'Meal', note: 'Note for the host (optional)', ucapan: 'A wish for the couple (optional)', send: 'Send RSVP', update: 'Update RSVP', thanksYes: 'Thank you! We look forward to seeing you.', thanksNo: 'Thank you for letting us know. We will miss you.', change: 'Change my reply', yours: 'Your reply', people: 'people', pick: 'Choose attending or not first', fail: 'Could not send, please try again' }
-  : { title: 'Boleh hadir?', deadline: 'Sila RSVP sebelum', closed: 'RSVP dah ditutup', closedSub: 'Jawapan tak diterima lagi. Hubungi tuan majlis kalau ada perubahan.', demo: 'Ini kad contoh', demoSub: 'Dalam kad korang sendiri, tetamu RSVP terus kat sini — dan korang nampak semua jawapan dalam dashboard.', name: 'Nama', namePh: 'cth. Aina sekeluarga', phone: 'No. telefon (pilihan)', phoneHint: 'Supaya boleh ubah jawapan dari phone lain.', yes: 'Hadir', no: 'Tak dapat hadir', pax: 'Berapa orang, termasuk korang?', side: 'Pihak', lelaki: 'Pihak lelaki', perempuan: 'Pihak perempuan', rakan: 'Kawan-kawan', meal: 'Makanan', note: 'Nota untuk tuan majlis (pilihan)', ucapan: 'Ucapan untuk pengantin (pilihan)', send: 'Hantar RSVP', update: 'Kemas kini RSVP', thanksYes: 'Terima kasih! Kami tunggu kedatangan korang.', thanksNo: 'Terima kasih sebab maklumkan. Doakan kami ya.', change: 'Ubah jawapan', yours: 'Jawapan korang', people: 'orang', pick: 'Pilih hadir atau tak dulu', fail: 'Tak dapat hantar, cuba lagi' });
+  ? { title: 'Will you be there?', deadline: 'Please reply by', closed: 'RSVP closed', closedSub: 'Replies are no longer being taken. Contact the host if your plans change.', demo: 'This is a sample card', demoSub: 'This is a sample, so nothing was saved. On your own card, every reply lands in your dashboard.', name: 'Your name', namePh: 'e.g. Aina & family', phone: 'Phone (optional)', phoneHint: 'So you can change your reply from another phone.', yes: 'Attending', no: 'Can\'t make it', pax: 'How many people, including you?', side: 'You are from', lelaki: 'Groom\'s side', perempuan: 'Bride\'s side', rakan: 'Friends', meal: 'Meal', note: 'Note for the host (optional)', ucapan: 'A wish for the couple (optional)', send: 'Send RSVP', update: 'Update RSVP', thanksYes: 'Thank you! We look forward to seeing you.', thanksNo: 'Thank you for letting us know. We will miss you.', change: 'Change my reply', yours: 'Your reply', people: 'people', pick: 'Choose attending or not first', fail: 'Could not send, please try again' }
+  : { title: 'Boleh hadir?', deadline: 'Sila RSVP sebelum', closed: 'RSVP dah ditutup', closedSub: 'Jawapan tak diterima lagi. Hubungi tuan majlis kalau ada perubahan.', demo: 'Ini kad contoh', demoSub: 'Ni contoh je, jawapan tak disimpan. Dalam kad korang sendiri, setiap jawapan terus masuk dashboard korang.', name: 'Nama', namePh: 'cth. Aina sekeluarga', phone: 'No. telefon (pilihan)', phoneHint: 'Supaya boleh ubah jawapan dari phone lain.', yes: 'Hadir', no: 'Tak dapat hadir', pax: 'Berapa orang, termasuk korang?', side: 'Pihak', lelaki: 'Pihak lelaki', perempuan: 'Pihak perempuan', rakan: 'Kawan-kawan', meal: 'Makanan', note: 'Nota untuk tuan majlis (pilihan)', ucapan: 'Ucapan untuk pengantin (pilihan)', send: 'Hantar RSVP', update: 'Kemas kini RSVP', thanksYes: 'Terima kasih! Kami tunggu kedatangan korang.', thanksNo: 'Terima kasih sebab maklumkan. Doakan kami ya.', change: 'Ubah jawapan', yours: 'Jawapan korang', people: 'orang', pick: 'Pilih hadir atau tak dulu', fail: 'Tak dapat hantar, cuba lagi' });
 
 async function load() {
   try {
@@ -36,11 +36,14 @@ async function load() {
   } catch (e) { loadError.value = apiError(e, L.value.fail); }
 }
 onMounted(load);
+const demoSent = ref(false);
 
 async function submit() {
   error.value = '';
   if (!f.name.trim()) { error.value = L.value.name; return; }
   if (f.attending === null) { error.value = L.value.pick; return; }
+  // the sample: the form is real to try, and nothing is sent
+  if (cfg.value?.demo) { sent.value = f.attending; editing.value = false; demoSent.value = true; return; }
   busy.value = true;
   try {
     await $fetch(`/api/g/${props.slug}/rsvp`, { method: 'POST', body: {
@@ -66,12 +69,13 @@ const deadlineText = computed(() => (cfg.value?.deadline ? kadDate(`${cfg.value.
       <span class="mx-auto grid size-11 place-items-center rounded-full" :style="{ background: 'var(--f-accent)', color: 'var(--f-on-accent)' }"><Check class="size-5" :stroke-width="2" aria-hidden="true" /></span>
       <p class="mt-3 text-[17px] font-semibold leading-6">{{ sent ? L.thanksYes : L.thanksNo }}</p>
       <p class="mt-1 text-[14px] leading-5" :style="{ color: 'var(--f-muted)' }">{{ L.yours }}: {{ f.name }} · {{ sent ? `${L.yes}, ${f.pax} ${L.people}` : L.no }}</p>
-      <button v-if="cfg.open" type="button" class="gf-btn gf-btn-ghost mt-4" @click="editing = true"><PencilLine class="size-4" :stroke-width="1.75" aria-hidden="true" />{{ L.change }}</button>
+      <p v-if="demoSent" class="mx-auto mt-3 max-w-[34ch] text-[13px] leading-5" :style="{ color: 'var(--f-muted)' }">{{ L.demoSub }}</p>
+      <button v-if="cfg.open || cfg.demo" type="button" class="gf-btn gf-btn-ghost mt-4" @click="editing = true"><PencilLine class="size-4" :stroke-width="1.75" aria-hidden="true" />{{ L.change }}</button>
     </div>
 
-    <div v-else-if="!cfg.open" class="gf-soft text-center" role="status">
-      <p class="text-[17px] font-semibold">{{ cfg.demo ? L.demo : L.closed }}</p>
-      <p class="mt-1 text-[14px] leading-5" :style="{ color: 'var(--f-muted)' }">{{ cfg.demo ? L.demoSub : L.closedSub }}</p>
+    <div v-else-if="!cfg.open && !cfg.demo" class="gf-soft text-center" role="status">
+      <p class="text-[17px] font-semibold">{{ L.closed }}</p>
+      <p class="mt-1 text-[14px] leading-5" :style="{ color: 'var(--f-muted)' }">{{ L.closedSub }}</p>
     </div>
 
     <form v-else class="space-y-5" novalidate @submit.prevent="submit">

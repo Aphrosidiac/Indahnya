@@ -16,7 +16,7 @@ import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
 import { eq, inArray } from 'drizzle-orm';
 import { S3Client, PutObjectCommand, DeleteObjectsCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import { useDb, users, events, eventMembers, guests, media, reactions, kad, messages } from '../server/db';
+import { useDb, users, events, eventMembers, guests, media, reactions, kad, messages, rsvps, tables } from '../server/db';
 import { KadFields, kadDefaults, kadPrefix } from '../server/utils/kad';
 import { renderKadOg } from '../server/utils/kad-og';
 import { composeKad } from '../shared/utils/kad-view';
@@ -58,7 +58,7 @@ const majlis = new Date('2026-08-15T00:00:00.000Z');
 const forever = new Date('2099-12-31T00:00:00.000Z');
 const settings = {
   locale: 'ms' as const, approvalMode: false, demo: true, guestDeleteHours: 0,
-  modules: { gambar: true, ucapan: true, rsvp: true, tempat: false, kad: true },
+  modules: { gambar: true, ucapan: true, rsvp: true, tempat: true, kad: true },
   slideshow: { intervalSec: 6, showNames: true, shuffle: false },
 };
 const fields = {
@@ -127,6 +127,26 @@ const WISHES = [
 for (const [i, body] of WISHES.entries()) {
   const at = new Date(start + (i + 3) * 40 * 60_000);
   await db.insert(messages).values({ id: ulid(at.getTime()), eventId: ev.id, guestId: guestIds[i + 1]!, name: NAMES[i + 1]!, kind: 'text', body, status: 'visible', createdAt: at });
+}
+
+// a seating plan, so "cari nombor meja" on the landing and the kad finds real people
+await db.delete(rsvps).where(eq(rsvps.eventId, ev.id));
+await db.delete(tables).where(eq(tables.eventId, ev.id));
+const SEATS: [string, string, number][] = [
+  ['Meja Pengantin', 'Ahmad Ismail', 2], ['Meja Pengantin', 'Rohana Musa', 1],
+  ['Meja 1', 'Makcik Ros', 3], ['Meja 1', 'Pak Long Hamid', 2], ['Meja 1', 'Mak Uda Zaiton', 2],
+  ['Meja 2', 'Kak Yati', 4], ['Meja 2', 'Abang Faiz', 2], ['Meja 2', 'Nadia & Irfan', 2],
+  ['Meja 3', 'Uncle Lim Wei Ming', 2], ['Meja 3', 'Auntie Mei Ling', 2], ['Meja 3', 'Dr. Priya Raman', 2],
+  ['Meja 4', 'Cikgu Rahman', 2], ['Meja 4', 'Syafiq Aziz', 1], ['Meja 4', 'Hana Sofea', 1],
+  ['Meja 5', 'Team Office Petronas', 6], ['Meja 6', 'Geng Sekolah SMK Seksyen 9', 8],
+];
+const tableIds = new Map<string, string>();
+for (const [i, t] of [...new Set(SEATS.map(s => s[0]))].entries()) {
+  const [row] = await db.insert(tables).values({ id: ulid(), eventId: ev.id, name: t, capacity: 10, sort: i }).returning();
+  tableIds.set(t, row!.id);
+}
+for (const [i, [t, name, pax]] of SEATS.entries()) {
+  await db.insert(rsvps).values({ id: ulid(start - (40 - i) * 86_400_000), eventId: ev.id, name, attending: true, pax, side: i % 3 === 0 ? 'lelaki' : i % 3 === 1 ? 'perempuan' : 'rakan', tableId: tableIds.get(t)!, source: 'guest', createdAt: new Date(start - (40 - i) * 86_400_000) });
 }
 
 // the e-kad: cover + four photos processed the way the kad editor does, then its WhatsApp preview.

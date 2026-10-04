@@ -27,6 +27,8 @@ export interface EventSettings {
   notified?: string[];
   /** The landing's sample gallery: readable by anyone, never accepts uploads. */
   demo?: boolean;
+  /** The landing's "cuba sekarang" sandbox: a visitor sees only their own uploads, and everything goes within the hour. */
+  sandbox?: boolean;
   /** RSVP form: closes after `deadline` (YYYY-MM-DD, end of that day MYT); pax per reply; optional meal choices; ask which side. */
   rsvp?: { deadline: string | null; maxPax: number; meals: string[]; sides: boolean };
 }

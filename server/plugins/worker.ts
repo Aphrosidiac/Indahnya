@@ -4,6 +4,7 @@ import { processMedia } from '../worker/process-media';
 import { purgeEvent, sweep } from '../worker/purge';
 import { notifyExpiring } from '../worker/notify';
 import { kadGc } from '../worker/kad-gc';
+import { sweepSandbox } from '../utils/sandbox';
 
 /**
  * The worker lives inside the app process: one VPS, one PM2 entry. Jobs are
@@ -56,6 +57,7 @@ export default defineNitroPlugin((nitro) => {
 
   const timers = [
     setInterval(() => { void tick(); }, 2000),
+    setInterval(() => { sweepSandbox().catch(e => console.error('[sandbox]', e)); }, 10 * 60_000),
     setInterval(() => { sweep().catch(e => console.error('[sweep]', e)); notifyExpiring().catch(e => console.error('[notify]', e)); }, 3_600_000),
   ];
   const first = setTimeout(() => {

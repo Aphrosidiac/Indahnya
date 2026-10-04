@@ -30,6 +30,7 @@ const Body = z.object({
 export default defineEventHandler(async (event) => {
   const ev = await eventBySlug(event);
   if (!ev.settings.modules.rsvp) throw createError({ statusCode: 404, statusMessage: 'RSVP ditutup' });
+  if (ev.settings.demo) throw createError({ statusCode: 403, statusMessage: 'Ini kad contoh' });
   if (!rsvpOpen(ev)) throw createError({ statusCode: 410, statusMessage: 'RSVP dah ditutup' });
   const b = await readBodyAs(event, Body);
   // per IP first: a client that drops its cookie is a new guest on every request

@@ -31,6 +31,14 @@ export async function currentGuest(event: H3Event, eventId: string) {
   return g && g.eventId === eventId ? g : null;
 }
 
+/** Make this browser the given guest of the event (the landing sandbox's phone, joining its desktop). */
+export function adoptGuest(event: H3Event, eventId: string, token: string) {
+  const jar = readJar(event);
+  delete jar[eventId];
+  jar[eventId] = token;
+  writeJar(event, jar);
+}
+
 function readJar(event: H3Event): Record<string, string> {
   try { return JSON.parse(getCookie(event, COOKIE) || '{}'); } catch { return {}; }
 }

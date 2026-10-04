@@ -9,6 +9,7 @@ import { newId } from '../../../../utils/ids';
 import { presignPut } from '../../../../utils/storage';
 import { readBodyAs } from '../../../../utils/validate';
 import { rateLimit, clientIp } from '../../../../utils/rate';
+import { SANDBOX } from '../../../../utils/sandbox';
 
 const File = z.object({ name: z.string().max(255), type: z.string().max(100), bytes: z.number().int().positive() });
 const Body = z.object({ files: z.array(File).min(1).max(MEDIA_LIMITS.filesPerBatch) });
@@ -33,7 +34,7 @@ function resolveType(name: string, declared: string) {
  * bytes. The answer carries the Content-Type to PUT with, which is signed.
  */
 export default defineEventHandler(async (event) => {
-  const ev = await eventBySlug(event);
+  const ev = await eventBySlug(event, { sandbox: true });
   if (ev.settings.demo) throw createError({ statusCode: 403, statusMessage: 'Ini galeri contoh' });
   if (!uploadsOpen(ev)) throw createError({ statusCode: 410, statusMessage: 'Tempoh muat naik dah tamat' });
   if (!ev.settings.modules.gambar) throw createError({ statusCode: 403, statusMessage: 'Galeri ditutup' });
@@ -51,11 +52,18 @@ export default defineEventHandler(async (event) => {
     const id = newId();
     return { name: f.name, id, kind, type, originalKey: `events/${ev.id.toLowerCase()}/orig/${id.toLowerCase()}.${PHOTO[type] ?? VIDEO[type]}` };
   });
+  if (ev.settings.sandbox) for (const p of plan) if (p.kind === 'video') { p.error = 'Cubaan ni untuk gambar sahaja'; delete p.id; }
   const wanted = plan.filter(p => p.id);
 
   if (wanted.length) {
     await useDb().transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${ev.id}))`);
+      if (ev.settings.sandbox) {
+        const [mine] = await tx.select({ n: count() }).from(media).where(and(eq(media.guestId, guest.id), sql`${media.status} not in ('deleted','failed')`));
+        if (Number(mine?.n ?? 0) + wanted.length > SANDBOX.perVisitor) {
+          throw createError({ statusCode: 402, statusMessage: `Cubaan ni ${SANDBOX.perVisitor} gambar je. Buat majlis sendiri untuk lagi.` });
+        }
+      }
       const cap = PLANS[ev.plan].uploadCap;
       if (cap !== null) {
         const used = await uploadsUsed(ev.id, tx);

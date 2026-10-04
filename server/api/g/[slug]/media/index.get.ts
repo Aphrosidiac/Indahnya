@@ -10,13 +10,14 @@ import { publicUrl } from '../../../../utils/storage';
  * whether this browser may still delete it.
  */
 export default defineEventHandler(async (event) => {
-  const ev = await eventBySlug(event);
+  const ev = await eventBySlug(event, { sandbox: true });
   const q = getQuery(event);
   const me = await currentGuest(event, ev.id);
   const limit = Math.min(Number(q.limit) || 40, 100);
   const where = [eq(media.eventId, ev.id), eq(media.status, 'ready')];
   if (typeof q.cursor === 'string' && q.cursor) where.push(lt(media.id, q.cursor));
-  if (q.mine === '1') { if (!me) return { items: [], next: null }; where.push(eq(media.guestId, me.id)); }
+  // the sandbox only ever shows a visitor their own photos
+  if (q.mine === '1' || ev.settings.sandbox) { if (!me) return { items: [], next: null }; where.push(eq(media.guestId, me.id)); }
   const db = useDb();
   const rows = await db.select({ m: media, guestName: guests.name }).from(media)
     .leftJoin(guests, eq(guests.id, media.guestId))

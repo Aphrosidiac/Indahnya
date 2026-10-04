@@ -13,7 +13,7 @@ import { enqueue } from '../../../../../utils/jobs';
  * reaped by the sweep, freeing the cap.
  */
 export default defineEventHandler(async (event) => {
-  const ev = await eventBySlug(event);
+  const ev = await eventBySlug(event, { sandbox: true });
   const id = getRouterParam(event, 'id')!;
   const me = await currentGuest(event, ev.id);
   const db = useDb();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Mic, Square, Play, RotateCcw, Search, Armchair, MessageSquareHeart, Heart } from 'lucide-vue-next';
+import { Mic, Square, Play, RotateCcw, Search, Armchair, MessageSquareHeart } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
 import { prefersReduced } from '~/composables/useLandingMotion';
 
@@ -32,8 +32,26 @@ let rsvpTimer: ReturnType<typeof setInterval> | undefined;
 const q = ref('');
 const result = ref<{ name: string; table: string }[] | null>(null);
 const searching = ref(false);
-const TABLES = ['Meja Pengantin', 'Meja 1', 'Meja 2', 'Meja 3', 'Meja 4', 'Meja 5', 'Meja 6'];
 const found = computed(() => result.value?.[0]?.table ?? null);
+/*
+ * The dewan, drawn as a guest would walk it: the pelamin at the top, the
+ * couple's table in front of it, round tables of eight down both sides of
+ * the bridal walk, the entrance at the bottom. A found table lights up and a
+ * path walks from the entrance to it, which is what the feature is for.
+ */
+const DOOR = { x: 170, y: 322 };
+const ROUND = [[80, 126], [260, 126], [80, 200], [260, 200], [80, 274], [260, 274]] as const;
+const CHAIRS = Array.from({ length: 8 }, (_, k) => [Math.cos((k + 0.5) * Math.PI / 4) * 26, Math.sin((k + 0.5) * Math.PI / 4) * 26] as const);
+const floor = ROUND.map(([x, y], i) => ({ name: `Meja ${i + 1}`, x, y }));
+const route = computed(() => {
+  const f = found.value;
+  if (!f) return '';
+  if (f === 'Meja Pengantin') return `M${DOOR.x} ${DOOR.y} V92`;
+  const t = floor.find(t => t.name === f);
+  if (!t) return '';
+  // up the walk to the table's row, then across to its nearest chair
+  return `M${DOOR.x} ${DOOR.y} V${t.y} H${t.x < DOOR.x ? t.x + 35 : t.x - 35}`;
+});
 let st: ReturnType<typeof setTimeout> | undefined;
 watch(q, (v) => {
   clearTimeout(st);
@@ -194,20 +212,39 @@ const sideColour = ['#27622a', '#7dd56f', '#cdeec5'];
         <div class="mt-6 grid grid-cols-1 items-center gap-6 sm:grid-cols-[1fr_auto]">
           <div aria-live="polite" class="min-h-[88px] transition-opacity" :class="isGhost && 'opacity-60'">
             <template v-if="result && result.length">
-              <p v-for="r in result.slice(0, 2)" :key="r.name" class="seat-hit">
+              <p v-for="r in result.slice(0, 1)" :key="r.name" class="seat-hit">
                 <span class="block text-[15px] text-[#55524f]">{{ r.name }}</span>
-                <span class="l-display block text-[44px] text-[#1a1a1a]">{{ tableLabel(r.table) }}</span>
+                <span class="l-display block text-[44px] text-[#1a1a1a]">{{ r.table === 'Meja Pengantin' ? L.guests.seat.head : tableLabel(r.table) }}</span>
               </p>
+              <p class="seat-hit mt-3 inline-flex items-center gap-2 text-[14px] text-[#27622a]"><span class="size-2 rounded-full bg-[#7dd56f]" />{{ L.guests.seat.walk }}</p>
             </template>
             <p v-else-if="result" class="text-[15px] text-[#55524f]">{{ L.guests.seat.none }}</p>
             <p v-else class="text-[15px] text-[#75716d]">{{ q.trim().length ? L.guests.seat.short : '' }}</p>
           </div>
-          <!-- the dewan floor, the found table lit -->
-          <div class="grid w-[240px] grid-cols-3 gap-3 justify-self-center sm:justify-self-end" aria-hidden="true">
-            <span v-for="t in TABLES" :key="t" class="table-dot grid aspect-square place-items-center rounded-full text-[11px] font-semibold" :class="[t === 'Meja Pengantin' ? 'col-span-3 mx-auto !aspect-[3/1] w-[70%] !rounded-full' : '', found === t ? 'is-found' : '']">
-              <Heart v-if="t === 'Meja Pengantin'" class="size-3.5" :stroke-width="2.5" /><template v-else>{{ t.replace('Meja ', '') }}</template>
-            </span>
-          </div>
+          <!-- the dewan floor, the found table lit and the walk to it drawn -->
+          <svg viewBox="0 0 340 346" class="dewan w-full max-w-[330px] justify-self-center sm:w-[300px] sm:justify-self-end lg:w-[330px]" role="img" :aria-label="found ? tableLabel(found) : L.guests.seat.title">
+            <path class="wall" d="M150 324 H22 a16 16 0 0 1 -16 -16 V22 a16 16 0 0 1 16 -16 H318 a16 16 0 0 1 16 16 V308 a16 16 0 0 1 -16 16 H190" />
+            <rect class="walkway" x="158" y="52" width="24" height="272" rx="2" />
+            <!-- pelamin -->
+            <path class="pelamin" d="M112 46 V26 Q112 14 124 14 H216 Q228 14 228 26 V46 Z" />
+            <text x="170" y="34" class="lbl lbl-on">{{ L.guests.seat.stage }}</text>
+            <!-- the couple's table -->
+            <g class="tbl" :class="found === 'Meja Pengantin' && 'is-found'">
+              <circle class="chair" cx="160" cy="57" r="4.5" /><circle class="chair" cx="180" cy="57" r="4.5" />
+              <rect class="top" x="138" y="63" width="64" height="16" rx="5" />
+              <path class="heart" d="M170 75 l-3.6 -3.4 a2.2 2.2 0 1 1 3.6 -2.6 a2.2 2.2 0 1 1 3.6 2.6 Z" />
+            </g>
+            <!-- round tables of eight -->
+            <g v-for="t in floor" :key="t.name" class="tbl" :class="found === t.name && 'is-found'">
+              <circle v-for="(c, k) in CHAIRS" :key="k" class="chair" :cx="t.x + c[0]" :cy="t.y + c[1]" r="4" />
+              <circle class="top" :cx="t.x" :cy="t.y" r="17.5" />
+              <text :x="t.x" :y="t.y + 4.5" class="num">{{ t.name.replace('Meja ', '') }}</text>
+            </g>
+            <!-- the walk from the door -->
+            <path v-if="route" :key="route" class="route" :d="route" />
+            <circle v-if="route" :key="`you-${route}`" class="you" :cx="DOOR.x" :cy="DOOR.y" r="6" />
+            <text x="170" y="341" class="lbl">{{ L.guests.seat.door }}</text>
+          </svg>
         </div>
       </div>
 
@@ -249,8 +286,29 @@ const sideColour = ['#27622a', '#7dd56f', '#cdeec5'];
 .reply-enter-from { opacity: 0; transform: translateY(-10px); }
 .reply-leave-active { display: none; }
 .reply-move { transition: transform .5s var(--l-ease); }
-.table-dot { background: #ebe8e5; color: #55524f; transition: background-color .4s, color .4s, transform .5s var(--l-ease), box-shadow .4s; }
-.table-dot.is-found { background: #7dd56f; color: #1a1a1a; transform: scale(1.12); box-shadow: 0 0 0 6px rgb(125 213 111 / .25); }
+.dewan { overflow: visible; }
+.dewan .wall { fill: #f6f4f1; stroke: #d9d5d1; stroke-width: 1.5; }
+.dewan .walkway { fill: #ebe8e5; opacity: .7; }
+.dewan .pelamin { fill: #e6f3e1; stroke: #bfdcb5; stroke-width: 1; }
+.dewan .lbl { font: 600 9px Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; fill: #75716d; text-anchor: middle; }
+.dewan .lbl-on { fill: #27622a; }
+.dewan .num { font: 600 11px Inter, sans-serif; fill: #55524f; text-anchor: middle; transition: fill .4s; }
+.dewan .chair { fill: #d9d5d1; transition: fill .4s; }
+.dewan .top { fill: #fdfcfb; stroke: #d9d5d1; stroke-width: 1.2; transition: fill .4s, stroke .4s; }
+.dewan .heart { fill: #b9b6b1; transition: fill .4s; }
+.dewan .tbl.is-found .top { fill: #7dd56f; stroke: #3d8f39; }
+.dewan .tbl.is-found .chair { fill: #3d8f39; }
+.dewan .tbl.is-found .num, .dewan .tbl.is-found .heart { fill: #1a1a1a; }
+.dewan .route { fill: none; stroke: #27622a; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 6; }
+.dewan .you { fill: #27622a; stroke: #fdfcfb; stroke-width: 2.5; }
+@media (prefers-reduced-motion: no-preference) {
+  .dewan .route { animation: walk-in .5s var(--l-ease) backwards, march 1s linear infinite; }
+  .dewan .you { animation: walk-in .4s var(--l-ease) backwards; }
+  .dewan .tbl.is-found .top { animation: lit .6s var(--l-ease) backwards; }
+  @keyframes walk-in { from { opacity: 0; } }
+  @keyframes march { to { stroke-dashoffset: -8; } }
+  @keyframes lit { from { fill: #fdfcfb; } }
+}
 .seat-hit { animation: hit .5s var(--l-ease) backwards; }
 @keyframes hit { from { opacity: 0; transform: translateY(8px); } }
 .wish-rail { mask-image: linear-gradient(90deg, transparent, #000 16%, #000 90%, transparent); }

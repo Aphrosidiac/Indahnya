@@ -68,13 +68,12 @@ export const LANDING = {
       names: 'Cuba letak nama korang',
       a: 'Nama pertama',
       b: 'Nama kedua',
-      phone: 'Ni kad sebenar. Scroll dalam phone tu.',
       perks: ['Waze & Google Maps', 'Countdown hari majlis', 'Aturcara', 'Salam kaut DuitNow', 'Lagu latar', 'Preview cantik dalam WhatsApp'],
     },
     guests: {
       title: 'Sebelum majlis, tetamu dah tahu semua.',
       rsvp: { title: 'RSVP', body: 'Hadir ke tak, berapa orang, pihak mana. Korang nampak jumlah terus.', coming: 'Hadir', pax: 'pax', sides: ['Lelaki', 'Perempuan', 'Rakan'], sample: 'Contoh: Aina & Hakim' },
-      seat: { title: 'Cari nombor meja', body: 'Tetamu taip nama, terus dapat nombor meja. Cuba:', placeholder: 'Taip nama, contoh Ros', none: 'Tak jumpa nama tu dalam senarai contoh.', table: 'Meja', short: 'Taip sekurang-kurangnya 3 huruf' },
+      seat: { title: 'Cari nombor meja', body: 'Tetamu taip nama, terus dapat nombor meja. Cuba:', placeholder: 'Taip nama, contoh Ros', none: 'Tak jumpa nama tu dalam senarai contoh.', table: 'Meja', short: 'Taip sekurang-kurangnya 3 huruf', stage: 'Pelamin', door: 'Pintu masuk', head: 'Meja pengantin', walk: 'Ikut laluan dari pintu masuk' },
       wish: { title: 'Ucapan tulis atau suara', body: 'Tetamu tinggalkan ucapan, atau rakam suara terus dari browser.', record: 'Cuba rakam suara', stop: 'Berhenti', play: 'Main semula', again: 'Rakam lagi', note: 'Rakaman ni kekal dalam browser korang je.', denied: 'Mikrofon tak dapat dibuka. Bagi kebenaran dalam browser dulu.' },
     },
     host: {
@@ -176,13 +175,12 @@ export const LANDING = {
       names: 'Try your own names',
       a: 'First name',
       b: 'Second name',
-      phone: 'This is the real card. Scroll inside the phone.',
       perks: ['Waze & Google Maps', 'Countdown to the day', 'Programme', 'DuitNow gift QR', 'Background song', 'A proper WhatsApp preview'],
     },
     guests: {
       title: 'Before the day, guests know everything.',
       rsvp: { title: 'RSVP', body: 'Coming or not, how many, which side. You see the totals as they come in.', coming: 'Coming', pax: 'pax', sides: ['Groom', 'Bride', 'Friends'], sample: 'Sample: Aina & Hakim' },
-      seat: { title: 'Find your table', body: 'Guests type their name and get their table number. Try:', placeholder: 'Type a name, e.g. Ros', none: 'No one by that name in the sample list.', table: 'Table', short: 'Type at least 3 letters' },
+      seat: { title: 'Find your table', body: 'Guests type their name and get their table number. Try:', placeholder: 'Type a name, e.g. Ros', none: 'No one by that name in the sample list.', table: 'Table', short: 'Type at least 3 letters', stage: 'Dais', door: 'Entrance', head: 'Couple\'s table', walk: 'Follow the path from the entrance' },
       wish: { title: 'Written and voice wishes', body: 'Guests leave a message, or record their voice right in the browser.', record: 'Try recording', stop: 'Stop', play: 'Play back', again: 'Record again', note: 'This recording stays in your browser.', denied: 'The microphone could not open. Allow it in your browser first.' },
     },
     host: {

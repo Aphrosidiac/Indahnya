@@ -112,16 +112,26 @@ const swatch = (t: KadTemplate) => ({ background: `linear-gradient(135deg, ${KAD
 
       <!-- the stage, in the template's own ground -->
       <div class="lg:col-span-7">
-        <div class="stage relative flex justify-center overflow-hidden rounded-[28px] px-4 pb-0 pt-12 md:pt-16" :style="{ background: theme.band }">
+        <div class="stage relative flex justify-center overflow-hidden rounded-[28px] px-4 py-12 md:py-14" :style="{ background: theme.band }">
           <svg class="lace pointer-events-none absolute inset-x-0 top-0 h-3 w-full" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="lace" width="24" height="12" patternUnits="userSpaceOnUse"><path d="M0 0 H24 V2 Q18 12 12 2 Q6 12 0 2 Z" :fill="theme.bg" /></pattern></defs><rect width="100%" height="12" fill="url(#lace)" /></svg>
-          <div class="l-phone relative h-[min(720px,78vh)] w-[min(340px,82vw)] translate-y-[2px] rounded-b-none !pb-0">
-            <div class="l-phone-screen !rounded-b-none" :style="{ background: theme.bg }">
-              <iframe ref="frame" src="/contoh/kad?cover=1" title="Kad jemputan contoh" loading="lazy" class="block size-full border-0" />
+          <div class="l-phone relative aspect-[9/19.5] h-[min(680px,74vh)] max-w-full">
+            <div class="l-phone-screen" :style="{ background: theme.bg }">
+              <!-- a picture of the card, not a second page to get lost in: no scroll, no taps, no focus; the chips and names still re-dress it -->
+              <iframe ref="frame" src="/contoh/kad?cover=1" title="Kad jemputan contoh" loading="lazy" inert scrolling="no" class="pointer-events-none block size-full border-0" />
+              <!-- iOS chrome over the card: the status bar and the home bar, in the template's ink -->
+              <div class="status pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between" :style="{ color: theme.ink }" aria-hidden="true">
+                <span class="time">9:41</span>
+                <span class="flex items-center gap-[5px]">
+                  <svg viewBox="0 0 18 12" class="h-[11px]"><g fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1" /><rect x="5" y="5.5" width="3" height="6.5" rx="1" /><rect x="10" y="3" width="3" height="9" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /></g></svg>
+                  <svg viewBox="0 0 16 12" class="h-[11px]"><path fill="currentColor" d="M8 2.6c2.2 0 4.2.9 5.7 2.3l1.1-1.2A9.8 9.8 0 0 0 8 1 9.8 9.8 0 0 0 1.2 3.7l1.1 1.2A8.2 8.2 0 0 1 8 2.6Zm0 3.3c1.3 0 2.5.5 3.4 1.3l1.1-1.2A6.6 6.6 0 0 0 8 4.3 6.6 6.6 0 0 0 3.5 6l1.1 1.2c.9-.8 2.1-1.3 3.4-1.3Zm0 3.2c.5 0 .9.2 1.2.5L8 11 6.8 9.6c.3-.3.7-.5 1.2-.5Z" /></svg>
+                  <span class="battery"><i /></span>
+                </span>
+              </div>
+              <span class="home pointer-events-none absolute bottom-[7px] left-1/2 h-[5px] w-[36%] -translate-x-1/2 rounded-full" :style="{ background: theme.ink }" aria-hidden="true" />
             </div>
             <span class="l-phone-island" />
           </div>
         </div>
-        <p class="mt-4 text-center text-[14px] text-[#75716d]">{{ L.kad.phone }}</p>
       </div>
     </div>
   </section>
@@ -129,6 +139,13 @@ const swatch = (t: KadTemplate) => ({ background: `linear-gradient(135deg, ${KAD
 
 <style scoped>
 .stage { transition: background-color .6s var(--l-ease); }
+/* the status bar sits level with the island: time in the left ear, icons in the right */
+.status { height: 0; margin-top: 7.9%; padding: 0 9% 0 12%; font: 600 15px/1 Inter, system-ui, sans-serif; letter-spacing: -.01em; transition: color .6s; } /* a zero-height row centred on the island's midline (margin % is of the width) */
+.status .battery { position: relative; width: 24px; height: 12px; border-radius: 4px; border: 1px solid currentColor; opacity: .9; padding: 1.5px; }
+.status .battery::after { content: ''; position: absolute; right: -3px; top: 3.5px; width: 1.5px; height: 4px; border-radius: 0 1px 1px 0; background: currentColor; opacity: .5; }
+.status .battery i { display: block; width: 78%; height: 100%; border-radius: 2px; background: currentColor; }
+@media (max-width: 640px) { .status { font-size: 13px; padding: 0 7% 0 11%; } .status .battery { width: 21px; height: 11px; } }
+.home { opacity: .55; transition: background-color .6s; }
 .lace rect { transition: fill .6s; }
 .tpl { background: rgb(26 26 26 / .05); color: #1a1a1a; transition: background-color .2s, box-shadow .2s, transform .2s var(--l-ease); }
 .tpl:hover { background: rgb(26 26 26 / .09); }

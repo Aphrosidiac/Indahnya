@@ -1,0 +1,123 @@
+/*
+ * The landing's own layer over the product tokens. Same ground, ink and
+ * green as the app (so the site reads as the product's older sibling), plus
+ * a display face for the big type and one deliberate night section: the
+ * dewan, where the lights go down for the slideshow.
+ *
+ * Shape rule: surfaces 28px, inner tiles 14px, every button and chip a pill.
+ * One accent: the brand green, always carrying ink, never ink carrying it.
+ */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+
+/* in the components layer, so Tailwind utilities (hidden, sm:inline-flex …) still win */
+@layer components {
+
+.landing {
+  --l-ground: #f6f4f3;
+  --l-paper: #fdfcfb;
+  --l-sand: #ebe8e5;
+  --l-ink: #1a1a1a;
+  --l-ink-2: #55524f;   /* body on ground, 7.4:1 */
+  --l-ink-3: #75716d;   /* captions on ground, 4.6:1 */
+  --l-line: rgb(26 26 26 / .1);
+  --l-green: #7dd56f;
+  --l-green-ink: #27622a;
+  --l-green-tint: #e6f3e1;
+  --l-night: #0e110f;
+  --l-night-2: #181c19;
+  --l-night-ink: #f3f1ee;
+  --l-night-2ink: #b9b6b1; /* 9.6:1 on night */
+  --l-display: "Bricolage Grotesque Variable", "Inter", system-ui, sans-serif;
+  --l-ease: cubic-bezier(.16, 1, .3, 1);
+
+  background: var(--l-ground);
+  color: var(--l-ink);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: clip;
+  isolation: isolate;
+}
+/* the dewan: the whole page dims while the slideshow section holds the screen. A fixed
+   layer whose opacity fades (composited), not a background-color transition (a repaint
+   of the whole page every frame). */
+.l-night { position: fixed; inset: 0; z-index: -1; background: var(--l-night); opacity: 0; pointer-events: none; transition: opacity .7s var(--l-ease); }
+.landing.is-dim .l-night { opacity: 1; }
+/* the dewan's own words follow the lights: ink while the room is bright, light once it dims */
+.landing { --dw: #1a1a1a; --dw2: #55524f; }
+.landing.is-dim { --dw: #f3f1ee; --dw2: #b9b6b1; }
+.l-dw { color: var(--dw); transition: color .7s var(--l-ease); }
+.l-dw2 { color: var(--dw2); transition: color .7s var(--l-ease); }
+
+.l-display {
+  font-family: var(--l-display);
+  font-weight: 640;
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.045em;
+  line-height: .94;
+  color: inherit;
+}
+.l-h2 {
+  font-family: var(--l-display);
+  font-weight: 640;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-size: clamp(36px, 5.2vw, 76px);
+  color: inherit;
+  text-wrap: balance;
+}
+.l-h3 {
+  font-family: var(--l-display);
+  font-weight: 620;
+  font-variation-settings: "opsz" 36;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  font-size: clamp(22px, 2vw, 28px);
+  color: inherit;
+}
+.l-lead { font-size: clamp(17px, 1.3vw, 19px); line-height: 1.55; color: var(--l-ink-2); max-width: 56ch; text-wrap: pretty; }
+.l-body { font-size: 15px; line-height: 1.55; color: var(--l-ink-2); text-wrap: pretty; }
+.l-wrap { width: 100%; max-width: 1360px; margin-inline: auto; padding-inline: 16px; }
+@media (min-width: 768px) { .l-wrap { padding-inline: 32px; } }
+@media (min-width: 1280px) { .l-wrap { padding-inline: 48px; } }
+
+/* buttons: pills, a physical push on press */
+.l-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 52px; padding: 0 26px; border-radius: 999px; white-space: nowrap;
+  font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+  transition: transform .2s var(--l-ease), background-color .2s, color .2s, box-shadow .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.l-btn:active { transform: scale(.97); }
+.l-btn-sm { height: 40px; padding: 0 18px; font-size: 14px; }
+.l-btn-go { background: var(--l-green); color: var(--l-ink); box-shadow: inset 0 -2px 0 rgb(0 0 0 / .08); }
+.l-btn-go:hover { background: #8fde82; }
+.l-btn-ink { background: var(--l-ink); color: #fff; }
+.l-btn-ink:hover { background: #2c2b2a; }
+.l-btn-line { background: transparent; color: var(--l-ink); box-shadow: inset 0 0 0 1.5px rgb(26 26 26 / .18); }
+.l-btn-line:hover { box-shadow: inset 0 0 0 1.5px rgb(26 26 26 / .45); }
+.l-btn-ghost-night { background: rgb(255 255 255 / .1); color: var(--l-night-ink); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .16); }
+.l-btn-ghost-night:hover { background: rgb(255 255 255 / .16); }
+
+.l-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.005em;
+}
+
+.l-surface { background: var(--l-paper); border-radius: 28px; box-shadow: 0 1px 0 rgb(26 26 26 / .04), 0 24px 60px -32px rgb(60 48 36 / .28); }
+
+/* arrive-on-scroll: the element is visible at rest; `.l-in` only plays an entrance once */
+@media (prefers-reduced-motion: no-preference) {
+  .l-arrive.l-in { animation: l-arrive .9s var(--l-ease); }
+  @keyframes l-arrive { from { opacity: 0; transform: translateY(28px); } }
+}
+
+/* phone frame (used by the how-to steps, the kad and the try panel) */
+.l-phone {
+  position: relative; border-radius: 46px; padding: 10px; background: #111;
+  box-shadow: inset 0 0 0 1.5px #3a3a3a, 0 40px 80px -40px rgb(30 24 18 / .55), 0 12px 24px -16px rgb(30 24 18 / .35);
+}
+.l-phone-screen { position: relative; overflow: hidden; border-radius: 37px; background: var(--l-ground); height: 100%; isolation: isolate; }
+.l-phone-island { position: absolute; top: 10px; left: 50%; z-index: 5; width: 31%; height: 26px; transform: translateX(-50%); border-radius: 999px; background: #000; }
+}

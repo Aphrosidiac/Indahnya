@@ -26,9 +26,9 @@ export default defineEventHandler(async (event) => {
   // the same visitor while its hour has room left; otherwise a fresh one, never a token about to die
   let g = await currentGuest(event, ev.id);
   if (!g || Date.now() - g.createdAt.getTime() >= SANDBOX.ttlMs - 10 * 60_000) {
-    [g] = await useDb().insert(guests).values({ id: newId(), eventId: ev.id, token: newToken() }).returning();
-    adoptGuest(event, ev.id, g!.token);
+    const [fresh] = await useDb().insert(guests).values({ id: newId(), eventId: ev.id, token: newToken() }).returning();
+    g = fresh!;
+    adoptGuest(event, ev.id, g.token);
   }
-  g = g!;
   return { slug: SANDBOX.slug, k: g.token, name: g.name, expiresAt: new Date(g.createdAt.getTime() + SANDBOX.ttlMs), perVisitor: SANDBOX.perVisitor };
 });

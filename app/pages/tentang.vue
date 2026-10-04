@@ -2,6 +2,7 @@
 import '~/assets/css/landing.css';
 import { ArrowRight, Check, Mail, MessageCircle } from 'lucide-vue-next';
 import LNav from '~/components/landing/LNav.vue';
+import LVine from '~/components/landing/LVine.vue';
 import LFinal from '~/components/landing/LFinal.vue';
 import QrStand from '~/components/print/QrStand.vue';
 import { LANDING, type LandingLang } from '~/composables/useLanding';
@@ -53,7 +54,8 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
 </script>
 
 <template>
-  <div class="landing min-h-screen">
+  <div class="landing relative min-h-screen">
+    <LVine />
     <LNav :L="L" :other="other" :home="false" />
     <main>
       <!-- who and what, in one breath -->

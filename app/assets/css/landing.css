@@ -50,8 +50,8 @@
 .l-night { position: fixed; inset: 0; z-index: -1; background: var(--l-night); opacity: 0; pointer-events: none; transition: opacity .7s var(--l-ease); }
 .landing.is-dim .l-night { opacity: 1; }
 /* the dewan's own words follow the lights: ink while the room is bright, light once it dims */
-.landing { --dw: #1a1a1a; --dw2: #55524f; }
-.landing.is-dim { --dw: #f3f1ee; --dw2: #b9b6b1; }
+.landing { --dw: #1a1a1a; --dw2: #55524f; --vine: #2f6b2c; --vine-o: .3; }
+.landing.is-dim { --dw: #f3f1ee; --dw2: #b9b6b1; --vine: #7dd56f; --vine-o: .24; }
 .l-dw { color: var(--dw); transition: color .7s var(--l-ease); }
 .l-dw2 { color: var(--dw2); transition: color .7s var(--l-ease); }
 

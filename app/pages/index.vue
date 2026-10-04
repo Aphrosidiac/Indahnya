@@ -4,6 +4,7 @@ import { LANDING, type LandingLang } from '~/composables/useLanding';
 import { useLandingMotion } from '~/composables/useLandingMotion';
 import { qrArtDataUrl } from '~~/shared/utils/qr-art';
 import LNav from '~/components/landing/LNav.vue';
+import LVine from '~/components/landing/LVine.vue';
 import LHero from '~/components/landing/LHero.vue';
 import LStory from '~/components/landing/LStory.vue';
 import LHow from '~/components/landing/LHow.vue';
@@ -90,8 +91,9 @@ const demoQr = qrArtDataUrl(`${site}/aina-hakim`);
 </script>
 
 <template>
-  <div class="landing min-h-screen" :class="{ 'is-dim': dim }">
+  <div class="landing relative min-h-screen" :class="{ 'is-dim': dim }">
     <div class="l-night" aria-hidden="true" />
+    <LVine />
     <LNav :L="L" :other="other" :dim="dim" @go="go" />
     <main>
       <LHero :L="L" :qr-url="`${site}/aina-hakim`" @go="go" />

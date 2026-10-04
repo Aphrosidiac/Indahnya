@@ -2,6 +2,7 @@
 import '~/assets/css/landing.css';
 import { ArrowRight, MessageCircle } from 'lucide-vue-next';
 import LNav from '~/components/landing/LNav.vue';
+import LVine from '~/components/landing/LVine.vue';
 import LFinal from '~/components/landing/LFinal.vue';
 import { LANDING, type LandingLang } from '~/composables/useLanding';
 import { qrArtDataUrl } from '~~/shared/utils/qr-art';
@@ -30,7 +31,8 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
 </script>
 
 <template>
-  <div class="landing min-h-screen">
+  <div class="landing relative min-h-screen">
+    <LVine />
     <LNav :L="L" :other="other" :home="false" />
     <main class="l-wrap pb-24 pt-36 md:pb-32 md:pt-48">
       <p class="text-[14px] font-semibold uppercase tracking-[.12em] text-[#27622a]">{{ C.eyebrow }}</p>

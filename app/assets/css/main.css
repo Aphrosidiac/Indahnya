@@ -1,2 +1,8 @@
 @import "../../ui/tokens.css";
 @import "./guest-forms.css";
+
+/* iOS Safari zooms the whole page into any focused field set under 16px (the UI kit's .field is
+   14px). On touch screens every text field is 16px, so tapping one never zooms. */
+@media (pointer: coarse) {
+  input:not([type=checkbox], [type=radio], [type=range], [type=file], [type=color]), textarea, select { font-size: 16px !important; }
+}

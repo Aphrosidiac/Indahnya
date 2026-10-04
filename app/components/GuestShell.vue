@@ -73,8 +73,8 @@ const active = (to: string) => route.path === to || (to !== base.value && route.
     </main>
 
     <footer v-if="ev.badge" class="mx-auto w-full max-w-[1100px] px-4 text-center text-[12px] leading-4 text-ink-400 sm:pb-8" :class="tabs.length > 1 ? 'pb-36' : 'pb-24'">
-      <a href="https://indahnya.my" class="inline-flex items-center gap-1.5 hover:text-ink-700"><Logo :size="14" :wordmark="false" />{{ t('badge' as never) }}</a>
-      <span class="mx-1.5">·</span><a href="https://ffdev.studio" target="_blank" rel="noopener" class="hover:text-ink-700">FF Dev Studio</a>
+      <a href="https://indahnya.my" class="inline-flex min-h-10 items-center gap-1.5 hover:text-ink-700"><Logo :size="14" :wordmark="false" />{{ t('badge' as never) }}</a>
+      <span class="mx-1.5">·</span><a href="https://ffdev.studio" target="_blank" rel="noopener" class="inline-flex min-h-10 items-center hover:text-ink-700">FF Dev Studio</a>
     </footer>
 
     <!-- phone bottom bar: the same pill language, thumb-reachable -->

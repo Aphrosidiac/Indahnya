@@ -31,7 +31,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
       ['Harga', 'Percuma, RM0 (50 upload, simpan 30 hari selepas majlis); RM59 sekali bayar (upload tanpa had, simpan setahun); RM99 sekali bayar (upload tanpa had, simpan dua tahun)'],
       ['Bayaran', 'Melalui Stripe: FPX, kad atau GrabPay, dalam Ringgit'],
       ['Dibina oleh', 'FF Dev Studio, Malaysia'],
-      ['Hubungi', 'hello@ffdev.studio · WhatsApp +60 13-907 8719'],
+      ['Hubungi', 'hello@ffdev.studio · WhatsApp +60\u00a013\u2011907\u00a08719'],
     ],
     why: {
       h: 'Kenapa Indahnya wujud',
@@ -78,7 +78,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
       ['Pricing', 'Free, RM0 (50 uploads, kept 30 days after the event); RM59 one-time (unlimited uploads, kept one year); RM99 one-time (unlimited uploads, kept two years)'],
       ['Payment', 'Through Stripe: FPX, card or GrabPay, in Ringgit'],
       ['Built by', 'FF Dev Studio, Malaysia'],
-      ['Contact', 'hello@ffdev.studio · WhatsApp +60 13-907 8719'],
+      ['Contact', 'hello@ffdev.studio · WhatsApp +60\u00a013\u2011907\u00a08719'],
     ],
     why: {
       h: 'Why Indahnya exists',

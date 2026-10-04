@@ -50,7 +50,7 @@ useHead({ htmlAttrs: { class: 'has-demo' } });
 <template>
   <div class="demo-guide fixed inset-x-0 top-0 z-[75] border-b border-black/10 bg-[#1a1a1a] text-[#f3f1ee]" role="region" :aria-label="C.sample">
     <div class="mx-auto flex h-full max-w-[1100px] items-center gap-3 px-4">
-      <NuxtLink to="/" class="shrink-0 rounded-[8px] p-1 text-[#f3f1ee] hover:bg-white/10" :aria-label="C.home"><Logo :size="20" :wordmark="false" inherit /></NuxtLink>
+      <NuxtLink to="/" class="-ml-2 grid size-10 shrink-0 place-items-center rounded-[10px] text-[#f3f1ee] hover:bg-white/10" :aria-label="C.home"><Logo :size="20" :wordmark="false" inherit /></NuxtLink>
       <div class="min-w-0 flex-1">
         <p class="flex items-center gap-2 text-[14px] font-semibold leading-5">
           <span class="rounded-full bg-[#7dd56f] px-2 py-px text-[11px] font-semibold uppercase tracking-[.06em] text-[#1a1a1a]">{{ C.sample }}</span>
@@ -59,11 +59,11 @@ useHead({ htmlAttrs: { class: 'has-demo' } });
         </p>
         <p class="text-[12.5px] leading-[17px] text-white/70 max-sm:line-clamp-2 sm:truncate">{{ here.what }}</p>
       </div>
-      <NuxtLink v-if="prev" :to="prev.to" class="grid size-9 shrink-0 max-sm:!hidden place-items-center rounded-full bg-white/10 hover:bg-white/15" :aria-label="`${C.prev}: ${prev.title}`"><ChevronLeft class="size-4" :stroke-width="2" /></NuxtLink>
-      <NuxtLink v-if="next" :to="next.to" class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 pl-2.5 pr-3 text-[13px] font-semibold hover:bg-white/15 max-sm:size-9 max-sm:justify-center max-sm:p-0" :aria-label="`${C.next}: ${next.title}`">
+      <NuxtLink v-if="prev" :to="prev.to" class="grid size-10 shrink-0 max-sm:!hidden place-items-center rounded-full bg-white/10 hover:bg-white/15" :aria-label="`${C.prev}: ${prev.title}`"><ChevronLeft class="size-4" :stroke-width="2" /></NuxtLink>
+      <NuxtLink v-if="next" :to="next.to" class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-white/10 pl-3 pr-3.5 text-[13px] font-semibold hover:bg-white/15 max-sm:size-10 max-sm:justify-center max-sm:p-0" :aria-label="`${C.next}: ${next.title}`">
         <span class="max-sm:hidden">{{ C.next }}: {{ next.title }}</span><ChevronRight class="size-4" :stroke-width="2" aria-hidden="true" />
       </NuxtLink>
-      <NuxtLink to="/app?new=1" class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#7dd56f] px-3.5 text-[13px] font-semibold text-[#1a1a1a] hover:bg-[#8fe082]" :class="next && 'max-sm:hidden'">
+      <NuxtLink to="/app?new=1" class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#7dd56f] px-3.5 text-[13px] font-semibold text-[#1a1a1a] hover:bg-[#8fe082]" :class="next && 'max-sm:hidden'">
         <span class="max-sm:hidden">{{ C.make }}</span><span class="sm:hidden">{{ C.makeShort }}</span><ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" />
       </NuxtLink>
     </div>

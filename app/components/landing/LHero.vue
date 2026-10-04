@@ -29,6 +29,7 @@ const h1b = computed(() => {
 
 const wrap = ref<HTMLElement>();
 const stage = ref<HTMLElement>();
+const btnRow = ref<HTMLElement>();
 const cv = ref<HTMLCanvasElement>();
 const copy = ref<HTMLElement>();
 const floatRoot = ref<HTMLElement>();
@@ -101,12 +102,17 @@ const easeO = (t: number) => 1 - (1 - t) ** 3;
 /* a seeded random, so the layout is the same on every visit and every resize */
 const rnd = (n: number) => { const s = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return s - Math.floor(s); };
 
-/** Where the card sits at rest, and how big. */
+/** Where the words end (the buttons' foot), in stage px; transforms don't move it. */
+let copyBottom = 0;
+/** Where the card sits at rest, and how big. On a phone it waits under the words, its top
+ *  (and the LIVE pill above it) clear of the buttons, peeking up from the screen's foot. */
 function cardRest() {
   const desk = W >= 900;
   const col = Math.min(W, 1360), left = (W - col) / 2;
   const cw = desk ? clamp(col * 0.21, 250, 320) : Math.min(W * 0.58, 230);
-  return { cw, ch: cw * 1.42, cx: desk ? left + col * 0.79 : W * 0.5, cy: desk ? H * 0.6 : H * 0.84, rot: desk ? -5 : -4 };
+  const ch = cw * 1.42;
+  const cy = desk ? H * 0.6 : Math.max(H * 0.84, copyBottom + 64 + ch / 2);
+  return { cw, ch, cx: desk ? left + col * 0.79 : W * 0.5, cy, rot: desk ? -5 : -4 };
 }
 /** The card's state at progress a (0 rest → 1 centred, straight, its QR filling the screen). */
 function cardAt(a: number) {
@@ -335,6 +341,8 @@ function resize() {
   const el = stage.value; const c = cv.value; if (!el || !c) return;
   W = el.clientWidth; H = el.clientHeight; dpr = Math.min(devicePixelRatio || 1, 2);
   c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+  // the row's offsetParent is `copy`, which starts at the stage's top
+  copyBottom = btnRow.value ? btnRow.value.offsetTop + btnRow.value.offsetHeight : 0;
   buildWall(); assign();
   placeFloaters();
   invalidate();
@@ -451,9 +459,10 @@ onBeforeUnmount(() => {
         </h1>
         <div class="max-w-[560px] min-[900px]:max-w-[44%] lg:max-w-[40%]">
           <p data-words class="l-lead hero-in mt-6 md:mt-8" style="--d: 3">{{ L.hero.sub }}</p>
-          <div data-words class="hero-in mt-7 inline-flex flex-wrap items-center gap-3 md:mt-9" style="--d: 4">
-            <NuxtLink to="/app?new=1" class="l-btn l-btn-go">{{ L.cta }}<ArrowRight class="size-[18px]" :stroke-width="2" aria-hidden="true" /></NuxtLink>
-            <NuxtLink to="/aina-hakim" class="l-btn l-btn-line">{{ L.sample }}</NuxtLink>
+          <!-- one row on a phone too: tighter pills, and the arrow goes below 400px -->
+          <div ref="btnRow" data-words class="hero-in mt-7 inline-flex flex-wrap items-center gap-2 sm:gap-3 md:mt-9" style="--d: 4">
+            <NuxtLink to="/app?new=1" class="l-btn l-btn-go max-sm:!px-5 max-sm:!text-[15px]">{{ L.cta }}<ArrowRight class="size-[18px] max-[399px]:hidden" :stroke-width="2" aria-hidden="true" /></NuxtLink>
+            <NuxtLink to="/aina-hakim" class="l-btn l-btn-line max-sm:!px-5 max-sm:!text-[15px]">{{ L.sample }}</NuxtLink>
           </div>
           <TransitionGroup tag="ul" name="feed" data-words class="feed relative mt-10 hidden w-[340px] min-[900px]:block [@media(max-height:680px)]:!hidden" aria-hidden="true">
             <li v-for="(f, k) in feed" :key="f.key" class="feed-item flex items-center gap-3 rounded-[18px] bg-[#fdfcfb] p-2.5 pr-4" :style="{ '--k': k }">
@@ -472,10 +481,11 @@ onBeforeUnmount(() => {
       <!-- the wall, named -->
       <div ref="caption" class="l-wrap pointer-events-none absolute inset-x-0 bottom-5 opacity-0 md:bottom-8">
         <div class="l-surface inline-flex max-w-full items-center gap-4 p-3 pr-4 md:gap-5 md:p-4 md:pr-5">
-          <span class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#fde8e6] px-3 text-[12px] font-bold tracking-[0.04em] text-[#b42318]"><span class="live-dot size-1.5 rounded-full bg-[#d92d20]" aria-hidden="true" />LIVE</span>
+          <span class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#fde8e6] px-3 text-[12px] font-bold tracking-[0.04em] text-[#b42318] max-sm:hidden"><span class="live-dot size-1.5 rounded-full bg-[#d92d20]" aria-hidden="true" />LIVE</span>
           <span class="min-w-0">
-            <span class="block truncate text-[16px] font-semibold leading-5 text-[#1a1a1a] md:text-[18px]">{{ L.hero.wall }}</span>
-            <span class="block truncate text-[13px] leading-5 text-[#55524f]">{{ L.hero.wallSub }}</span>
+            <!-- a phone has no room for the pill: the live dot rides on the name, and the line may wrap -->
+            <span class="flex items-center gap-2 truncate text-[16px] font-semibold leading-5 text-[#1a1a1a] md:text-[18px]"><span class="live-dot size-2 shrink-0 rounded-full bg-[#d92d20] sm:hidden" aria-hidden="true" />{{ L.hero.wall }}</span>
+            <span class="block text-[13px] leading-[18px] text-[#55524f] max-sm:mt-0.5 max-sm:line-clamp-2 sm:truncate sm:leading-5">{{ L.hero.wallSub }}</span>
           </span>
           <NuxtLink to="/aina-hakim/gambar" class="l-btn l-btn-ink l-btn-sm shrink-0">{{ L.sample }}</NuxtLink>
         </div>

@@ -50,6 +50,6 @@ watch(q, (v) => {
 </template>
 
 <style scoped>
-.gf-chip { height: 28px; padding: 0 11px; border-radius: 999px; font-weight: 600; color: var(--f-ink); background: color-mix(in srgb, var(--f-ink) 7%, transparent); transition: background-color .15s; }
+.gf-chip { height: 36px; padding: 0 14px; border-radius: 999px; font-weight: 600; color: var(--f-ink); background: color-mix(in srgb, var(--f-ink) 7%, transparent); transition: background-color .15s; }
 .gf-chip:hover { background: color-mix(in srgb, var(--f-ink) 12%, transparent); }
 </style>

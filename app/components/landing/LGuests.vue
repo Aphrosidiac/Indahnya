@@ -196,10 +196,11 @@ const sideColour = ['#27622a', '#7dd56f', '#cdeec5'];
         <div class="flex items-start justify-between gap-4">
           <div>
             <h3 class="l-h3">{{ L.guests.seat.title }}</h3>
-            <p class="l-body mt-2">
-              {{ L.guests.seat.body }}
-              <button v-for="n in TRY" :key="n" type="button" class="ml-1 rounded-full bg-[#ebe8e5] px-2.5 py-0.5 text-[14px] font-semibold text-[#1a1a1a] transition hover:bg-[#dedad6]" @click="tryName(n)">{{ n }}</button>
-            </p>
+            <p class="l-body mt-2">{{ L.guests.seat.body }}</p>
+            <!-- the names to try, as chips big enough to tap -->
+            <div class="mt-2.5 flex flex-wrap gap-2">
+              <button v-for="n in TRY" :key="n" type="button" class="inline-flex h-9 items-center rounded-full bg-[#ebe8e5] px-3.5 text-[14px] font-semibold text-[#1a1a1a] transition hover:bg-[#dedad6]" @click="tryName(n)">{{ n }}</button>
+            </div>
           </div>
           <Armchair class="size-6 shrink-0 text-[#27622a]" :stroke-width="1.75" aria-hidden="true" />
         </div>

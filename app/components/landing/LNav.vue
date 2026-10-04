@@ -74,7 +74,8 @@ watch(sheet, v => document.documentElement.classList.toggle('l-lock', v));
     <Transition name="sheet">
       <div v-if="sheet" class="sheet mx-auto mt-2 max-w-[1280px] rounded-[28px] p-3 lg:hidden">
         <NuxtLink v-for="l in links" :key="l.label" :to="l.to" class="flex h-14 items-center rounded-[16px] px-4 text-[20px] font-semibold tracking-[-0.02em] text-[#1a1a1a] active:bg-[#ebe8e5]" :aria-current="l.here ? 'page' : undefined" @click="go(l, $event)">{{ l.label }}</NuxtLink>
-        <div class="mt-2 grid grid-cols-2 gap-2">
+        <!-- side by side only where both fit; stacked, the main action goes first -->
+        <div class="mt-2 flex flex-col-reverse gap-2 min-[440px]:grid min-[440px]:grid-cols-2">
           <NuxtLink to="/masuk" class="l-btn l-btn-line">{{ L.nav.login }}</NuxtLink>
           <NuxtLink to="/app?new=1" class="l-btn l-btn-go !px-4">{{ L.cta }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></NuxtLink>
         </div>

@@ -48,7 +48,7 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
   <section class="relative overflow-hidden pt-10">
     <div ref="field" class="relative mx-auto flex min-h-[86vh] max-w-[1600px] items-center justify-center px-4">
       <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div v-for="(it, i) in ITEMS" :key="i" class="drift absolute" :class="i % 3 === 2 && 'hidden md:block'" :data-d="it.d" :style="{ left: `${it.x}%`, top: `${it.y}%`, width: `clamp(64px, ${it.w / 14.4}vw, ${it.w}px)`, '--r': `${it.r}deg`, '--i': i }">
+        <div v-for="(it, i) in ITEMS" :key="i" class="drift absolute" :class="(i % 3 === 2 || (it.y > 30 && it.y < 84)) && 'max-md:hidden'" :data-d="it.d" :style="{ left: `${it.x}%`, top: `${it.y}%`, width: `clamp(64px, ${it.w / 14.4}vw, ${it.w}px)`, '--r': `${it.r}deg`, '--i': i }">
           <div v-if="it.id === 'qr'" class="drift-in rounded-[10px] bg-[#fdfcfb] p-[10%] shadow-[0_20px_40px_-20px_rgba(60,48,36,.45)]"><img v-if="qr" :src="qr" alt="" class="w-full" /></div>
           <img v-else :src="photo(it.id)" alt="" class="drift-in w-full rounded-[10px] shadow-[0_20px_40px_-20px_rgba(60,48,36,.45)]" loading="lazy" />
         </div>
@@ -63,13 +63,14 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
     <footer class="l-wrap relative">
       <div class="flex flex-col gap-6 border-t border-[#1a1a1a]/10 pt-8 md:flex-row md:items-center md:justify-between">
         <p class="text-[15px] text-[#55524f]">{{ L.footer.tagline }}</p>
-        <nav class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[15px] text-[#55524f]" aria-label="Footer">
+        <!-- on a phone each link is a full 44px row to tap -->
+        <nav class="flex flex-wrap items-center gap-x-6 text-[15px] text-[#55524f] md:gap-y-2 [&>a]:max-md:inline-flex [&>a]:max-md:min-h-11 [&>a]:max-md:items-center" aria-label="Footer">
           <NuxtLink :to="lang === 'en' ? '/tentang?lang=en' : '/tentang'" class="hover:text-[#1a1a1a]">{{ L.footer.about }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="hover:text-[#1a1a1a]">{{ L.footer.links.privacy }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="hover:text-[#1a1a1a]">{{ L.footer.links.terms }}</NuxtLink>
           <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="hover:text-[#1a1a1a]">{{ L.footer.links.contact }}</a>
           <NuxtLink :to="other" class="hover:text-[#1a1a1a]">{{ L.nav.lang === 'EN' ? 'English' : 'Bahasa Melayu' }}</NuxtLink>
-          <span>{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-semibold text-[#1a1a1a] hover:underline">FF Dev Studio</a></span>
+          <span>{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-semibold text-[#1a1a1a] hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">FF Dev Studio</a></span>
         </nav>
       </div>
       <p class="mt-6 max-w-[880px] text-[13px] leading-[1.6] text-[#75716d]">

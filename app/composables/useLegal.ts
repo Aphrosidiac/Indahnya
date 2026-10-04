@@ -12,8 +12,8 @@ export interface LegalDoc { title: string; updated: string; intro: string; secti
 
 const UPDATED_MS = 'Dikemas kini 24 September 2026';
 const UPDATED_EN = 'Updated 24 September 2026';
-const CONTACT_MS = 'Email hello@indahnya.my atau WhatsApp +60 13-907 8719.';
-const CONTACT_EN = 'Email hello@indahnya.my or WhatsApp +60 13-907 8719.';
+const CONTACT_MS = 'Email hello@indahnya.my atau WhatsApp +60\u00a013\u2011907\u00a08719.';
+const CONTACT_EN = 'Email hello@indahnya.my or WhatsApp +60\u00a013\u2011907\u00a08719.';
 
 export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
   ms: {

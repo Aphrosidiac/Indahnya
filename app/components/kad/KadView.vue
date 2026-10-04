@@ -500,7 +500,7 @@ function tool(k: string) {
 .kad-swatches span { width: 34px; height: 34px; border-radius: 999px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--k-ink) 16%, transparent); }
 .kad-foot { padding: 44px 28px 36px; text-align: center; }
 .kad-names-foot { margin-top: 14px; font-size: 30px; }
-.kad-badge { display: inline-block; margin-top: 18px; font-family: Inter, sans-serif; font-size: 12px; color: var(--k-muted); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--k-muted) 40%, transparent); }
+.kad-badge { display: inline-block; margin-top: 6px; padding: 12px 4px; /* a 40px tap row */ font-family: Inter, sans-serif; font-size: 12px; color: var(--k-muted); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--k-muted) 40%, transparent); }
 
 /* bar */
 .kad-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 40; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--k-bg) 92%, transparent); backdrop-filter: blur(12px); border-top: 1px solid color-mix(in srgb, var(--k-ink) 10%, transparent); }

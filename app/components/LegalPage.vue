@@ -54,8 +54,8 @@ const LINKS = [{ path: '/tentang', ms: 'Tentang', en: 'About' }, { path: '/priva
         <p v-for="x in s.p ?? []" :key="x" class="mt-3 text-[15px] leading-[1.65] text-ink-700">{{ x }}</p>
       </section>
       <p class="mt-14 border-t border-line-100 pt-6 text-[13px] text-ink-500">
-        <NuxtLink to="/" class="hover:text-ink-900">indahnya.my</NuxtLink> · FF Dev Studio
-        <template v-for="l in LINKS.filter(x => x.path !== path)" :key="l.path"> · <NuxtLink :to="lang === 'en' ? { path: l.path, query: { lang: 'en' } } : l.path" class="hover:text-ink-900">{{ l[lang] }}</NuxtLink></template>
+        <NuxtLink to="/" class="inline-block py-2.5 hover:text-ink-900">indahnya.my</NuxtLink> · FF Dev Studio
+        <template v-for="l in LINKS.filter(x => x.path !== path)" :key="l.path"> · <NuxtLink :to="lang === 'en' ? { path: l.path, query: { lang: 'en' } } : l.path" class="inline-block py-2.5 hover:text-ink-900">{{ l[lang] }}</NuxtLink></template>
       </p>
     </main>
   </div>

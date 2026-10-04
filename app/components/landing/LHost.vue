@@ -74,7 +74,7 @@ const pending = ['g18', 'g03', 'g11'];
               <div v-if="i === 0" class="grid grid-cols-3 gap-3">
                 <div v-for="(id, k) in pending" :key="id" class="appr rounded-[18px] bg-[#f6f4f3] p-2" :class="['is-ok', 'is-hidden', ''][k]" :style="{ '--k': k }">
                   <div class="relative aspect-[4/5] overflow-hidden rounded-[12px] bg-[#ebe8e5]"><img :src="photo(id)" alt="" class="appr-img size-full object-cover" loading="lazy" /></div>
-                  <div class="mt-2 grid grid-cols-2 gap-1.5">
+                  <div class="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2"><!-- a third of a phone is too narrow for both side by side -->
                     <span class="appr-yes inline-flex h-8 items-center justify-center gap-1 rounded-full bg-white text-[12px] font-semibold"><Check class="size-3.5" :stroke-width="2.5" />{{ L.host.approve }}</span>
                     <span class="appr-no inline-flex h-8 items-center justify-center gap-1 rounded-full bg-white text-[12px] font-semibold"><EyeOff class="size-3.5" :stroke-width="2" />{{ L.host.hide }}</span>
                   </div>

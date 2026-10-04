@@ -100,7 +100,7 @@ const pending = ['g18', 'g03', 'g11'];
               <div v-else-if="i === 2" class="mx-auto max-w-[620px]">
                 <div class="laptop overflow-hidden rounded-t-[16px] border-[10px] border-b-0 border-[#2a2e2b] bg-black">
                   <div class="relative aspect-video">
-                    <img :src="photo('g22', 'l')" alt="" class="size-full object-cover" loading="lazy" />
+                    <img :src="photo('g23', 'l')" alt="" class="size-full object-cover" loading="lazy" />
                     <div class="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-3 pt-10">
                       <span class="text-[12px] font-semibold text-white">Aina &amp; Hakim</span>
                       <img v-if="qr" :src="qr" alt="" class="size-10 rounded-[4px] bg-white p-1" />

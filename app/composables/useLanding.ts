@@ -112,7 +112,7 @@ export const LANDING = {
       ],
     },
     final: { title: 'Majlis korang, siap dalam dua minit.', body: 'Percuma untuk mula. QR siap sebelum korang habis baca ayat ni.' },
-    footer: { by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', contact: 'Hubungi' } },
+    footer: { credit: 'Gambar contoh dari majlis sebenar, oleh', on: 'di Unsplash', and: 'dan', disclaimer: 'Orang dalam gambar tak ada kaitan dengan Indahnya dan bukan pelanggan kami, dan nama dalam contoh (Aina & Hakim, tetamu, ucapan) semua rekaan.', takedown: 'Ni gambar korang dan nak kami buang? Hubungi kami.', by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', contact: 'Hubungi' } },
   },
   en: {
     nav: { how: 'How it works', kad: 'Invitation', pricing: 'Pricing', faq: 'FAQ', login: 'Sign in', lang: 'BM', menu: 'Menu', close: 'Close' },
@@ -219,7 +219,7 @@ export const LANDING = {
       ],
     },
     final: { title: 'Your event, ready in two minutes.', body: 'Free to start. The QR is ready before you finish reading this.' },
-    footer: { by: 'Made by', tagline: 'QR photo galleries for events, made for Malaysia.', links: { privacy: 'Privacy', terms: 'Terms', contact: 'Contact' } },
+    footer: { credit: 'Sample photos from real majlis, by', on: 'on Unsplash', and: 'and', disclaimer: 'The people in them have no connection to Indahnya and are not our customers, and the names in the demos (Aina & Hakim, the guests, the wishes) are made up.', takedown: 'Is one of these your photo and you would like it taken down? Contact us.', by: 'Made by', tagline: 'QR photo galleries for events, made for Malaysia.', links: { privacy: 'Privacy', terms: 'Terms', contact: 'Contact' } },
   },
 } as const;
 
@@ -227,6 +227,7 @@ export type LandingLang = keyof typeof LANDING;
 export type LandingCopy = (typeof LANDING)[LandingLang];
 
 /** The landing's frames: Unsplash-licensed, Malaysian where we could find them. [width, height] of the 900px masters. */
-export const PHOTOS: Record<string, [number, number]> = { g01: [900, 507], g02: [900, 1351], g03: [900, 600], g04: [900, 1351], g07: [900, 1350], g08: [900, 600], g09: [900, 1350], g10: [900, 1350], g11: [900, 600], g13: [900, 1350], g14: [900, 1350], g15: [900, 620], g17: [900, 1350], g18: [900, 600], g20: [900, 600], g21: [900, 1169], g22: [900, 1350] };
+export const PHOTOS: Record<string, [number, number]> = { g01: [900, 506], g02: [900, 1352], g03: [900, 600], g04: [900, 1352], g07: [900, 600], g08: [900, 600], g09: [900, 1350], g10: [900, 600], g11: [900, 1350], g13: [900, 600], g14: [900, 1401], g15: [900, 600], g17: [900, 1350], g18: [900, 1350], g20: [900, 600], g21: [900, 1169], g22: [900, 1350], g23: [900, 600] };
 export const GUEST_NAMES = ['Makcik Ros', 'Aiman', 'Team Office', 'Kak Yati', 'Pak Long', 'Nadia & Irfan', 'Abang Faiz', 'Cousins', 'Uncle Lim', 'Syafiq', 'Auntie Mei', 'Hana'];
-export const photo = (id: string, size: 's' | 'l' = 's') => (size === 's' ? `/landing/s/${id}.webp` : `/landing/${id}.jpg`);
+/** Sample photos (scripts/landing-photos.json, built by scripts/build-photos.mjs): 's' 560px for tiles, 'l' 1600px for big frames. */
+export const photo = (id: string, size: 's' | 'l' = 's') => `/landing/${size}/${id}.webp`;

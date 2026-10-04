@@ -87,7 +87,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
               />
               <div class="l-phone relative z-10 aspect-[9/19] h-[88%] sm:ml-[30%]">
                 <div class="l-phone-screen bg-[#0b0b0b]">
-                  <img :src="photo('g20', 'l')" alt="" class="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-[6px]" />
+                  <img :src="photo('g20')" alt="" class="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-[6px]" />
                   <QrStand
                     class="absolute left-1/2 top-[42%] w-[64%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] overflow-hidden rounded-[6px]"
                     :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"

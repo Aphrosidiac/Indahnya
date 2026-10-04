@@ -1,9 +1,9 @@
 // Regenerates the static brand assets from brand/ (built by
 // scripts/build-brand.py) and the landing photos: favicons, app icons, the
-// 1200x630 social card, and small WebP copies of the landing photos.
+// 1200x630 social card.
 //   python3 scripts/build-brand.py && node scripts/build-assets.mjs
 import sharp from 'sharp';
-import { readdirSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
 
 const MARK = readFileSync('brand/indahnya-mark.svg', 'utf8').replace(/<\/?svg[^>]*>/g, '');
 const markInk = MARK.replaceAll('#7dd56f', '#1a1a1a').replace(/(<circle cx="47" cy="47" r="3.1" fill=")#1a1a1a/, '$1#7dd56f');
@@ -30,8 +30,5 @@ const W = 1200, H = 630;
 const photo = await sharp('public/landing/g08.jpg').resize(W, H, { fit: 'cover' }).modulate({ brightness: 0.6 }).toBuffer();
 await sharp(photo).composite([{ input: readFileSync('brand/og-overlay.svg') }]).jpeg({ quality: 84, mozjpeg: true }).toFile('public/og.jpg');
 
-mkdirSync('public/landing/s', { recursive: true });
-for (const f of readdirSync('public/landing').filter(f => f.endsWith('.jpg'))) {
-  await sharp(`public/landing/${f}`).resize({ width: 480 }).webp({ quality: 72 }).toFile(`public/landing/s/${f.replace('.jpg', '.webp')}`);
-}
+// the landing photos themselves are built by scripts/build-photos.mjs
 console.log('assets built');

@@ -116,11 +116,18 @@ function burst() {
 /* ── wiring ── */
 let triggers: { kill: () => void }[] = [];
 let io: IntersectionObserver | undefined;
+let pre: IntersectionObserver | undefined;
 onMounted(async () => {
   reduced.value = prefersReduced();
   phone.value = matchMedia('(pointer: coarse)').matches && innerWidth < 900;
-  // decoded ahead, so a slide change never decodes a 900px JPEG mid-scroll
-  SAMPLE.forEach(s => { const im = new Image(); im.src = s.src; im.decode?.().catch(() => {}); });
+  // decoded ahead, so a slide change never decodes a big frame mid-scroll; but only once the
+  // section is a screen or so away, so twelve large photos never compete with the hero
+  pre = new IntersectionObserver(([e]) => {
+    if (!e?.isIntersecting) return;
+    pre?.disconnect();
+    SAMPLE.forEach(s => { const im = new Image(); im.src = s.src; im.decode?.().catch(() => {}); });
+  }, { rootMargin: '150% 0px' });
+  if (wrap.value) pre.observe(wrap.value);
 
   // the slideshow (and the polling) run only while the TV is on screen
   io = new IntersectionObserver(([e]) => {
@@ -149,7 +156,7 @@ onMounted(async () => {
   triggers.push({ kill: () => mm.revert() });
 });
 onBeforeUnmount(() => {
-  triggers.forEach(t => t.kill()); io?.disconnect();
+  triggers.forEach(t => t.kill()); io?.disconnect(); pre?.disconnect();
   clearTimeout(timer); clearInterval(poll);
 });
 
@@ -170,7 +177,7 @@ const total = Object.keys(PHOTOS).length;
       <div class="relative mx-auto mt-10 w-full" :class="!reduced && 'min-[900px]:mt-0'" :style="{ maxWidth: 'min(1180px, calc((100dvh - 230px) * 16 / 9))' }">
         <div ref="tvEl" class="tv relative aspect-video w-full origin-center overflow-hidden rounded-[14px] bg-black">
           <TransitionGroup name="slide">
-            <img v-for="s in slides" :key="s.key" :src="s.src" alt="" decoding="async" class="slide absolute inset-0 size-full object-cover" :class="s.fresh && 'object-contain bg-black'" />
+            <img v-for="s in slides" :key="s.key" :src="s.src" alt="" decoding="async" loading="lazy" class="slide absolute inset-0 size-full object-cover" :class="s.fresh && 'object-contain bg-black'" />
           </TransitionGroup>
           <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-[2.4%] pt-[9%]">
             <div class="min-w-0">

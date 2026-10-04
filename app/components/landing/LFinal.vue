@@ -4,6 +4,7 @@ import type { LandingCopy } from '~/composables/useLanding';
 import { photo } from '~/composables/useLanding';
 import { prefersReduced } from '~/composables/useLandingMotion';
 import { WORDMARK } from '~/ui/brand-art';
+import SAMPLE_PHOTOS from '~~/scripts/landing-photos.json';
 
 /**
  * The last door (Cosmos' close): the guests' photos and a few QR cards
@@ -18,8 +19,14 @@ const ITEMS = [
   { id: 'g09', x: 26, y: 72, w: 110, r: -9, d: 1 },
 ];
 const field = ref<HTMLElement>();
+const wm = ref<SVGSVGElement>();
+/** An SVG <image> never lazy-loads, so the wordmark's big photo is only asked for once the foot of the page is near. */
+const wmSrc = ref('');
+let wmIo: IntersectionObserver | undefined;
 let onMove: ((e: PointerEvent) => void) | undefined;
 onMounted(() => {
+  wmIo = new IntersectionObserver(([e]) => { if (e?.isIntersecting) { wmSrc.value = photo('g08', 'l'); wmIo?.disconnect(); } }, { rootMargin: '100% 0px' });
+  if (wm.value) wmIo.observe(wm.value);
   if (prefersReduced() || !matchMedia('(pointer: fine)').matches || !field.value) return;
   const els = [...field.value.querySelectorAll<HTMLElement>('[data-d]')];
   let raf = 0, mx = 0, my = 0;
@@ -29,7 +36,12 @@ onMounted(() => {
   };
   addEventListener('pointermove', onMove, { passive: true });
 });
-onBeforeUnmount(() => { if (onMove) removeEventListener('pointermove', onMove); });
+onBeforeUnmount(() => { wmIo?.disconnect(); if (onMove) removeEventListener('pointermove', onMove); });
+/** The photographers behind the sample photos, most-used first (free Unsplash licence; credit is a courtesy we keep). */
+const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; user: string; n: number }>>((a, p) => {
+  (a[p.user] ??= { by: p.by, user: p.user, n: 0 }).n++;
+  return a;
+}, {})).sort((a, b) => b.n - a.n);
 </script>
 
 <template>
@@ -59,12 +71,18 @@ onBeforeUnmount(() => { if (onMove) removeEventListener('pointermove', onMove); 
           <span>{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-semibold text-[#1a1a1a] hover:underline">FF Dev Studio</a></span>
         </nav>
       </div>
+      <p class="mt-6 max-w-[880px] text-[13px] leading-[1.6] text-[#75716d]">
+        {{ L.footer.credit }}
+        <template v-for="(c, i) in credits" :key="c.user"><a :href="`https://unsplash.com/@${c.user}?utm_source=indahnya&utm_medium=referral`" target="_blank" rel="noopener" class="underline decoration-[#1a1a1a]/20 underline-offset-2 hover:text-[#1a1a1a]">{{ c.by }}</a>{{ i < credits.length - 2 ? ', ' : i === credits.length - 2 ? ` ${L.footer.and} ` : ' ' }}</template>{{ L.footer.on }}.
+        {{ L.footer.disclaimer }}
+        <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="underline decoration-[#1a1a1a]/20 underline-offset-2 hover:text-[#1a1a1a]">{{ L.footer.takedown }}</a>
+      </p>
     </footer>
     <!-- the name, cropped by the page, filled with the day; the i keeps its flower -->
-    <svg class="wordmark" :viewBox="WORDMARK.viewBox" aria-hidden="true">
+    <svg ref="wm" class="wordmark" :viewBox="WORDMARK.viewBox" aria-hidden="true">
       <defs><clipPath id="wm-clip"><path :d="WORDMARK.path" /></clipPath></defs>
       <rect x="-200" y="-1400" width="4200" height="1800" fill="#1a1a1a" clip-path="url(#wm-clip)" />
-      <g clip-path="url(#wm-clip)"><image class="wm-photo" href="/landing/g08.jpg" x="-120" y="-1420" width="4000" height="2000" preserveAspectRatio="xMidYMid slice" /></g>
+      <g clip-path="url(#wm-clip)"><image v-if="wmSrc" class="wm-photo" :href="wmSrc" x="-120" y="-1420" width="4000" height="2000" preserveAspectRatio="xMidYMid slice" /></g>
       <g v-html="WORDMARK.flowerSvg.replaceAll('{P}', '#7dd56f')" />
     </svg>
   </section>

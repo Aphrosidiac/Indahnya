@@ -42,7 +42,7 @@ async function wipe(Bucket: string, Prefix: string) {
   if (keys.length) await s3.send(new DeleteObjectsCommand({ Bucket, Delete: { Objects: keys, Quiet: true } }));
 }
 
-const PHOTOS = ['g08', 'g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g20', 'g13', 'g01', 'g02', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07'];
+const PHOTOS = ['g08', 'g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g20', 'g13', 'g01', 'g02', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07', 'g23'];
 const NAMES = ['Makcik Ros', 'Aiman', 'Team Office', 'Kak Yati', 'Pak Long', 'Nadia & Irfan', 'Abang Faiz', 'Cousins', 'Uncle Lim', 'Syafiq', 'Auntie Mei', 'Hana'];
 
 const db = useDb();

@@ -1,0 +1,131 @@
+[
+ {
+  "url": "http://localhost:3182/",
+  "nojs_status": 200,
+  "nojs": {
+   "title": "Indahnya: galeri gambar majlis dengan QR",
+   "canonical": [
+    "http://localhost:3182/"
+   ],
+   "robots": [],
+   "description": [
+    "Tetamu scan, snap, upload. Tak payah app, tak payah login. Semua masuk satu galeri, live atas TV dewan."
+   ],
+   "jsonld": [
+    2333
+   ],
+   "h1": [
+    "Semua gambar majlis.Satu QR."
+   ],
+   "links": 24
+  },
+  "rendered_status": 200,
+  "rendered": {
+   "title": "Indahnya: galeri gambar majlis dengan QR",
+   "canonical": [
+    "http://localhost:3182/"
+   ],
+   "robots": [],
+   "description": [
+    "Tetamu scan, snap, upload. Tak payah app, tak payah login. Semua masuk satu galeri, live atas TV dewan."
+   ],
+   "jsonld": [
+    2333
+   ],
+   "h1": [
+    "Semua gambar majlis.Satu QR."
+   ],
+   "links": 24
+  },
+  "words_nojs": 782,
+  "words_rendered": 895,
+  "missing_pct": 13.5,
+  "issues": [
+   "13.5% of rendered main-content words are absent without JS"
+  ]
+ },
+ {
+  "url": "http://localhost:3182/?lang=en",
+  "nojs_status": 200,
+  "nojs": {
+   "title": "Indahnya: QR photo gallery for your event",
+   "canonical": [
+    "http://localhost:3182/?lang=en"
+   ],
+   "robots": [],
+   "description": [
+    "Guests scan, snap and upload. No app, no sign-up. Everything lands in one gallery, live on the venue screen."
+   ],
+   "jsonld": [
+    2374
+   ],
+   "h1": [
+    "Every photo from the day.One QR."
+   ],
+   "links": 24
+  },
+  "rendered_status": 200,
+  "rendered": {
+   "title": "Indahnya: QR photo gallery for your event",
+   "canonical": [
+    "http://localhost:3182/?lang=en"
+   ],
+   "robots": [],
+   "description": [
+    "Guests scan, snap and upload. No app, no sign-up. Everything lands in one gallery, live on the venue screen."
+   ],
+   "jsonld": [
+    2374
+   ],
+   "h1": [
+    "Every photo from the day.One QR."
+   ],
+   "links": 24
+  },
+  "words_nojs": 928,
+  "words_rendered": 1042,
+  "missing_pct": 11.7,
+  "issues": [
+   "11.7% of rendered main-content words are absent without JS"
+  ]
+ },
+ {
+  "url": "http://localhost:3182/privasi",
+  "nojs_status": 200,
+  "nojs": {
+   "title": "Notis Privasi · Indahnya",
+   "canonical": [
+    "http://localhost:3182/privasi"
+   ],
+   "robots": [],
+   "description": [
+    "Indahnya (indahnya.my) dikendalikan oleh FF Dev Studio, Malaysia. Notis ni terangkan data apa yang kami kumpul, kenapa, siapa boleh tengok, berapa lama kami simpan, dan hak korang di bawah Akta Perlindungan Data Peribadi 2010."
+   ],
+   "jsonld": [],
+   "h1": [
+    "Notis Privasi"
+   ],
+   "links": 4
+  },
+  "rendered_status": 200,
+  "rendered": {
+   "title": "Notis Privasi · Indahnya",
+   "canonical": [
+    "http://localhost:3182/privasi"
+   ],
+   "robots": [],
+   "description": [
+    "Indahnya (indahnya.my) dikendalikan oleh FF Dev Studio, Malaysia. Notis ni terangkan data apa yang kami kumpul, kenapa, siapa boleh tengok, berapa lama kami simpan, dan hak korang di bawah Akta Perlindungan Data Peribadi 2010."
+   ],
+   "jsonld": [],
+   "h1": [
+    "Notis Privasi"
+   ],
+   "links": 4
+  },
+  "words_nojs": 629,
+  "words_rendered": 629,
+  "missing_pct": 0,
+  "issues": []
+ }
+]

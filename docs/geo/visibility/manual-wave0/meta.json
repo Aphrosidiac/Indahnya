@@ -1,0 +1,404 @@
+{
+ "brand": {
+  "name": "Indahnya",
+  "aliases": [
+   "Indahnya"
+  ],
+  "domain": "indahnya.my"
+ },
+ "competitors": [
+  {
+   "name": "Kenangan",
+   "aliases": [
+    "Kenangan"
+   ],
+   "domain": "kenanganmajlis.com"
+  },
+  {
+   "name": "Wedibox",
+   "aliases": [
+    "Wedibox"
+   ],
+   "domain": "wedibox.com"
+  },
+  {
+   "name": "GuestPix",
+   "aliases": [
+    "GuestPix"
+   ],
+   "domain": "guestpix.com"
+  },
+  {
+   "name": "POV",
+   "aliases": [
+    "POV"
+   ],
+   "domain": "pov.camera"
+  },
+  {
+   "name": "Tuan Majlis",
+   "aliases": [
+    "Tuan Majlis"
+   ],
+   "domain": "tuanmajlis.com"
+  },
+  {
+   "name": "Jemputan",
+   "aliases": [
+    "Jemputan"
+   ],
+   "domain": "jemputan.me"
+  },
+  {
+   "name": "KadKami",
+   "aliases": [
+    "KadKami"
+   ],
+   "domain": "kadkami.my"
+  },
+  {
+   "name": "Nak Jemput",
+   "aliases": [
+    "Nak Jemput"
+   ],
+   "domain": "nakjemput.com"
+  }
+ ],
+ "engines": [
+  "chatgpt-ui",
+  "perplexity-ui",
+  "gemini-ui",
+  "aimode-ui"
+ ],
+ "runs": 1,
+ "prompts": "prompts_v1.csv",
+ "models": {
+  "chatgpt-ui": "manual-ui",
+  "perplexity-ui": "manual-ui",
+  "gemini-ui": "manual-ui",
+  "aimode-ui": "manual-ui"
+ },
+ "started": "2026-10-04T21:32:37",
+ "prompt_rows": [
+  {
+   "id": "p001",
+   "text": "what is a QR photo gallery for weddings and how does it work",
+   "stratum": "discovery",
+   "persona": "first-time host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p002",
+   "text": "cara kumpul gambar tetamu masa majlis kahwin",
+   "stratum": "discovery",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "3"
+  },
+  {
+   "id": "p003",
+   "text": "macam mana nak dapat semua gambar yang tetamu ambil masa kenduri",
+   "stratum": "discovery",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p004",
+   "text": "how do I collect all the photos guests take at my wedding in Malaysia",
+   "stratum": "discovery",
+   "persona": "first-time host",
+   "locale": "MY",
+   "weight": "3"
+  },
+  {
+   "id": "p005",
+   "text": "app untuk tetamu upload gambar majlis kahwin tanpa download app",
+   "stratum": "best-for",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "3"
+  },
+  {
+   "id": "p006",
+   "text": "best QR code wedding photo sharing app Malaysia",
+   "stratum": "best-for",
+   "persona": "comparison shopper",
+   "locale": "MY",
+   "weight": "3"
+  },
+  {
+   "id": "p007",
+   "text": "best way to share wedding photos with guests without WhatsApp group",
+   "stratum": "best-for",
+   "persona": "first-time host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p008",
+   "text": "QR code gambar majlis kahwin murah",
+   "stratum": "best-for",
+   "persona": "budget host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p009",
+   "text": "wedding guest photo upload QR under RM100 Malaysia",
+   "stratum": "best-for",
+   "persona": "budget host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p010",
+   "text": "slideshow gambar tetamu live atas TV dewan kahwin",
+   "stratum": "best-for",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p011",
+   "text": "how to show guests photos live on a screen at a wedding reception",
+   "stratum": "best-for",
+   "persona": "first-time host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p012",
+   "text": "e-kad kahwin digital dengan RSVP dan galeri gambar",
+   "stratum": "best-for",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p013",
+   "text": "digital wedding invitation Malaysia with RSVP and table finder",
+   "stratum": "best-for",
+   "persona": "first-time host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p014",
+   "text": "kad kahwin digital yang ada cari nombor meja tetamu",
+   "stratum": "best-for",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p015",
+   "text": "guestbook digital majlis kahwin ucapan suara",
+   "stratum": "best-for",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p016",
+   "text": "QR photo sharing for aqiqah or birthday party Malaysia",
+   "stratum": "best-for",
+   "persona": "host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p017",
+   "text": "company event photo sharing QR code Malaysia",
+   "stratum": "best-for",
+   "persona": "corporate organiser",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p018",
+   "text": "Google Drive vs QR photo gallery for wedding guest photos",
+   "stratum": "comparison",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p019",
+   "text": "WhatsApp group atau app galeri untuk gambar majlis kahwin mana lebih baik",
+   "stratum": "comparison",
+   "persona": "BM evaluator",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p020",
+   "text": "Wedibox alternative in Malaysia",
+   "stratum": "comparison",
+   "persona": "switcher",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p021",
+   "text": "alternatives to Kenangan majlis photo gallery",
+   "stratum": "comparison",
+   "persona": "switcher",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p022",
+   "text": "Indahnya vs Kenangan",
+   "stratum": "comparison",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p023",
+   "text": "GuestPix vs POV vs Wedibox for a Malaysian wedding",
+   "stratum": "comparison",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p024",
+   "text": "what is Indahnya",
+   "stratum": "branded-fact",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p025",
+   "text": "Indahnya harga",
+   "stratum": "branded-fact",
+   "persona": "BM evaluator",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p026",
+   "text": "Indahnya pricing",
+   "stratum": "branded-fact",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p027",
+   "text": "is Indahnya legit",
+   "stratum": "branded-fact",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p028",
+   "text": "does Indahnya need guests to download an app",
+   "stratum": "branded-fact",
+   "persona": "host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p029",
+   "text": "Indahnya simpan gambar berapa lama",
+   "stratum": "branded-fact",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p030",
+   "text": "who makes Indahnya",
+   "stratum": "branded-fact",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p031",
+   "text": "can guests upload videos with Indahnya",
+   "stratum": "branded-fact",
+   "persona": "host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p032",
+   "text": "does Indahnya work without internet at the venue",
+   "stratum": "branded-fact",
+   "persona": "host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p033",
+   "text": "is there a free QR wedding photo gallery in Malaysia",
+   "stratum": "best-for",
+   "persona": "budget host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p034",
+   "text": "QR code untuk tetamu scan dan upload gambar percuma",
+   "stratum": "best-for",
+   "persona": "BM budget host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p035",
+   "text": "how to print a QR code table card for wedding photos",
+   "stratum": "discovery",
+   "persona": "host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p036",
+   "text": "cara buat QR code untuk gambar majlis",
+   "stratum": "discovery",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "2"
+  },
+  {
+   "id": "p037",
+   "text": "wedding photo sharing app that keeps original quality",
+   "stratum": "best-for",
+   "persona": "evaluator",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p038",
+   "text": "how to stop inappropriate photos in a shared wedding gallery",
+   "stratum": "discovery",
+   "persona": "host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p039",
+   "text": "wedding planner tool Malaysia RSVP seating guest photos all in one",
+   "stratum": "best-for",
+   "persona": "first-time host",
+   "locale": "MY",
+   "weight": "1"
+  },
+  {
+   "id": "p040",
+   "text": "apa aplikasi terbaik untuk kongsi gambar majlis tunang",
+   "stratum": "best-for",
+   "persona": "BM host",
+   "locale": "MY",
+   "weight": "1"
+  }
+ ]
+}

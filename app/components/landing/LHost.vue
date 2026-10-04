@@ -40,10 +40,11 @@ onMounted(async () => {
     cards.value.forEach((card, i) => {
       const nextCard = cards.value[i + 1];
       if (!nextCard) return;
-      gsap.to(card.firstElementChild!, {
-        scale: 0.93, filter: 'brightness(.82)', ease: 'none',
-        scrollTrigger: { trigger: nextCard, start: 'top bottom', end: 'top 20%', scrub: true },
-      });
+      // explicit from/to on transform and a shade's opacity: a filter tween from "none" has no
+      // start value, and scrolling back to the start left the card nearly black
+      const st = { trigger: nextCard, start: 'top bottom', end: 'top 20%', scrub: true };
+      gsap.fromTo(card.firstElementChild!, { scale: 1 }, { scale: 0.93, ease: 'none', immediateRender: false, scrollTrigger: st });
+      gsap.fromTo(card.querySelector('.stack-shade'), { opacity: 0 }, { opacity: 0.22, ease: 'none', immediateRender: false, scrollTrigger: st });
     });
   });
   triggers.push({ kill: () => mm.revert() });
@@ -59,7 +60,8 @@ const pending = ['g18', 'g03', 'g11'];
 
     <div class="mt-12 md:mt-16">
       <div v-for="(c, i) in L.host.cards" :key="c.title" ref="cards" class="stack-slot sticky pb-6" :style="{ top: `calc(92px + ${i * 22}px)` }">
-        <div class="origin-top overflow-hidden rounded-[28px] shadow-[0_1px_0_rgba(26,26,26,.04),0_30px_80px_-40px_rgba(60,48,36,.35)]" :style="{ background: BG[i], color: i === 2 ? '#f3f1ee' : '#1a1a1a' }">
+        <div class="relative origin-top overflow-hidden rounded-[28px] [will-change:transform] shadow-[0_1px_0_rgba(26,26,26,.04),0_30px_80px_-40px_rgba(60,48,36,.35)]" :style="{ background: BG[i], color: i === 2 ? '#f3f1ee' : '#1a1a1a' }">
+          <div class="stack-shade pointer-events-none absolute inset-0 z-10 bg-[#0e110f] opacity-0" aria-hidden="true" />
           <div class="grid min-h-[min(560px,72vh)] grid-cols-1 items-center gap-8 p-6 md:p-10 lg:grid-cols-12 lg:gap-12 lg:p-14">
             <div class="lg:col-span-5">
               <h3 class="l-display text-[clamp(30px,3.4vw,50px)] !leading-[1.02]">{{ c.title }}</h3>

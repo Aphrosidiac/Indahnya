@@ -7,6 +7,13 @@
  * Shape rule: surfaces 28px, inner tiles 14px, every button and chip a pill.
  * One accent: the brand green, always carrying ink, never ink carrying it.
  */
+/*
+ * Tailwind's layer order, stated before anything else. In the production
+ * build this file is inlined ahead of Tailwind's own stylesheet, and the
+ * first @layer a browser meets fixes the order: without this line
+ * `components` came first, so the reset (base) beat .l-btn and .l-h2.
+ */
+@layer theme, base, components, utilities;
 @import "@fontsource-variable/bricolage-grotesque/opsz.css";
 
 /* in the components layer, so Tailwind utilities (hidden, sm:inline-flex …) still win */

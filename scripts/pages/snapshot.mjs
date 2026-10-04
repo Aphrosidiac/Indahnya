@@ -51,6 +51,16 @@ for (const p of PAGES) {
     await save(join(dist, en ? join('__en', fileFor(p)) : fileFor(p)), html);
   }
 }
+// pages the app itself opens with a query (the landing's kad phone): their own copy, by exact URL
+const VARIANTS = ['/contoh/kad?cover=1'];
+const variants = {};
+for (const v of VARIANTS) {
+  const html = await (await get(v)).text();
+  texts.push(html);
+  const file = `__v/${v.slice(1).replace(/[^a-z0-9]+/gi, '-')}`;
+  variants[v] = `/${file}`;
+  await save(join(dist, `${file}.html`), html);
+}
 const nf = await (await get('/__not-a-page__', { ok: [404] })).text();
 texts.push(nf);
 await save(join(dist, '404.html'), nf);
@@ -77,6 +87,7 @@ const { rows: seats } = await db.query(
 await db.end();
 const data = {
   slug: SLUG,
+  variants,
   event: await json(base),
   kad: await json(`${base}/kad`),
   ics,
@@ -110,5 +121,5 @@ await save(join(dist, '_routes.json'), JSON.stringify({ version: 1, include: ['/
 
 // nothing pointing back at this machine
 const leaks = texts.filter(t => /localhost|127\.0\.0\.1/.test(t)).length;
-console.log(`pages ${PAGES.length * 2 + 1} · media ${keys.size} · photos ${data.media.length} · ucapan ${data.ucapan.length} · seats ${seats.length} · localhost refs ${leaks}`);
+console.log(`pages ${PAGES.length * 2 + 1 + VARIANTS.length} · media ${keys.size} · photos ${data.media.length} · ucapan ${data.ucapan.length} · seats ${seats.length} · localhost refs ${leaks}`);
 if (leaks) process.exit(2);

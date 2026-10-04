@@ -1,8 +1,10 @@
 /**
  * The preview's only server code (Cloudflare Pages Function). Two jobs:
  *
- * 1. Language. Pages are BM at their path; `?lang=en` is a query, which a
- *    static host cannot tell apart, so it is answered from the __en/ copy.
+ * 1. Queries. Pages are BM at their path; `?lang=en` is a query, which a
+ *    static host cannot tell apart, so it is answered from the __en/ copy,
+ *    and the few URLs the app opens with a query of its own (the landing's
+ *    kad phone) from their own copy under __v/.
  * 2. The API. The sample event's answers were captured at build
  *    (_data.json, see snapshot.mjs) and are replayed here: seat search
  *    filters the captured list the way the real endpoint does, and every
@@ -72,15 +74,21 @@ function api(request, url) {
   return fail(404, 'Not found');
 }
 
+async function asset(env, request, path) {
+  const u = new URL(path, request.url);
+  let r = await env.ASSETS.fetch(new Request(u, request));
+  if (r.status >= 300 && r.status < 400 && r.headers.get('location')) r = await env.ASSETS.fetch(new Request(new URL(r.headers.get('location'), u), request));
+  return r.ok ? new Response(r.body, r) : null;
+}
+
 export async function onRequest({ request, next, env }) {
   const url = new URL(request.url);
   if (url.pathname.startsWith('/api/')) return api(request, url);
-  // an English page: the same path under __en/ (the query stays in the address bar for the app)
-  if (url.searchParams.get('lang') === 'en' && (request.method === 'GET' || request.method === 'HEAD') && !/\.[a-z0-9]+$/i.test(url.pathname)) {
-    const en = new URL(url.pathname === '/' ? '/__en/' : `/__en${url.pathname.replace(/\/$/, '')}`, url);
-    let r = await env.ASSETS.fetch(new Request(en, request));
-    if (r.status >= 300 && r.status < 400 && r.headers.get('location')) r = await env.ASSETS.fetch(new Request(new URL(r.headers.get('location'), en), request));
-    if (r.ok) return new Response(r.body, r);
+  if ((request.method === 'GET' || request.method === 'HEAD') && url.search && !/\.[a-z0-9]+$/i.test(url.pathname)) {
+    // the query stays in the address bar for the app to read; only the HTML is chosen here
+    const v = data.variants?.[url.pathname + url.search];
+    if (v) return (await asset(env, request, v)) ?? next();
+    if (url.searchParams.get('lang') === 'en') return (await asset(env, request, url.pathname === '/' ? '/__en/' : `/__en${url.pathname.replace(/\/$/, '')}`)) ?? next();
   }
   return next();
 }

@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
 import { photo } from '~/composables/useLanding';
 import { prefersReduced } from '~/composables/useLandingMotion';
+import { WORDMARK } from '~/ui/brand-art';
 
 /**
  * The last door (Cosmos' close): the guests' photos and a few QR cards
@@ -59,8 +60,13 @@ onBeforeUnmount(() => { if (onMove) removeEventListener('pointermove', onMove); 
         </nav>
       </div>
     </footer>
-    <!-- the name, cropped by the page, filled with the day -->
-    <p class="wordmark l-display select-none whitespace-nowrap text-center" aria-hidden="true">indahnya</p>
+    <!-- the name, cropped by the page, filled with the day; the i keeps its flower -->
+    <svg class="wordmark" :viewBox="WORDMARK.viewBox" aria-hidden="true">
+      <defs><clipPath id="wm-clip"><path :d="WORDMARK.path" /></clipPath></defs>
+      <rect x="-200" y="-1400" width="4200" height="1800" fill="#1a1a1a" clip-path="url(#wm-clip)" />
+      <g clip-path="url(#wm-clip)"><image class="wm-photo" href="/landing/g08.jpg" x="-120" y="-1420" width="4000" height="2000" preserveAspectRatio="xMidYMid slice" /></g>
+      <g v-html="WORDMARK.flowerSvg.replaceAll('{P}', '#7dd56f')" />
+    </svg>
   </section>
 </template>
 
@@ -71,12 +77,9 @@ onBeforeUnmount(() => { if (onMove) removeEventListener('pointermove', onMove); 
 }
 @keyframes float { to { transform: rotate(calc(var(--r) * -0.6)) translateY(-14px); } }
 .drift { transition: translate .9s cubic-bezier(.16, 1, .3, 1); }
-.wordmark {
-  margin-top: 4vw; margin-bottom: -6.6vw; font-size: 25.5vw; line-height: .8; letter-spacing: -0.06em; font-weight: 700;
-  color: transparent; background: url('/landing/g22.jpg') center 55% / cover, #1a1a1a; -webkit-background-clip: text; background-clip: text;
-}
+.wordmark { display: block; width: calc(100% - 32px); max-width: 1500px; margin: 5vw auto -5.4vw; color: #1a1a1a; }
 @media (prefers-reduced-motion: no-preference) {
-  .wordmark { background-size: 115% auto; animation: pan 24s ease-in-out infinite alternate; }
+  .wm-photo { animation: pan 26s ease-in-out infinite alternate; transform-box: view-box; }
 }
-@keyframes pan { from { background-position: 0% 30%; } to { background-position: 100% 60%; } }
+@keyframes pan { from { transform: translateX(-60px) scale(1.04); } to { transform: translateX(60px) scale(1.04); } }
 </style>

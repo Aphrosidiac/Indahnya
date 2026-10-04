@@ -98,7 +98,7 @@ onBeforeUnmount(() => { removeEventListener('pointerdown', onPointer); removeEve
       :class="[ui.navOpen ? 'translate-x-0 max-lg:shadow-lg' : '-translate-x-full lg:translate-x-0', ui.navCollapsed ? 'lg:w-[72px]' : 'lg:w-[256px]']"
       :inert="!ui.navOpen && !isDesktop ? true : undefined">
       <div class="flex h-16 shrink-0 items-center justify-between pr-3" :class="ui.navCollapsed ? 'max-lg:pl-5 lg:justify-center lg:pr-0' : 'pl-5'">
-        <NuxtLink to="/app" class="flex items-center rounded-sm" :class="ui.navCollapsed && 'lg:hidden'"><Logo :size="26" /></NuxtLink>
+        <NuxtLink to="/app" class="flex items-center rounded-sm" :class="ui.navCollapsed && 'lg:hidden'"><Logo :size="21" /></NuxtLink>
         <button type="button" class="grid size-8 place-items-center rounded-[8px] text-ink-500 transition-colors hover:bg-sand hover:text-ink-900 max-lg:hidden"
           :aria-label="ui.navCollapsed ? 'Buka menu' : 'Lipat menu'" :aria-expanded="!ui.navCollapsed" @click="ui.toggleNav()">
           <PanelLeft class="size-[18px]" :stroke-width="1.5" />

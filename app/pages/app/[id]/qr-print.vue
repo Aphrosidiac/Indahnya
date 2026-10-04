@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Logo } from '~/ui';
 /**
  * A printable sheet. Opens in its own tab; the host prints it (or saves a
  * PDF). Three layouts share one design: the couple's names, one line of
@@ -30,7 +31,7 @@ onMounted(() => { document.title = `Indahnya QR — ${ev.value?.title ?? ''}`; }
       <img :src="svg" alt="QR" class="qr" />
       <div class="link">{{ link }}</div>
       <div class="line">{{ line }}</div>
-      <div class="foot"><span>{{ hashtag }}</span><span>indahnya.my</span></div>
+      <div class="foot"><span>{{ hashtag }}</span><span class="inline-flex items-center gap-1"><Logo :size="11" :wordmark="false" mono inherit />indahnya.my</span></div>
     </div>
   </div>
   <button type="button" class="print" @click="doPrint">Print</button>

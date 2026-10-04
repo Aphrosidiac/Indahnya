@@ -31,6 +31,7 @@ and accepted without discussion — change freely.
 | Differentiators | last: face-search "cari gambar saya", WhatsApp reminders, disposable-camera mode, e-kad partner API. |
 | UI | **Exactly ANK Ops**: tokens, 33 primitives, transitions (veil/pop/drop/slide, `.reveal` no-fill keyframes, no route transitions), shell, composition rules. Guest pages use the same language one size warmer. |
 | Landing page | **Rebuilt 2026-10-04 (branch `landing-v2`)** at `/` (BM default, `?lang=en`). Borrowed mechanisms, each on Indahnya's own job: the hero's real QR turns into the gallery wall (canvas), mymind's NO list + Cosmos' sharpening sentence, Granola's held step list, Lusion/Apple's pinned stage for the dewan (page dims, TV grows), Partiful's demo cursor on the real kad (`/contoh/kad`), Arc's lace edge, Cosmos' drifting close. Live demos run the product: the TV's QR sends a real photo through the `_cuba` sandbox (`/contoh/cuba`, `server/utils/sandbox.ts`: own photos only, 6 max, swept after an hour), the seat search asks the sample event. Photos are Unsplash-licensed (`public/landing/`) until real majlis photos exist. |
+| Brand | **Mekar** mark (a QR whose fourth corner blooms) + wordmark "indahnya" in Bricolage Grotesque, outlined, the i dotted with a kerawang flower. Chosen 2026-10-04 from four directions (`brand/concepts/`). Rules and files: `brand/README.md`; rebuild with `scripts/build-brand.py` + `scripts/build-assets.mjs`. |
 
 ## Pricing table
 

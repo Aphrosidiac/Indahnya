@@ -54,7 +54,7 @@ async function submit() {
 <template>
   <div class="grid min-h-screen place-items-center px-4 py-12">
     <div class="w-full max-w-[380px]">
-      <div class="mb-7 flex justify-center"><NuxtLink to="/" aria-label="Indahnya — laman utama"><Logo :size="34" /></NuxtLink></div>
+      <div class="mb-7 flex justify-center"><NuxtLink to="/" aria-label="Indahnya — laman utama"><Logo :size="28" /></NuxtLink></div>
 
       <div v-if="verifying" class="card p-6 text-center" role="status">
         <span class="mx-auto block size-6 animate-spin rounded-full border-2 border-line-200 border-t-ink-700" aria-hidden="true" />

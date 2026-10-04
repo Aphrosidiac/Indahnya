@@ -55,7 +55,7 @@ const anyDone = computed(() => up.done.value > 0);
 <template>
   <div class="min-h-[100dvh] bg-[#f6f4f3] text-[#1a1a1a]">
     <div class="mx-auto flex min-h-[100dvh] max-w-[460px] flex-col px-5 pb-8 pt-6">
-      <NuxtLink to="/" class="self-start"><Logo :size="28" /></NuxtLink>
+      <NuxtLink to="/" class="self-start"><Logo :size="22" /></NuxtLink>
 
       <div v-if="state === 'expired'" class="my-auto py-10">
         <span class="grid size-12 place-items-center rounded-full bg-[#fde8e6] text-[#b42318]"><AlertCircle class="size-6" :stroke-width="2" /></span>

@@ -22,7 +22,7 @@ useSeoMeta({ title: () => `${d.value.title} · Indahnya`, description: () => d.v
 <template>
   <div class="min-h-screen bg-surface-50 text-ink-800">
     <header class="mx-auto flex h-16 w-full max-w-[760px] items-center justify-between px-5">
-      <NuxtLink to="/" aria-label="Indahnya — laman utama"><Logo :size="26" /></NuxtLink>
+      <NuxtLink to="/" aria-label="Indahnya — laman utama"><Logo :size="22" /></NuxtLink>
       <NuxtLink :to="lang === 'en' ? { path } : { path, query: { lang: 'en' } }" class="rounded-sm px-2.5 py-2 text-[13px] font-medium text-ink-500 hover:bg-sand hover:text-ink-900">{{ d.other }}</NuxtLink>
     </header>
     <main class="reveal mx-auto w-full max-w-[760px] px-5 pb-20 pt-6">

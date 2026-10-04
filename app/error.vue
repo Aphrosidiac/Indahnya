@@ -15,7 +15,7 @@ const home = () => clearError({ redirect: '/' });
 <template>
   <div class="grid min-h-screen place-items-center bg-surface-50 px-4 py-12">
     <div class="w-full max-w-[420px] text-center">
-      <div class="mb-7 flex justify-center"><Logo :size="30" /></div>
+      <div class="mb-7 flex justify-center"><Logo :size="26" /></div>
       <div class="card p-7">
         <p class="num text-[13px] font-medium text-ink-400">{{ error.statusCode }}</p>
         <h1 class="mt-1 text-[20px] font-semibold leading-7 text-ink-900">{{ notFound ? 'Link ni tak jumpa' : 'Ada masalah sekejap' }}</h1>

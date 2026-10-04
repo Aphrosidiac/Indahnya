@@ -43,7 +43,7 @@ watch(sheet, v => document.documentElement.classList.toggle('l-lock', v));
 <template>
   <header class="nav fixed inset-x-0 top-0 z-40 px-3 pt-3 md:px-5 md:pt-4" :class="{ 'nav-hidden': hidden }">
     <div class="nav-pill mx-auto flex h-[60px] max-w-[1280px] items-center justify-between gap-3 rounded-full pl-4 pr-2 md:pl-5" :class="{ 'is-solid': solid || sheet, 'is-dim': dim && !sheet }">
-      <NuxtLink to="/" class="rounded-full" aria-label="Indahnya"><Logo :size="28" :wordmark="true" class="nav-logo" /></NuxtLink>
+      <NuxtLink to="/" class="rounded-full" aria-label="Indahnya"><Logo :size="24" class="nav-logo" /></NuxtLink>
       <nav class="hidden items-center gap-0.5 lg:flex" aria-label="Utama">
         <a v-for="l in links" :key="l.id" :href="l.id" class="nav-link" @click.prevent="go(l.id)">{{ l.label }}</a>
       </nav>
@@ -75,7 +75,7 @@ watch(sheet, v => document.documentElement.classList.toggle('l-lock', v));
 .nav-pill { transition: background-color .35s, box-shadow .35s, color .35s; color: #1a1a1a; }
 .nav-pill.is-solid { background: rgb(253 252 251 / .82); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); box-shadow: 0 1px 0 rgb(26 26 26 / .05), 0 10px 30px -18px rgb(60 48 36 / .35), inset 0 0 0 1px rgb(255 255 255 / .6); }
 .nav-pill.is-dim { background: rgb(24 28 25 / .72); color: #f3f1ee; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08); }
-.nav-pill.is-dim :deep(.nav-logo span) { color: #f3f1ee; }
+.nav-pill.is-dim :deep(.logo) { color: #f3f1ee; }
 .nav-link {
   display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 14px; border-radius: 999px;
   font-size: 15px; font-weight: 500; color: inherit; opacity: .8; transition: opacity .2s, background-color .2s;

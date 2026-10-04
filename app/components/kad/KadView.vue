@@ -16,6 +16,7 @@ import '@fontsource/cinzel/latin-600.css';
 import { KAD_THEMES, kadDate, kadTime } from '~~/shared/utils/kad-templates';
 import { kadStart, type KadView } from '~~/shared/utils/kad-view';
 import KadOrnament from './KadOrnament.vue';
+import { Logo } from '~/ui';
 
 /**
  * The e-kad, in the shape Malaysian guests already know from the genre: a
@@ -337,7 +338,7 @@ function tool(k: string) {
       <footer class="kad-foot">
         <KadOrnament :kind="t.ornament" flip />
         <p class="kad-names kad-names-foot">{{ couple ? `${view.names.a} & ${view.names.b}` : view.names.a }}</p>
-        <a v-if="view.badge" href="https://indahnya.my" class="kad-badge">{{ L.badge }} · FF Dev Studio</a>
+        <a v-if="view.badge" href="https://indahnya.my" class="kad-badge"><Logo :size="12" :wordmark="false" mono inherit class="mr-1.5 -mt-0.5" />{{ L.badge }} · FF Dev Studio</a>
       </footer>
     </main>
 

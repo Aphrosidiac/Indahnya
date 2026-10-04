@@ -30,7 +30,7 @@ and accepted without discussion — change freely.
 | Vendor / photographer mode | not v1. Parked. |
 | Differentiators | last: face-search "cari gambar saya", WhatsApp reminders, disposable-camera mode, e-kad partner API. |
 | UI | **Exactly ANK Ops**: tokens, 33 primitives, transitions (veil/pop/drop/slide, `.reveal` no-fill keyframes, no route transitions), shell, composition rules. Guest pages use the same language one size warmer. |
-| Landing page | **Built 2026-09-20** at `/` (BM default, `?lang=en`). Direction from the Awwwards study: Cosmos (gallery-as-hero), Opal/Polaroid (flow told visually), Daylight (warm ground + one accent), POV's section order. Photos are Unsplash-licensed (`public/landing/`) until real majlis photos exist. `/privasi` and `/terma` are still unwritten. |
+| Landing page | **Rebuilt 2026-10-04 (branch `landing-v2`)** at `/` (BM default, `?lang=en`). Borrowed mechanisms, each on Indahnya's own job: the hero's real QR turns into the gallery wall (canvas), mymind's NO list + Cosmos' sharpening sentence, Granola's held step list, Lusion/Apple's pinned stage for the dewan (page dims, TV grows), Partiful's demo cursor on the real kad (`/contoh/kad`), Arc's lace edge, Cosmos' drifting close. Live demos run the product: the TV's QR sends a real photo through the `_cuba` sandbox (`/contoh/cuba`, `server/utils/sandbox.ts`: own photos only, 6 max, swept after an hour), the seat search asks the sample event. Photos are Unsplash-licensed (`public/landing/`) until real majlis photos exist. |
 
 ## Pricing table
 

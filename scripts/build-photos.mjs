@@ -28,7 +28,8 @@ for (const p of list) {
   await img().resize(big).webp({ quality: 76 }).toFile(`public/landing/l/${p.id}.webp`);
   await img().resize({ width: 560 }).webp({ quality: 70 }).toFile(`public/landing/s/${p.id}.webp`);
   const { width, height } = await sharp(`public/landing/${p.id}.jpg`).metadata();
-  meta[p.id] = [900, Math.round((900 * height) / width)];
+  // a photo kept for one frame (`only`) stays off the hero's wall
+  if (!p.only) meta[p.id] = [900, Math.round((900 * height) / width)];
 }
 // drop cuts of photos no longer in the list
 const ids = new Set(list.map(p => p.id));

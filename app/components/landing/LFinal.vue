@@ -25,7 +25,7 @@ const wmSrc = ref('');
 let wmIo: IntersectionObserver | undefined;
 let onMove: ((e: PointerEvent) => void) | undefined;
 onMounted(() => {
-  wmIo = new IntersectionObserver(([e]) => { if (e?.isIntersecting) { wmSrc.value = photo('g08', 'l'); wmIo?.disconnect(); } }, { rootMargin: '100% 0px' });
+  wmIo = new IntersectionObserver(([e]) => { if (e?.isIntersecting) { wmSrc.value = photo('g24', 'l'); wmIo?.disconnect(); } }, { rootMargin: '100% 0px' });
   if (wm.value) wmIo.observe(wm.value);
   if (prefersReduced() || !matchMedia('(pointer: fine)').matches || !field.value) return;
   const els = [...field.value.querySelectorAll<HTMLElement>('[data-d]')];
@@ -78,7 +78,7 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
         <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="underline decoration-[#1a1a1a]/20 underline-offset-2 hover:text-[#1a1a1a]">{{ L.footer.takedown }}</a>
       </p>
     </footer>
-    <!-- the name, cropped by the page, filled with the day; the i keeps its flower -->
+    <!-- the name, cropped by the page, filled with songket and henna (texture, never a face cut by a letter); the i keeps its flower -->
     <svg ref="wm" class="wordmark" :viewBox="WORDMARK.viewBox" aria-hidden="true">
       <defs><clipPath id="wm-clip"><path :d="WORDMARK.path" /></clipPath></defs>
       <rect x="-200" y="-1400" width="4200" height="1800" fill="#1a1a1a" clip-path="url(#wm-clip)" />

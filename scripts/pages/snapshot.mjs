@@ -20,6 +20,7 @@ import { mkdir, writeFile, cp, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 const [origin, site, out] = process.argv.slice(2);
 if (!origin || !site || !out) { console.error('usage: snapshot.mjs <server-origin> <site-url> <out-dir>'); process.exit(1); }
@@ -32,7 +33,7 @@ const PAGES = ['/', '/tentang', '/privasi', '/terma', '/mula', '/contoh/kad', '/
 
 const texts = [];
 async function get(path, { ok = [200] } = {}) {
-  const r = await fetch(origin + path, { redirect: 'manual' });
+  const r = await fetch(origin + path, { redirect: 'manual', headers: { accept: path.startsWith('/api/') ? 'application/json' : 'text/html' } });
   if (!ok.includes(r.status)) throw new Error(`${path} → ${r.status}`);
   return r;
 }
@@ -93,7 +94,15 @@ const mediaBase = `${site}/media/`;
 const keys = new Set();
 const re = new RegExp(`${mediaBase.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}([^"'\\s)\\\\?#]+)`, 'g');
 for (const t of texts) for (const m of t.matchAll(re)) keys.add(m[1]);
-for (const k of keys) await save(join(dist, 'media', k), Buffer.from(await (await get(`/media/${k}`)).arrayBuffer()));
+// read from the PUBLIC bucket only (the production build has no /media route), with the app's own env
+const s3 = new S3Client({
+  endpoint: process.env.NUXT_S3_ENDPOINT, region: process.env.NUXT_S3_REGION || 'auto', forcePathStyle: true,
+  credentials: { accessKeyId: process.env.NUXT_S3_ACCESS_KEY_ID, secretAccessKey: process.env.NUXT_S3_SECRET_ACCESS_KEY },
+});
+for (const k of keys) {
+  const o = await s3.send(new GetObjectCommand({ Bucket: process.env.NUXT_S3_BUCKET, Key: decodeURIComponent(k) }));
+  await save(join(dist, 'media', k), Buffer.from(await o.Body.transformToByteArray()));
+}
 
 // 5. headers: the app's baseline, and kept out of search while indahnya.my is not live
 await save(join(dist, '_headers'), await readFile(join(here, '_headers')));

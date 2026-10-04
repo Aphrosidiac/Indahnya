@@ -84,7 +84,7 @@ const pending = ['g18', 'g03', 'g11'];
               <!-- the zip -->
               <div v-else-if="i === 1" class="mx-auto max-w-[520px]">
                 <div class="relative h-[200px]">
-                  <img v-for="(id, k) in ['g08', 'g04', 'g21', 'g11', 'g02', 'g14']" :key="id" :src="photo(id)" alt="" class="zip-fly absolute left-1/2 top-1/2 w-[120px] rounded-[10px] shadow-lg" loading="lazy" :style="{ '--k': k, '--x': `${(k - 2.5) * 70}px`, '--r': `${(k - 2.5) * 6}deg` }" />
+                  <img v-for="(id, k) in ['g10', 'g04', 'g21', 'g11', 'g02', 'g14']" :key="id" :src="photo(id)" alt="" class="zip-fly absolute left-1/2 top-1/2 w-[120px] rounded-[10px] shadow-lg" loading="lazy" :style="{ '--k': k, '--x': `${(k - 2.5) * 70}px`, '--r': `${(k - 2.5) * 6}deg` }" />
                 </div>
                 <div class="relative rounded-[20px] bg-white p-4 shadow-[0_20px_40px_-24px_rgba(39,98,42,.4)]">
                   <div class="flex items-center gap-3">

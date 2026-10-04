@@ -42,7 +42,7 @@ async function wipe(Bucket: string, Prefix: string) {
   if (keys.length) await s3.send(new DeleteObjectsCommand({ Bucket, Delete: { Objects: keys, Quiet: true } }));
 }
 
-const PHOTOS = ['g08', 'g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g20', 'g13', 'g01', 'g02', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07', 'g23'];
+const PHOTOS = ['g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g13', 'g01', 'g02', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07', 'g23'];
 const NAMES = ['Makcik Ros', 'Aiman', 'Team Office', 'Kak Yati', 'Pak Long', 'Nadia & Irfan', 'Abang Faiz', 'Cousins', 'Uncle Lim', 'Syafiq', 'Auntie Mei', 'Hana'];
 
 const db = useDb();
@@ -157,7 +157,7 @@ const kadAsset = async (file: string) => {
   await put(PUBLIC, key, await sharp(readFileSync(`public/landing/${file}.jpg`)).rotate().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toBuffer(), 'image/webp');
   return key;
 };
-const coverKey = await kadAsset('g08');
+const coverKey = await kadAsset('g21');
 const photoKeys = await Promise.all(['g04', 'g21', 'g02', 'g13'].map(kadAsset));
 const kadFields = KadFields.parse({
   hosts: 'Ahmad bin Ismail\n&\nRohana binti Musa',
@@ -173,7 +173,7 @@ const kadFields = KadFields.parse({
 const [fresh] = await db.select().from(events).where(eq(events.id, ev.id));
 const publicBase = v('S3_PUBLIC_BASE') || 'http://localhost:3180/media';
 const view = composeKad(fresh!, 'garden', kadFields, kadDefaults(fresh!), k => `${publicBase}/${k}`, true);
-const og = await renderKadOg(view, readFileSync('public/landing/g08.jpg'), async f => readFileSync(`server/assets/fonts/${f}`));
+const og = await renderKadOg(view, readFileSync('public/landing/g21.jpg'), async f => readFileSync(`server/assets/fonts/${f}`));
 const ogKey = `${kp}og-${Date.now().toString(36)}.jpg`;
 await put(PUBLIC, ogKey, og, 'image/jpeg');
 await db.insert(kad).values({ eventId: ev.id, template: 'garden', fields: kadFields, ogKey, updatedAt: new Date() })

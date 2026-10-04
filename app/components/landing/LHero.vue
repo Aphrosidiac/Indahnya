@@ -39,11 +39,11 @@ const reduced = ref(false);
 /* ── the floating polaroids around the card: the photos that are coming ── */
 const FLOAT = [
   { id: 'g04', dx: -1.02, dy: 0.5, w: 0.5, r: -8, d: 1.3 },
-  { id: 'g08', dx: 0.98, dy: -0.72, w: 0.58, r: 6, d: 0.8 },
+  { id: 'g03', dx: 0.98, dy: -0.72, w: 0.58, r: 6, d: 0.8 },
   { id: 'g21', dx: 1.12, dy: 0.36, w: 0.5, r: 9, d: 1.5 },
   { id: 'g11', dx: 0.42, dy: 1.04, w: 0.56, r: -4, d: 1 },
   { id: 'g02', dx: -1.3, dy: -0.32, w: 0.4, r: -6, d: 0.55, far: true },
-  { id: 'g20', dx: -0.46, dy: 1.1, w: 0.46, r: 5, d: 0.7 },
+  { id: 'g10', dx: -0.46, dy: 1.1, w: 0.46, r: 5, d: 0.7 },
   { id: 'g14', dx: 0.16, dy: -1.12, w: 0.38, r: -3, d: 0.5, far: true },
   { id: 'g15', dx: 1.5, dy: -0.18, w: 0.36, r: -7, d: 0.45, far: true },
   { id: 'g22', dx: -1.66, dy: 0.74, w: 0.38, r: 10, d: 0.5, far: true },
@@ -51,8 +51,8 @@ const FLOAT = [
 ];
 /* ── the live feed under the buttons, and the card's counter: the gallery filling while you read ── */
 const FEED: { name: string; ids: string[] }[] = [
-  { name: 'Makcik Ros', ids: ['g04', 'g20', 'g11'] }, { name: 'Uncle Lim', ids: ['g14'] }, { name: 'Team Office', ids: ['g09', 'g02', 'g18', 'g15', 'g01'] },
-  { name: 'Kak Yati', ids: ['g21', 'g15'] }, { name: 'Abang Faiz', ids: ['g08', 'g03', 'g22', 'g07'] }, { name: 'Nadia & Irfan', ids: ['g10', 'g17'] }, { name: 'Hana', ids: ['g18'] },
+  { name: 'Makcik Ros', ids: ['g04', 'g13', 'g11'] }, { name: 'Uncle Lim', ids: ['g14'] }, { name: 'Team Office', ids: ['g09', 'g02', 'g18', 'g15', 'g01'] },
+  { name: 'Kak Yati', ids: ['g21', 'g15'] }, { name: 'Abang Faiz', ids: ['g23', 'g03', 'g22', 'g07'] }, { name: 'Nadia & Irfan', ids: ['g10', 'g17'] }, { name: 'Hana', ids: ['g18'] },
 ];
 let feedSeq = 0;
 const feed = ref(FEED.slice(0, 3).map(f => ({ ...f, key: feedSeq++ })).reverse());
@@ -121,7 +121,7 @@ function buildWall() {
   const cols = W >= 1280 ? 6 : W >= 900 ? 5 : W >= 600 ? 4 : 3;
   const gap = W >= 900 ? 10 : 6;
   const tw = (W - gap * (cols + 1)) / cols;
-  const order = ['g08', 'g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g02', 'g01', 'g20', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07'];
+  const order = ['g23', 'g04', 'g18', 'g11', 'g21', 'g15', 'g09', 'g02', 'g01', 'g13', 'g17', 'g03', 'g14', 'g22', 'g10', 'g07'];
   const out: Tile[] = [];
   let n = 0;
   const near = (c: number, y0: number, y1: number) => out.filter(t => Math.abs(Math.round((t.x - gap) / (tw + gap)) - c) <= 1 && t.y < y1 + tw && t.y + t.h > y0 - tw).map(t => t.id);

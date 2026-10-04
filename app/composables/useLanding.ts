@@ -239,7 +239,7 @@ export type LandingLang = keyof typeof LANDING;
 export type LandingCopy = (typeof LANDING)[LandingLang];
 
 /** The landing's frames: Unsplash-licensed, Malaysian where we could find them. [width, height] of the 900px masters. */
-export const PHOTOS: Record<string, [number, number]> = { g01: [900, 506], g02: [900, 1352], g03: [900, 600], g04: [900, 1352], g07: [900, 600], g08: [900, 600], g09: [900, 1350], g10: [900, 600], g11: [900, 1350], g13: [900, 600], g14: [900, 1401], g15: [900, 600], g17: [900, 1350], g18: [900, 1350], g20: [900, 600], g21: [900, 1169], g22: [900, 1350], g23: [900, 600] };
+export const PHOTOS: Record<string, [number, number]> = { g01: [900, 506], g02: [900, 1352], g03: [900, 600], g04: [900, 1352], g07: [900, 600], g09: [900, 1350], g10: [900, 600], g11: [900, 1350], g13: [900, 600], g14: [900, 1401], g15: [900, 600], g17: [900, 1350], g18: [900, 1350], g21: [900, 1169], g22: [900, 1350], g23: [900, 600] };
 export const GUEST_NAMES = ['Makcik Ros', 'Aiman', 'Team Office', 'Kak Yati', 'Pak Long', 'Nadia & Irfan', 'Abang Faiz', 'Cousins', 'Uncle Lim', 'Syafiq', 'Auntie Mei', 'Hana'];
 /** Sample photos (scripts/landing-photos.json, built by scripts/build-photos.mjs): 's' 560px for tiles, 'l' 1600px for big frames. */
 export const photo = (id: string, size: 's' | 'l' = 's') => `/landing/${size}/${id}.webp`;

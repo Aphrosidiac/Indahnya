@@ -27,7 +27,7 @@ writeFileSync('public/favicon.ico', Buffer.concat([ico, png32]));
 
 // the social card: a real majlis frame, the lockup, the hero line; all text outlined (brand/og-overlay.svg)
 const W = 1200, H = 630;
-const photo = await sharp('public/landing/g08.jpg').resize(W, H, { fit: 'cover' }).modulate({ brightness: 0.6 }).toBuffer();
+const photo = await sharp('public/landing/g10.jpg').resize(W, H, { fit: 'cover' }).modulate({ brightness: 0.6 }).toBuffer();
 await sharp(photo).composite([{ input: readFileSync('brand/og-overlay.svg') }]).jpeg({ quality: 84, mozjpeg: true }).toFile('public/og.jpg');
 
 // the landing photos themselves are built by scripts/build-photos.mjs

@@ -2,6 +2,7 @@
 import '~/assets/css/landing.css';
 import { LANDING, type LandingLang } from '~/composables/useLanding';
 import { useLandingMotion } from '~/composables/useLandingMotion';
+import { qrArtDataUrl } from '~~/shared/utils/qr-art';
 import LNav from '~/components/landing/LNav.vue';
 import LHero from '~/components/landing/LHero.vue';
 import LStory from '~/components/landing/LStory.vue';
@@ -83,8 +84,7 @@ const dim = ref(false);
 onMounted(() => { void motion.boot(); });
 onBeforeUnmount(() => { motion.teardown(); document.documentElement.classList.remove('l-lock'); });
 const go = (id: string) => motion.scrollTo(id);
-const demoQr = ref('');
-onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(`${site}/aina-hakim`, { margin: 0, width: 280, color: { dark: '#1a1a1a', light: '#00000000' } }); });
+const demoQr = qrArtDataUrl(`${site}/aina-hakim`);
 </script>
 
 <template>
@@ -94,11 +94,11 @@ onMounted(async () => { demoQr.value = await (await import('qrcode')).toDataURL(
     <main>
       <LHero :L="L" :qr-url="`${site}/aina-hakim`" @go="go" />
       <LStory :L="L" />
-      <LHow :L="L" :qr="demoQr" />
+      <LHow :L="L" :qr="demoQr" :url="`${site}/aina-hakim`" />
       <LDewan :L="L" @dim="dim = $event" />
       <LKad :L="L" />
       <LGuests :L="L" />
-      <LHost :L="L" :qr="demoQr" />
+      <LHost :L="L" :qr="demoQr" :url="`${site}/aina-hakim`" />
       <LPricing :L="L" />
       <LFaq :L="L" />
     </main>

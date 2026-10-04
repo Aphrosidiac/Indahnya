@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { qrArtDataUrl } from '~~/shared/utils/qr-art';
 /**
  * The venue screen. Dark, full-bleed, a QR in the corner so the room can
  * join, a name under each photo if the host allows. Polls for new photos
@@ -135,7 +136,7 @@ async function start(): Promise<void> {
     if (!clearedForGood) retry = setTimeout(() => void start(), 10_000);
     return;
   }
-  qrImg.value = await (await import('qrcode')).toDataURL(qr.value, { margin: 1, width: 400, color: { dark: '#ffffff', light: '#00000000' } });
+  qrImg.value = qrArtDataUrl(qr.value, { margin: 1.6 });
   void advance();
   poller = setInterval(() => { void pull(pool.value[0]?.id); }, 6000);
   document.documentElement.requestFullscreen?.().catch(() => {});
@@ -170,7 +171,7 @@ useHead({ title: () => (names.value ? `${names.value} · Slideshow` : 'Slideshow
       <div v-if="feed" class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 bg-gradient-to-t from-black/70 to-transparent p-8 pt-24">
         <div class="min-w-0"><p class="truncate text-[28px] font-semibold leading-8 tracking-[-0.02em]">{{ names }}</p><p class="mt-1 text-[16px] text-white/70">{{ pool.length }} {{ en ? 'photos' : 'gambar' }}</p></div>
         <Transition name="veil"><p v-if="feed.event.settings.showNames && current?.guestName" :key="current.id" class="truncate rounded-full bg-white/15 px-5 py-2 text-[18px] backdrop-blur-md">📷 {{ current.guestName }}</p></Transition>
-        <div class="flex shrink-0 items-center gap-4"><div class="text-right"><p class="text-[16px] font-medium">{{ en ? 'Scan to upload' : 'Scan untuk upload' }}</p><p class="text-[14px] text-white/60">{{ shortSite() }}/{{ slug }}</p></div><img v-if="qrImg" :src="qrImg" alt="QR" class="size-[120px]" /></div>
+        <div class="flex shrink-0 items-center gap-4"><div class="text-right"><p class="text-[16px] font-medium">{{ en ? 'Scan to upload' : 'Scan untuk upload' }}</p><p class="text-[14px] text-white/60">{{ shortSite() }}/{{ slug }}</p></div><img v-if="qrImg" :src="qrImg" alt="QR" class="size-[132px] rounded-[14px]" /></div>
       </div>
     </template>
   </div>

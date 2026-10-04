@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Download, Copy, Check, Printer, QrCode, Link2, Images } from 'lucide-vue-next';
 import { PageHead, Btn, Card, Tabs, Sk, Alert, useUi } from '~/ui';
+import QrStand from '~/components/print/QrStand.vue';
+import { isKadTemplate, type KadTemplate } from '~~/shared/utils/kad-templates';
 
 definePageMeta({ layout: 'app', middleware: 'auth' });
 const { ev, id } = useCurrentEvent();
@@ -17,6 +19,11 @@ const embedCode = computed(() => (ev.value ? `<iframe src="${siteUrl()}/embed/${
 async function copyStr(s: string, what: string) { if (await copyText(s)) ui.ok(`${what} dah copy`); }
 const copied = ref(false);
 async function copy() { if (await copyText(link.value)) { copied.value = true; ui.ok('Link dah copy'); setTimeout(() => { copied.value = false; }, 1500); } }
+
+/* the print previews wear the kad's template, as the sheets do */
+const { data: kad } = useFetch<{ template: string; fields: { title?: string }; defaults: { title: string } }>(() => `/api/events/${id.value}/kad`, { key: `qr-kad-${id.value}` });
+const kadTemplate = computed<KadTemplate>(() => (isKadTemplate(kad.value?.template) ? kad.value!.template as KadTemplate : 'garden'));
+const kadTitle = computed(() => kad.value?.fields.title ?? kad.value?.defaults.title ?? '');
 
 const TEMPLATES = [
   { key: 'a5', label: 'Poster A5', sub: 'Untuk bingkai kat meja tetamu' },
@@ -56,10 +63,13 @@ const TEMPLATES = [
           <div class="grid grid-cols-1 divide-y divide-line-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <a v-for="t in TEMPLATES" :key="t.key" :href="`/app/${ev.id}/qr-print?tpl=${t.key}&to=${target}`" target="_blank" rel="noopener"
               class="group flex flex-col gap-3 px-5 py-5 transition-colors hover:bg-surface-50">
-              <div class="mx-auto flex aspect-[3/4] w-full max-w-[140px] flex-col items-center justify-center gap-2 rounded-[8px] border border-line-200 bg-surface-0 p-3 shadow-xs transition-transform duration-[160ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:-translate-y-px">
-                <span class="h-1.5 w-2/3 rounded-full bg-ink-900" /><span class="h-1 w-1/2 rounded-full bg-line-200" />
-                <img :src="svgUrl" alt="" class="mt-1 w-1/2" />
-                <span class="h-1 w-1/2 rounded-full bg-line-200" />
+              <div class="mx-auto flex h-[196px] w-full items-center justify-center">
+                <QrStand
+                  class="overflow-hidden rounded-[6px] border border-line-200 shadow-xs transition-transform duration-[160ms] ease-[cubic-bezier(.2,.8,.2,1)] group-hover:-translate-y-px"
+                  :class="t.key === 'tent' ? 'w-full max-w-[200px]' : 'w-full max-w-[138px]'"
+                  :url="link" :link="link.replace(siteUrl(), shortSite())" :template="kadTemplate" :format="t.key === 'tent' ? 'landscape' : 'portrait'"
+                  :names="ev.names" :title="kadTitle" :date="ev.date ? fmtDate(ev.date, undefined, ev.settings.locale) : ''" :locale="ev.settings.locale"
+                />
               </div>
               <span><span class="block text-[13px] font-medium leading-5 text-ink-900">{{ t.label }}</span><span class="block text-[12px] leading-4 text-ink-500">{{ t.sub }}</span></span>
             </a>

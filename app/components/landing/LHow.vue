@@ -3,6 +3,7 @@ import { Camera, Check, ImagePlus, Images } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
 import { GUEST_NAMES, photo } from '~/composables/useLanding';
 import { prefersReduced } from '~/composables/useLandingMotion';
+import QrStand from '~/components/print/QrStand.vue';
 
 /**
  * Three steps, told the way Granola tells a meeting: the step list holds
@@ -14,7 +15,7 @@ import { prefersReduced } from '~/composables/useLandingMotion';
  * Phones (and reduced motion) get the same scenes stacked, each under its
  * step, already played.
  */
-const props = defineProps<{ L: LandingCopy; qr: string }>();
+const props = defineProps<{ L: LandingCopy; qr: string; url: string }>();
 const active = ref(0);
 const played = ref<boolean[]>([false, false, false]);
 const scenes = ref<HTMLElement[]>([]);
@@ -80,20 +81,18 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
           <div class="stage relative mt-6 flex h-[min(78vh,640px)] w-full items-center justify-center overflow-hidden rounded-[28px] lg:mt-0 lg:h-[min(82vh,720px)]" :class="['bg-[#ebe8e5]', 'bg-[#e6f3e1]', 'bg-[#1b1f1c]'][i]">
             <!-- 1 · the QR on the table, through the phone's camera -->
             <template v-if="i === 0">
-              <div class="table-card absolute left-[8%] top-[16%] hidden w-[34%] max-w-[230px] rounded-[14px] bg-[#fdfcfb] p-[4%] text-center shadow-[0_30px_60px_-30px_rgba(60,48,36,.45)] sm:block">
-                <p class="font-[640] tracking-[-0.03em] text-[#1a1a1a] [font-family:var(--l-display)] [font-size:clamp(13px,1.3vw,18px)]">Aina &amp; Hakim</p>
-                <p class="mt-1 text-[10px] leading-3 text-[#55524f]">{{ L.hero.card }}</p>
-                <img v-if="qr" :src="qr" alt="" class="mx-auto mt-3 w-[78%]" />
-                <p class="mt-2 text-[9px] font-semibold text-[#1a1a1a]">indahnya.my/aina-hakim</p>
-              </div>
+              <QrStand
+                class="table-card absolute left-[7%] top-[12%] hidden w-[36%] max-w-[240px] overflow-hidden rounded-[10px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.5)] max-sm:!hidden"
+                :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" hashtag="#AinaHakim" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
+              />
               <div class="l-phone relative z-10 aspect-[9/19] h-[88%] sm:ml-[30%]">
                 <div class="l-phone-screen bg-[#0b0b0b]">
                   <img :src="photo('g20', 'l')" alt="" class="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-[6px]" />
-                  <div class="absolute left-1/2 top-[42%] w-[62%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] rounded-[10px] bg-[#fdfcfb] p-[7%] text-center">
-                    <p class="text-[11px] font-semibold text-[#1a1a1a]">Aina &amp; Hakim</p>
-                    <img v-if="qr" :src="qr" alt="" class="mx-auto mt-2 w-[80%]" />
-                  </div>
-                  <div class="finder absolute left-1/2 top-[42%] aspect-[4/5] w-[74%]" aria-hidden="true"><i /><i /><i /><i /></div>
+                  <QrStand
+                    class="absolute left-1/2 top-[42%] w-[64%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] overflow-hidden rounded-[6px]"
+                    :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
+                  />
+                  <div class="finder absolute left-1/2 top-[42%] aspect-[1/1.414] w-[74%]" aria-hidden="true"><i /><i /><i /><i /></div>
                   <div class="scan-pill absolute inset-x-[8%] top-[68%] flex items-center gap-2.5 rounded-[14px] bg-[#ffd60a] px-3 py-2.5 text-[#1a1a1a] shadow-lg">
                     <span class="grid size-7 shrink-0 place-items-center rounded-[8px] bg-[#7dd56f]"><svg viewBox="0 0 32 32" class="size-4"><g fill="#1a1a1a"><circle cx="16" cy="9.5" r="4.2" /><circle cx="16" cy="22.5" r="4.2" /><circle cx="9.5" cy="16" r="4.2" /><circle cx="22.5" cy="16" r="4.2" /></g></svg></span>
                     <span class="min-w-0 flex-1"><span class="block text-[10px] font-semibold leading-3">Safari</span><span class="block truncate text-[12px] font-medium leading-4">{{ L.how.scan }}</span></span>
@@ -171,7 +170,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
 .step-fill { height: 0; transition: height .7s var(--l-ease); }
 .step.is-on .step-fill { height: 100%; }
 
-.finder { transform: translate(-50%, -50%); }
+.finder { transform: translate(-50%, -50%) rotate(-4deg); }
 .finder i { position: absolute; width: 22%; height: 22%; border: 3px solid #ffd60a; }
 .finder i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
 .finder i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
@@ -179,8 +178,8 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
 .finder i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .finder { transition: transform .8s var(--l-ease), opacity .4s; transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
-  .is-played .finder { transform: translate(-50%, -50%) scale(1); opacity: 1; transition-delay: .2s; }
+  .finder { transition: transform .8s var(--l-ease), opacity .4s; transform: translate(-50%, -50%) rotate(-4deg) scale(1.3); opacity: 0; }
+  .is-played .finder { transform: translate(-50%, -50%) rotate(-4deg) scale(1); opacity: 1; transition-delay: .2s; }
   .scan-pill { transition: transform .6s var(--l-ease), opacity .3s; transform: translateY(16px) scale(.96); opacity: 0; }
   .is-played .scan-pill { transform: none; opacity: 1; transition-delay: 1s; }
   .table-card { transition: transform 1s var(--l-ease); transform: rotate(-9deg) translateY(30px); }

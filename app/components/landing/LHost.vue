@@ -3,6 +3,7 @@ import { Check, EyeOff, Download, FileArchive, Copy, MonitorPlay } from 'lucide-
 import type { LandingCopy } from '~/composables/useLanding';
 import { PHOTOS, photo } from '~/composables/useLanding';
 import { useLandingMotion, prefersReduced } from '~/composables/useLandingMotion';
+import QrStand from '~/components/print/QrStand.vue';
 
 /**
  * The host's side as a sticky stack: each card pins near the top and the
@@ -10,7 +11,7 @@ import { useLandingMotion, prefersReduced } from '~/composables/useLandingMotion
  * once it is the one on top: a photo approved and one hidden, the zip
  * filling, the TV link copied, the print cards fanning out.
  */
-const props = defineProps<{ L: LandingCopy; qr: string }>();
+const props = defineProps<{ L: LandingCopy; qr: string; url: string }>();
 const root = ref<HTMLElement>();
 const cards = ref<HTMLElement[]>([]);
 const on = ref<boolean[]>([false, false, false, false]);
@@ -114,13 +115,14 @@ const pending = ['g18', 'g03', 'g11'];
                 </div>
               </div>
 
-              <!-- print, fanned -->
-              <div v-else class="fan relative mx-auto h-[360px] max-w-[560px] md:h-[420px]">
-                <div v-for="(t, k) in L.host.print" :key="t" class="fan-card absolute bottom-0 left-1/2 flex flex-col items-center rounded-[14px] bg-[#fdfcfb] p-[4%] text-center shadow-[0_30px_50px_-28px_rgba(60,48,36,.5)]" :style="{ '--k': k, width: ['44%', '52%', '40%'][k], aspectRatio: k === 2 ? '1/1.1' : '1/1.414' }">
-                  <p class="font-[640] tracking-[-0.03em] [font-family:var(--l-display)] [font-size:clamp(14px,1.6vw,22px)]">Aina &amp; Hakim</p>
-                  <p class="mt-1 text-[clamp(8px,0.8vw,11px)] text-[#55524f]">{{ L.hero.card }}</p>
-                  <img v-if="qr" :src="qr" alt="" class="mt-[8%] w-[62%]" />
-                  <p class="mt-auto text-[clamp(8px,0.8vw,11px)] font-semibold">indahnya.my/aina-hakim</p>
+              <!-- print, fanned: the real stands, in three kad templates -->
+              <div v-else class="fan relative mx-auto h-[380px] max-w-[580px] md:h-[440px]">
+                <div v-for="(t, k) in L.host.print" :key="t" class="fan-card absolute bottom-8 left-1/2" :style="{ '--k': k, width: ['40%', '44%', '50%'][k] }">
+                  <QrStand
+                    class="overflow-hidden rounded-[10px] shadow-[0_30px_50px_-28px_rgba(60,48,36,.55)]"
+                    :url="url" link="indahnya.my/aina-hakim" :template="(['garden', 'emas', 'klasik'] as const)[k]" :format="k === 2 ? 'landscape' : 'portrait'"
+                    :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" hashtag="#AinaHakim" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
+                  />
                   <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[13px] font-semibold text-[#55524f]">{{ t }}</span>
                 </div>
               </div>
@@ -148,7 +150,8 @@ const pending = ['g18', 'g03', 'g11'];
 @keyframes press { 40% { transform: scale(.92); } }
 
 .fan-card { transform: translateX(-50%) rotate(0deg); transform-origin: 50% 100%; transition: transform 1s var(--l-ease); }
-.is-on .fan-card { transform: translateX(calc(-50% + (var(--k) - 1) * 62%)) rotate(calc((var(--k) - 1) * 9deg)); }
+.fan-card:nth-child(2) { z-index: 1; }
+.is-on .fan-card { transform: translateX(calc(-50% + (var(--k) - 1) * 66%)) rotate(calc((var(--k) - 1) * 8deg)); }
 .fan-card:hover { z-index: 2; }
 @media (prefers-reduced-motion: reduce) { .appr, .appr-img, .zip-fly, .fan-card { transition: none; } }
 @media (max-width: 1023px) { .stack-slot { position: relative; top: 0 !important; } }

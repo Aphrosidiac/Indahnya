@@ -4,6 +4,7 @@ import type { LandingCopy } from '~/composables/useLanding';
 import { GUEST_NAMES, PHOTOS, photo } from '~/composables/useLanding';
 import { useLandingMotion, prefersReduced } from '~/composables/useLandingMotion';
 import { useUploader } from '~/composables/useUploader';
+import { qrArtDataUrl } from '~~/shared/utils/qr-art';
 
 /**
  * The dewan. The lights go down (the page dims while this section holds the
@@ -60,8 +61,7 @@ async function start() {
   try {
     const s = await $fetch<{ k: string; slug: string; expiresAt: string; name: string | null }>('/api/cuba', { method: 'POST', body: {} });
     session.value = s;
-    const QR = await import('qrcode');
-    pairQr.value = await QR.toDataURL(`${location.origin}/contoh/cuba?k=${encodeURIComponent(s.k)}${props.L.nav.lang === 'BM' ? '&lang=en' : ''}`, { margin: 1, width: 360, errorCorrectionLevel: 'M', color: { dark: '#1a1a1a', light: '#ffffff' } });
+    pairQr.value = qrArtDataUrl(`${location.origin}/contoh/cuba?k=${encodeURIComponent(s.k)}${props.L.nav.lang === 'BM' ? '&lang=en' : ''}`, { margin: 1.4 });
     // whatever this visitor already sent (a reload) is not news
     const r = await $fetch<{ items: { id: string }[] }>(`/api/g/${s.slug}/media`);
     r.items.forEach(i => seen.add(i.id));

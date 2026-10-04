@@ -3,6 +3,10 @@ import { ArrowRight } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
 import { PHOTOS, GUEST_NAMES, photo } from '~/composables/useLanding';
 import { useLandingMotion, prefersReduced } from '~/composables/useLandingMotion';
+import { qrModules, logoPatch } from '~~/shared/utils/qr-art';
+import '@fontsource/great-vibes/latin-400.css';
+import '@fontsource/cormorant-garamond/latin-500.css';
+import '@fontsource/cormorant-garamond/latin-600.css';
 
 /**
  * The hero is the product's one idea, told as a single scroll: a real,
@@ -76,10 +80,13 @@ function placeFloaters() {
 
 /* ── geometry ── */
 interface Tile { x: number; y: number; w: number; h: number; id: string; img?: HTMLImageElement; px?: Uint8ClampedArray; cols: number; rows: number; delay: number }
-interface Mod { u: number; v: number; tile: number; cell: number; delay: number }
+interface Mod { u: number; v: number; tile: number; cell: number; delay: number; eye: boolean }
 let W = 0, H = 0, dpr = 1;
 let qrSize = 0;
-let qrData: Uint8Array | null = null;
+let qrData: ((r: number, c: number) => boolean) | null = null;
+let qrPatch = { start: 0, n: 0 };
+/** the stand on the table: the Garden kad, as components/print/QrStand.vue prints it */
+const STAND = { bg: '#f5f2ea', ink: '#26332a', muted: '#5b6b5e', accent: '#506c45' };
 let tiles: Tile[] = [];
 let mods: Mod[] = [];
 let p = 0;
@@ -140,15 +147,17 @@ function buildWall() {
 function assign() {
   if (!qrData) return;
   const size = qrSize;
-  const dark: { u: number; v: number }[] = [];
-  for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) if (qrData[i * size + j]) dark.push({ u: (j + 0.5) / size, v: (i + 0.5) / size });
+  const eyeAt = (i: number, j: number) => (i < 7 && j < 7) || (i < 7 && j >= size - 7) || (i >= size - 7 && j < 7);
+  const inPatch = (i: number, j: number) => i >= qrPatch.start - 0.5 && i < qrPatch.start + qrPatch.n + 0.5 && j >= qrPatch.start - 0.5 && j < qrPatch.start + qrPatch.n + 0.5;
+  const dark: { u: number; v: number; eye: boolean }[] = [];
+  for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) if (qrData(i, j) && !inPatch(i, j)) dark.push({ u: (j + 0.5) / size, v: (i + 0.5) / size, eye: eyeAt(i, j) });
   const area = tiles.map(t => Math.max(0, Math.min(t.y + t.h, H) - Math.max(t.y, 0)) * t.w);
   const total = area.reduce((a, b) => a + b, 0);
   const quota = area.map(a => Math.max(1, Math.round(dark.length * a / total)));
   const left = [...quota];
   const centres = tiles.map(t => ({ x: (t.x + t.w / 2) / W, y: (t.y + t.h / 2) / H }));
   const order = dark.map((d, i) => ({ d, i, r: rnd(i + 11) })).sort((a, b) => a.r - b.r);
-  const byTile: { u: number; v: number }[][] = tiles.map(() => []);
+  const byTile: { u: number; v: number; eye: boolean }[][] = tiles.map(() => []);
   for (const { d } of order) {
     let best = -1, bd = Infinity;
     for (let t = 0; t < tiles.length; t++) {
@@ -168,7 +177,7 @@ function assign() {
     t.rows = Math.max(1, Math.ceil(n / t.cols));
     const dist = Math.hypot(centres[ti]!.x - 0.5, centres[ti]!.y - 0.5);
     t.delay = dist * 0.14;
-    list.forEach((d, k) => mods.push({ u: d.u, v: d.v, tile: ti, cell: k, delay: 0.24 + dist * 0.2 + rnd(k + ti * 31) * 0.1 }));
+    list.forEach((d, k) => mods.push({ u: d.u, v: d.v, eye: d.eye, tile: ti, cell: k, delay: 0.24 + dist * 0.2 + rnd(k + ti * 31) * 0.1 }));
     t.px = undefined;
   });
   tiles.forEach(sample);
@@ -203,8 +212,8 @@ function cardShadow(cw: number, ch: number) {
   const x = c.getContext('2d')!;
   x.scale(dpr, dpr);
   x.shadowColor = 'rgba(60,48,36,.24)'; x.shadowBlur = 40; x.shadowOffsetY = 0;
-  x.fillStyle = '#fdfcfb';
-  x.beginPath(); x.roundRect(SH_PAD, SH_PAD, cw, ch, cw * 0.055); x.fill();
+  x.fillStyle = STAND.bg;
+  x.beginPath(); x.roundRect(SH_PAD, SH_PAD, cw, ch, cw * 0.04); x.fill();
   shadowCache = { key, c };
   return c;
 }
@@ -218,8 +227,9 @@ function draw() {
 
   const a = easeIO(clamp(p / 0.14));
   const card = cardAt(a);
-  const qs = card.cw * 0.7;
-  const qx0 = -qs / 2, qy0 = card.ch * 0.56 - card.ch / 2 - qs / 2; // QR's top-left in card-local units
+  const qs = card.cw * 0.56;
+  const qx0 = -qs / 2, qy0 = card.ch * 0.1 - qs / 2; // QR's top-left in card-local units
+  const restA = 1 - clamp((p - 0.13) / 0.05);       // the styled eyes and the bloom, before the modules leave
   const cell = qs / qrSize;
   const cos = Math.cos(card.rot), sin = Math.sin(card.rot);
   const toScreen = (lx: number, ly: number) => ({ x: card.cx + (lx * cos - ly * sin) * card.k, y: card.cy + (lx * sin + ly * cos) * card.k });
@@ -238,28 +248,77 @@ function draw() {
       x.drawImage(sh, -card.cw / 2 - SH_PAD, -card.ch / 2 - SH_PAD + 18, card.cw + SH_PAD * 2, card.ch + SH_PAD * 2);
       x.restore();
     }
-    x.fillStyle = '#fdfcfb';
-    x.beginPath(); x.roundRect(-card.cw / 2, -card.ch / 2, card.cw, card.ch, card.cw * 0.055); x.fill();
+    const { cw, ch } = card;
+    x.fillStyle = STAND.bg;
+    x.beginPath(); x.roundRect(-cw / 2, -ch / 2, cw, ch, cw * 0.04); x.fill();
+    // the double frame, as printed
+    x.strokeStyle = 'rgba(80,108,69,.55)'; x.lineWidth = cw * 0.0045;
+    x.beginPath(); x.roundRect(-cw / 2 + cw * 0.034, -ch / 2 + cw * 0.034, cw - cw * 0.068, ch - cw * 0.068, cw * 0.012); x.stroke();
+    x.strokeStyle = 'rgba(80,108,69,.3)'; x.lineWidth = cw * 0.002;
+    x.beginPath(); x.roundRect(-cw / 2 + cw * 0.044, -ch / 2 + cw * 0.044, cw - cw * 0.088, ch - cw * 0.088, cw * 0.007); x.stroke();
     const textA = 1 - clamp(p / 0.08);
     if (textA > 0) {
       x.globalAlpha = paper * textA;
       x.textAlign = 'center';
-      x.fillStyle = '#1a1a1a';
-      x.font = `640 ${card.cw * 0.098}px "Bricolage Grotesque Variable", Inter, sans-serif`;
-      x.fillText('Aina & Hakim', 0, -card.ch / 2 + card.ch * 0.135);
-      x.fillStyle = '#55524f';
-      x.font = `500 ${card.cw * 0.046}px Inter, sans-serif`;
-      x.fillText(props.L.hero.card, 0, -card.ch / 2 + card.ch * 0.19);
-      x.fillStyle = '#1a1a1a';
-      x.font = `600 ${card.cw * 0.05}px Inter, sans-serif`;
-      x.fillText('indahnya.my/aina-hakim', 0, card.ch / 2 - card.ch * 0.075);
+      const top = -ch / 2;
+      x.fillStyle = STAND.accent;
+      x.font = `600 ${cw * 0.036}px "Cormorant Garamond", Georgia, serif`;
+      if ('letterSpacing' in x) (x as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${cw * 0.011}px`;
+      x.fillText('WALIMATULURUS', 0, top + ch * 0.085);
+      if ('letterSpacing' in x) (x as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
+      // the sprig: two rules and a leaf
+      const oy = top + ch * 0.115;
+      x.strokeStyle = STAND.accent; x.lineWidth = cw * 0.005; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(-cw * 0.17, oy); x.lineTo(-cw * 0.04, oy); x.moveTo(cw * 0.04, oy); x.lineTo(cw * 0.17, oy); x.stroke();
+      x.fillStyle = 'rgba(80,108,69,.25)';
+      x.beginPath(); x.moveTo(0, oy + cw * 0.025); x.bezierCurveTo(-cw * 0.025, oy, -cw * 0.02, oy - cw * 0.02, 0, oy - cw * 0.035); x.bezierCurveTo(cw * 0.02, oy - cw * 0.02, cw * 0.025, oy, 0, oy + cw * 0.025); x.fill(); x.stroke();
+      x.fillStyle = STAND.ink;
+      x.font = `400 ${cw * 0.15}px "Great Vibes", cursive`;
+      x.fillText('Aina & Hakim', 0, top + ch * 0.235);
+      x.fillStyle = STAND.muted;
+      x.font = `500 ${cw * 0.052}px "Cormorant Garamond", Georgia, serif`;
+      x.fillText(props.L.hero.card, 0, top + ch * 0.3);
+      x.fillStyle = STAND.ink;
+      x.font = `600 ${cw * 0.044}px Inter, sans-serif`;
+      x.fillText('indahnya.my/aina-hakim', 0, ch / 2 - ch * 0.085);
+      x.globalAlpha = paper;
+    }
+    // the QR's panel and its four corner brackets
+    const pad = cw * 0.035, px0 = qx0 - pad, py0 = qy0 - pad, pw = qs + pad * 2;
+    x.fillStyle = '#ffffff';
+    x.beginPath(); x.roundRect(px0, py0, pw, pw, cw * 0.04); x.fill();
+    if (textA > 0) {
+      x.globalAlpha = paper * textA;
+      const o = cw * 0.025, L = cw * 0.06;
+      x.strokeStyle = STAND.accent; x.lineWidth = cw * 0.007; x.lineCap = 'round';
+      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+        const ex = sx < 0 ? px0 - o : px0 + pw + o, ey = sy < 0 ? py0 - o : py0 + pw + o;
+        x.beginPath(); x.moveTo(ex, ey - sy * L); x.lineTo(ex, ey); x.lineTo(ex - sx * L, ey); x.stroke();
+      }
+      x.globalAlpha = paper;
+    }
+    // the styled eyes and the bloom (shared/utils/qr-art.ts), until the modules take over
+    if (restA > 0) {
+      x.globalAlpha = paper * restA;
+      const u = qs / qrSize;
+      x.fillStyle = STAND.ink;
+      for (const [ex, ey] of [[0, 0], [qrSize - 7, 0], [0, qrSize - 7]]) {
+        const X = qx0 + ex! * u, Y = qy0 + ey! * u;
+        x.beginPath(); x.roundRect(X, Y, 7 * u, 7 * u, 1.5 * u); x.roundRect(X + u, Y + u, 5 * u, 5 * u, 0.6 * u); x.fill('evenodd');
+        x.beginPath(); x.roundRect(X + 2 * u, Y + 2 * u, 3 * u, 3 * u, 0.8 * u); x.fill();
+      }
+      const c0 = qx0 + qs / 2, c1 = qy0 + qs / 2, n = qrPatch.n * u, pr = n * 0.19, off = n * 0.2;
+      x.fillStyle = '#506c45';
+      for (const [dx, dy] of [[0, -off], [0, off], [-off, 0], [off, 0]]) { x.beginPath(); x.arc(c0 + dx!, c1 + dy!, pr, 0, Math.PI * 2); x.fill(); }
+      x.fillStyle = STAND.ink; x.beginPath(); x.arc(c0, c1, pr * 0.48, 0, Math.PI * 2); x.fill();
     }
     x.restore();
   }
 
   // the modules: from the QR to their place in a tile
-  const ink = [26, 26, 26];
+  const ink = [38, 51, 42];
   for (const m of mods) {
+    if (m.eye && restA >= 1) continue;
     const t = tiles[m.tile]!;
     const tm = easeIO(clamp((p - m.delay) / 0.26));
     const s = toScreen(qx0 + m.u * qs, qy0 + m.v * qs);
@@ -279,7 +338,9 @@ function draw() {
     x.translate(cx, cy);
     x.rotate(card.rot * (1 - tm));
     x.fillStyle = `rgb(${r | 0},${g | 0},${b | 0})`;
+    x.globalAlpha = m.eye ? 1 - restA : 1;
     x.fillRect(-mw / 2, -mh / 2, mw, mh);
+    x.globalAlpha = 1;
   }
   x.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -337,9 +398,8 @@ let onMove: ((e: PointerEvent) => void) | undefined;
 
 onMounted(async () => {
   reduced.value = prefersReduced();
-  const QR = await import('qrcode');
-  const q = QR.create(props.qrUrl, { errorCorrectionLevel: 'M' });
-  qrSize = q.modules.size; qrData = q.modules.data as unknown as Uint8Array;
+  const q = qrModules(props.qrUrl, 'H');
+  qrSize = q.size; qrData = q.dark; qrPatch = logoPatch(q.size);
 
   // the wall's images: small WebPs, sampled into module colours as they arrive
   for (const id of Object.keys(PHOTOS)) {
@@ -353,7 +413,7 @@ onMounted(async () => {
   ro = new ResizeObserver(resize);
   ro.observe(stage.value!);
   document.fonts?.ready.then(() => { placeFloaters(); invalidate(); });
-  Promise.all([document.fonts?.load('640 24px "Bricolage Grotesque Variable"'), document.fonts?.load('600 16px Inter')]).then(invalidate).catch(() => {});
+  Promise.all([document.fonts?.load('640 24px "Bricolage Grotesque Variable"'), document.fonts?.load('600 16px Inter'), document.fonts?.load('40px "Great Vibes"'), document.fonts?.load('600 16px "Cormorant Garamond"'), document.fonts?.load('500 16px "Cormorant Garamond"')]).then(invalidate).catch(() => {});
 
   if (reduced.value) return;
   feedTimer = setInterval(() => {
@@ -394,7 +454,7 @@ onBeforeUnmount(() => {
 
       <!-- the photos that are coming: polaroids around the card, captioned with who sent them -->
       <div v-if="floatBox.cw" ref="floatRoot" class="pointer-events-none absolute inset-0 origin-center [will-change:transform,opacity]" aria-hidden="true">
-        <div class="absolute z-[2]" :style="{ left: `${floatBox.cx}px`, top: `${floatBox.cy}px`, transform: `rotate(${floatBox.rot}deg) translate(${floatBox.cw * 0.5 - 20}px, ${-floatBox.cw * 0.71 - 14}px) translateX(-100%)` }">
+        <div class="absolute z-[2]" :style="{ left: `${floatBox.cx}px`, top: `${floatBox.cy}px`, transform: `rotate(${floatBox.rot}deg) translate(${floatBox.cw * 0.5 - 16}px, ${-floatBox.cw * 0.71 - 40}px) translateX(-100%)` }">
           <span class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#1a1a1a] pl-2.5 pr-3 text-[12px] font-semibold text-white shadow-[0_10px_24px_-10px_rgba(0,0,0,.5)]">
             <span class="live-dot size-1.5 rounded-full bg-[#ff5a4f]" />LIVE<span class="ml-1 font-medium tabular-nums text-white/75">{{ liveCount }} {{ L.hero.live }}</span>
           </span>

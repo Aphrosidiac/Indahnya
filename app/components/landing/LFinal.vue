@@ -64,6 +64,7 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
       <div class="flex flex-col gap-6 border-t border-[#1a1a1a]/10 pt-8 md:flex-row md:items-center md:justify-between">
         <p class="text-[15px] text-[#55524f]">{{ L.footer.tagline }}</p>
         <nav class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[15px] text-[#55524f]" aria-label="Footer">
+          <NuxtLink :to="lang === 'en' ? '/tentang?lang=en' : '/tentang'" class="hover:text-[#1a1a1a]">{{ L.footer.about }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="hover:text-[#1a1a1a]">{{ L.footer.links.privacy }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="hover:text-[#1a1a1a]">{{ L.footer.links.terms }}</NuxtLink>
           <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="hover:text-[#1a1a1a]">{{ L.footer.links.contact }}</a>

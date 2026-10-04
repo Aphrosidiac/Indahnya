@@ -7,8 +7,10 @@
  * Plain paragraphs only: each section is a heading and a list of paragraphs
  * or bullet lists. No HTML is rendered from these strings.
  */
-export interface LegalSection { h: string; p?: string[]; ul?: string[] }
-export interface LegalDoc { title: string; updated: string; intro: string; sections: LegalSection[]; other: string }
+/** `dl`: a facts block (term, definition), for the About page. */
+export interface LegalSection { h: string; p?: string[]; ul?: string[]; dl?: [string, string][] }
+/** `seoTitle`: the <title> when the H1 alone is too short to say what the page is. */
+export interface LegalDoc { title: string; seoTitle?: string; updated: string; intro: string; sections: LegalSection[]; other: string }
 
 const UPDATED_MS = 'Dikemas kini 24 September 2026';
 const UPDATED_EN = 'Updated 24 September 2026';
@@ -170,5 +172,94 @@ export const TERMS: Record<'ms' | 'en', LegalDoc> = {
       { h: 'Contact us', p: [`${CONTACT_EN} If the BM and English versions differ, the BM version prevails.`] },
     ],
     other: 'Baca dalam BM',
+  },
+};
+
+/**
+ * About: who and what Indahnya is, in facts a reader (or an answer engine)
+ * can check against the rest of the site. Every line here is true today and
+ * matches the landing, the pricing and the privacy notice; change them
+ * together. Founder name and SSM number are the owner's call (docs/geo/owner-todo.md).
+ */
+const ABOUT_UPDATED_MS = 'Dikemas kini 4 Oktober 2026';
+const ABOUT_UPDATED_EN = 'Updated 4 October 2026';
+export const ABOUT: Record<'ms' | 'en', LegalDoc> = {
+  ms: {
+    title: 'Tentang Indahnya',
+    seoTitle: 'Tentang Indahnya: galeri gambar majlis dengan QR',
+    updated: ABOUT_UPDATED_MS,
+    intro: 'Indahnya ialah galeri gambar majlis dengan QR untuk Malaysia. Tetamu scan QR atas meja, upload gambar terus dari browser phone tanpa app atau login, dan semua gambar masuk satu galeri yang boleh naik atas TV dewan. Indahnya juga ada e-kad jemputan, RSVP, carian nombor meja dan ucapan. Dibina oleh FF Dev Studio, Malaysia.',
+    other: 'English',
+    sections: [
+      { h: 'Fakta ringkas', dl: [
+        ['Nama', 'Indahnya'],
+        ['Laman', 'indahnya.my'],
+        ['Apa', 'Galeri gambar majlis dengan QR, e-kad jemputan, RSVP, carian tempat duduk, dan ucapan bertulis atau suara'],
+        ['Untuk', 'Majlis kahwin, aqiqah, hari jadi, graduasi, majlis syarikat dan majlis lain di Malaysia'],
+        ['Bahasa', 'Bahasa Melayu dan English'],
+        ['Harga', 'Percuma, RM0 (50 upload, simpan 30 hari selepas majlis); RM59 sekali bayar (upload tanpa had, simpan setahun); RM99 sekali bayar (upload tanpa had, simpan dua tahun)'],
+        ['Bayaran', 'Melalui Stripe: FPX, kad atau GrabPay, dalam Ringgit'],
+        ['Dibina oleh', 'FF Dev Studio, Malaysia (ffdev.studio)'],
+        ['Hubungi', 'hello@indahnya.my · WhatsApp +60 13-907 8719'],
+      ] },
+      { h: 'Kenapa Indahnya wujud', p: [
+        'Lepas majlis, gambar tetamu biasanya tersebar dalam berpuluh chat WhatsApp, selalunya dimampatkan, dan banyak yang tak pernah sampai ke tuan majlis. Indahnya kumpul semuanya dalam satu galeri, dengan nama siapa yang snap, dan tuan majlis boleh download semua sekali gus.',
+      ] },
+      { h: 'Macam mana Indahnya berfungsi', ul: [
+        'Tuan majlis buat majlis dan print QR: poster A5, A4 atau kad meja yang dilipat.',
+        'Tetamu scan QR dengan kamera phone. Galeri terus buka dalam browser. Tak payah download app, tak payah buat akaun.',
+        'Tetamu pilih sampai 30 gambar sekali gus, atau snap terus. Video sampai 60 saat setiap satu.',
+        'Gambar masuk galeri dalam beberapa saat dan boleh dipaparkan atas TV atau skrin dewan sebagai slideshow.',
+      ] },
+      { h: 'Privasi tetamu', ul: [
+        'Laman majlis setiap pasangan tak diindeks oleh enjin carian.',
+        'Metadata gambar (EXIF, termasuk lokasi GPS) dibuang dari salinan yang dipaparkan.',
+        'Tuan majlis boleh sembunyi gambar, atau on approval mode supaya gambar hanya naik selepas disemak.',
+        'Butiran penuh dalam Notis Privasi, di bawah Akta Perlindungan Data Peribadi 2010.',
+      ] },
+      { h: 'Siapa di belakang Indahnya', p: [
+        'Indahnya dibina dan dijalankan oleh FF Dev Studio, studio kecil di Malaysia. Kalau ada masalah, WhatsApp kami. Orang yang bina Indahnya yang jawab.',
+      ] },
+      { h: 'Hubungi', p: [CONTACT_MS] },
+    ],
+  },
+  en: {
+    title: 'About Indahnya',
+    seoTitle: 'About Indahnya: QR photo gallery for Malaysian events',
+    updated: ABOUT_UPDATED_EN,
+    intro: 'Indahnya is a QR photo gallery for Malaysian events. Guests scan a QR code on the table, upload photos straight from their phone browser with no app or sign-up, and every photo lands in one gallery that can play on the venue screen. Indahnya also has e-invitation cards, RSVP, table finder and guest wishes. Built by FF Dev Studio, Malaysia.',
+    other: 'Bahasa Melayu',
+    sections: [
+      { h: 'Quick facts', dl: [
+        ['Name', 'Indahnya'],
+        ['Website', 'indahnya.my'],
+        ['What', 'QR photo gallery for events, e-invitation card, RSVP, seating finder, and written or voice wishes'],
+        ['For', 'Weddings, aqiqah, birthdays, graduations, company events and other events in Malaysia'],
+        ['Languages', 'Bahasa Melayu and English'],
+        ['Pricing', 'Free, RM0 (50 uploads, kept 30 days after the event); RM59 one-time (unlimited uploads, kept one year); RM99 one-time (unlimited uploads, kept two years)'],
+        ['Payment', 'Through Stripe: FPX, card or GrabPay, in Ringgit'],
+        ['Built by', 'FF Dev Studio, Malaysia (ffdev.studio)'],
+        ['Contact', 'hello@indahnya.my · WhatsApp +60 13-907 8719'],
+      ] },
+      { h: 'Why Indahnya exists', p: [
+        'After an event, guests\' photos usually end up scattered across dozens of WhatsApp chats, often compressed, and many never reach the hosts. Indahnya gathers them in one gallery, with the name of whoever took each one, and the hosts can download everything at once.',
+      ] },
+      { h: 'How Indahnya works', ul: [
+        'The hosts create the event and print the QR: an A5 or A4 poster, or a folded table card.',
+        'Guests scan the QR with their phone camera. The gallery opens in the browser. No app to download, no account to make.',
+        'Guests pick up to 30 photos at a time, or snap one there and then. Videos up to 60 seconds each.',
+        'Photos reach the gallery within seconds and can play on the venue TV or screen as a slideshow.',
+      ] },
+      { h: 'Guest privacy', ul: [
+        'Each couple\'s event pages are not indexed by search engines.',
+        'Photo metadata (EXIF, including GPS location) is removed from the copies shown.',
+        'Hosts can hide photos, or turn on approval mode so photos appear only after review.',
+        'Full details are in the Privacy Notice, under the Personal Data Protection Act 2010.',
+      ] },
+      { h: 'Who is behind Indahnya', p: [
+        'Indahnya is built and run by FF Dev Studio, a small studio in Malaysia. If something goes wrong, WhatsApp us. The people who built Indahnya are the ones who answer.',
+      ] },
+      { h: 'Contact', p: [CONTACT_EN] },
+    ],
   },
 };

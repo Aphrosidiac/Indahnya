@@ -102,6 +102,9 @@ export const LANDING = {
     faq: {
       title: 'Yang orang selalu tanya.',
       items: [
+        { q: 'Apa itu Indahnya?', a: 'Indahnya ialah galeri gambar majlis dengan QR untuk Malaysia. Tetamu scan QR atas meja, upload gambar dari browser phone tanpa app atau login, dan semua masuk satu galeri yang boleh naik atas TV dewan. Ada juga e-kad jemputan, RSVP, carian nombor meja dan ucapan.' },
+        { q: 'Berapa harga Indahnya?', a: 'Percuma untuk mula (RM0): 50 upload, simpan 30 hari selepas majlis. RM59 sekali bayar untuk upload tanpa had dan simpan setahun. RM99 sekali bayar untuk simpan dua tahun dan tanpa badge Indahnya. Tak ada subscription, tak ada caj per tetamu.' },
+        { q: 'Apa beza dengan group WhatsApp atau Google Drive?', a: 'Dengan Indahnya, tetamu tak perlu join group, ada akaun Google atau download app. Scan QR, terus upload. Semua gambar duduk dalam satu galeri dengan nama siapa yang snap, boleh naik atas TV dewan masa majlis, dan tuan majlis download semua sekali gus.' },
         { q: 'Tetamu kena download app ke?', a: 'Tak. Scan QR, browser phone terus buka galeri. iPhone, Android, phone lama makcik, semua jalan.' },
         { q: 'Kalau tak ada line kat dewan?', a: 'Gambar yang tak sempat upload akan sambung sendiri bila line kembali, asalkan page galeri masih terbuka. Untuk TV, guna hotspot phone. Slideshow tetap jalan dengan gambar yang dah ada.' },
         { q: 'Boleh tapis gambar yang tak sesuai?', a: 'Boleh. Sembunyi atau padam dari dashboard, atau on approval mode supaya gambar hanya naik selepas korang tengok.' },
@@ -112,7 +115,7 @@ export const LANDING = {
       ],
     },
     final: { title: 'Majlis korang, siap dalam dua minit.', body: 'Percuma untuk mula. QR siap sebelum korang habis baca ayat ni.' },
-    footer: { credit: 'Gambar contoh dari majlis sebenar, oleh', on: 'di Unsplash', and: 'dan', disclaimer: 'Orang dalam gambar tak ada kaitan dengan Indahnya dan bukan pelanggan kami, dan nama dalam contoh (Aina & Hakim, tetamu, ucapan) semua rekaan.', takedown: 'Ni gambar korang dan nak kami buang? Hubungi kami.', by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', contact: 'Hubungi' } },
+    footer: { about: 'Tentang', credit: 'Gambar contoh dari majlis sebenar, oleh', on: 'di Unsplash', and: 'dan', disclaimer: 'Orang dalam gambar tak ada kaitan dengan Indahnya dan bukan pelanggan kami, dan nama dalam contoh (Aina & Hakim, tetamu, ucapan) semua rekaan.', takedown: 'Ni gambar korang dan nak kami buang? Hubungi kami.', by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', contact: 'Hubungi' } },
   },
   en: {
     nav: { how: 'How it works', kad: 'Invitation', pricing: 'Pricing', faq: 'FAQ', login: 'Sign in', lang: 'BM', menu: 'Menu', close: 'Close' },
@@ -209,6 +212,9 @@ export const LANDING = {
     faq: {
       title: 'What people ask.',
       items: [
+        { q: 'What is Indahnya?', a: 'Indahnya is a QR photo gallery for Malaysian events. Guests scan a QR code on the table, upload photos from their phone browser with no app or sign-up, and everything lands in one gallery that can play on the venue screen. It also has an e-invitation card, RSVP, a table finder and guest wishes.' },
+        { q: 'How much does Indahnya cost?', a: 'Free to start (RM0): 50 uploads, kept 30 days after the event. RM59 one-time for unlimited uploads kept for a year. RM99 one-time for two years and no Indahnya badge. No subscription and no per-guest fee.' },
+        { q: 'How is it different from a WhatsApp group or Google Drive?', a: 'With Indahnya, guests do not join a group, need a Google account or download an app. They scan the QR and upload. Every photo sits in one gallery with the name of whoever took it, can play on the venue screen during the event, and the hosts download everything at once.' },
         { q: 'Do guests need to install an app?', a: 'No. Scan the QR and the gallery opens in the phone browser. iPhone, Android, an aunty\'s old phone, all fine.' },
         { q: 'What if the venue has no signal?', a: 'Photos that did not make it resume on their own when the connection comes back, as long as the gallery page stays open. For the TV, use a phone hotspot. The slideshow keeps going with what it has.' },
         { q: 'Can I filter out photos that do not belong?', a: 'Yes. Hide or delete from the dashboard, or turn on approval mode so photos only show after you have seen them.' },
@@ -219,7 +225,7 @@ export const LANDING = {
       ],
     },
     final: { title: 'Your event, ready in two minutes.', body: 'Free to start. The QR is ready before you finish reading this.' },
-    footer: { credit: 'Sample photos from real majlis, by', on: 'on Unsplash', and: 'and', disclaimer: 'The people in them have no connection to Indahnya and are not our customers, and the names in the demos (Aina & Hakim, the guests, the wishes) are made up.', takedown: 'Is one of these your photo and you would like it taken down? Contact us.', by: 'Made by', tagline: 'QR photo galleries for events, made for Malaysia.', links: { privacy: 'Privacy', terms: 'Terms', contact: 'Contact' } },
+    footer: { about: 'About', credit: 'Sample photos from real majlis, by', on: 'on Unsplash', and: 'and', disclaimer: 'The people in them have no connection to Indahnya and are not our customers, and the names in the demos (Aina & Hakim, the guests, the wishes) are made up.', takedown: 'Is one of these your photo and you would like it taken down? Contact us.', by: 'Made by', tagline: 'QR photo galleries for events, made for Malaysia.', links: { privacy: 'Privacy', terms: 'Terms', contact: 'Contact' } },
   },
 } as const;
 

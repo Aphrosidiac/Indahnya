@@ -36,38 +36,40 @@ const other = computed(() => (lang.value === 'ms' ? '/?lang=en' : '/'));
 
 const site = useRuntimeConfig().public.siteUrl;
 const canonical = computed(() => (lang.value === 'en' ? `${site}/?lang=en` : `${site}/`));
+const pageTitle = computed(() => (lang.value === 'ms' ? 'Indahnya: galeri gambar majlis dengan QR' : 'Indahnya: QR photo gallery for your event'));
+/** The snippet answers "what is it, for whom, what does it cost" (the hero line is a feeling, not a definition). */
+const pageDesc = computed(() => (lang.value === 'ms'
+  ? 'Galeri gambar majlis dengan QR untuk Malaysia. Tetamu scan dan upload tanpa app, semua masuk satu galeri dan TV dewan. E-kad, RSVP, tempat duduk. Percuma untuk mula.'
+  : 'QR photo gallery for Malaysian events. Guests scan and upload with no app; every photo in one gallery and on the venue screen. E-invite, RSVP, seating. Free to start.'));
 useHead({
-  htmlAttrs: { lang: () => lang.value },
+  htmlAttrs: { lang: () => (lang.value === 'en' ? 'en-MY' : 'ms-MY') },
   link: [
     { rel: 'canonical', href: canonical },
-    { rel: 'alternate', hreflang: 'ms', href: `${site}/` },
-    { rel: 'alternate', hreflang: 'en', href: `${site}/?lang=en` },
+    { rel: 'alternate', hreflang: 'ms-MY', href: `${site}/` },
+    { rel: 'alternate', hreflang: 'en-MY', href: `${site}/?lang=en` },
     { rel: 'alternate', hreflang: 'x-default', href: `${site}/` },
   ],
   script: [{
     type: 'application/ld+json',
-    innerHTML: () => JSON.stringify({
-      '@context': 'https://schema.org',
-      '@graph': [
-        { '@type': 'Organization', '@id': `${site}/#org`, name: 'FF Dev Studio', url: 'https://ffdev.studio' },
-        {
-          '@type': 'SoftwareApplication', name: 'Indahnya', url: `${site}/`, applicationCategory: 'MultimediaApplication', operatingSystem: 'Web',
-          inLanguage: lang.value === 'en' ? 'en-MY' : 'ms-MY', description: L.value.hero.sub, publisher: { '@id': `${site}/#org` },
-          offers: [0, 59, 99].map(price => ({ '@type': 'Offer', price: String(price), priceCurrency: 'MYR' })),
-        },
-        {
-          '@type': 'FAQPage',
-          mainEntity: L.value.faq.items.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
-        },
-      ],
-    }),
+    // the site-wide entities (useSiteGraph) + this page and its FAQ, every fact also on the page
+    innerHTML: () => ldJson([
+      ...siteGraph(site, lang.value),
+      {
+        '@type': 'WebPage', '@id': `${canonical.value}#webpage`, url: canonical.value, name: pageTitle.value, description: pageDesc.value,
+        inLanguage: lang.value === 'en' ? 'en-MY' : 'ms-MY', isPartOf: { '@id': `${site}/#website` }, about: { '@id': `${site}/#app` },
+      },
+      {
+        '@type': 'FAQPage', '@id': `${canonical.value}#faq`, isPartOf: { '@id': `${canonical.value}#webpage` },
+        mainEntity: L.value.faq.items.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+      },
+    ]),
   }],
 });
 useSeoMeta({
-  title: () => lang.value === 'ms' ? 'Indahnya: galeri gambar majlis dengan QR' : 'Indahnya: QR photo gallery for your event',
-  description: () => L.value.hero.sub,
+  title: pageTitle,
+  description: pageDesc,
   ogTitle: () => `Indahnya: ${L.value.hero.h1a} ${L.value.hero.h1b}`,
-  ogDescription: () => L.value.hero.sub,
+  ogDescription: pageDesc,
   ogUrl: canonical,
   ogType: 'website',
   ogSiteName: 'Indahnya',

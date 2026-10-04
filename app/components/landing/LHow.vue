@@ -82,7 +82,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
             <!-- 1 · the QR on the table, through the phone's camera -->
             <template v-if="i === 0">
               <QrStand
-                class="table-card absolute left-[7%] top-[12%] hidden w-[36%] max-w-[240px] overflow-hidden rounded-[10px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.5)] max-sm:!hidden"
+                class="table-card absolute left-[7%] top-[12%] w-[36%] max-w-[240px] overflow-hidden rounded-[10px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.5)] max-sm:!hidden"
                 :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" hashtag="#AinaHakim" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
               />
               <div class="l-phone relative z-10 aspect-[9/19] h-[88%] sm:ml-[30%]">

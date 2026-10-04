@@ -227,8 +227,8 @@ function draw() {
 
   const a = easeIO(clamp(p / 0.14));
   const card = cardAt(a);
-  const qs = card.cw * 0.56;
-  const qx0 = -qs / 2, qy0 = card.ch * 0.1 - qs / 2; // QR's top-left in card-local units
+  const qs = card.cw * 0.6;
+  const qx0 = -qs / 2, qy0 = -card.ch * 0.02 - qs / 2; // QR's top-left in card-local units
   const restA = 1 - clamp((p - 0.13) / 0.05);       // the styled eyes and the bloom, before the modules leave
   const cell = qs / qrSize;
   const cos = Math.cos(card.rot), sin = Math.sin(card.rot);
@@ -251,52 +251,24 @@ function draw() {
     const { cw, ch } = card;
     x.fillStyle = STAND.bg;
     x.beginPath(); x.roundRect(-cw / 2, -ch / 2, cw, ch, cw * 0.04); x.fill();
-    // the double frame, as printed
-    x.strokeStyle = 'rgba(80,108,69,.55)'; x.lineWidth = cw * 0.0045;
-    x.beginPath(); x.roundRect(-cw / 2 + cw * 0.034, -ch / 2 + cw * 0.034, cw - cw * 0.068, ch - cw * 0.068, cw * 0.012); x.stroke();
-    x.strokeStyle = 'rgba(80,108,69,.3)'; x.lineWidth = cw * 0.002;
-    x.beginPath(); x.roundRect(-cw / 2 + cw * 0.044, -ch / 2 + cw * 0.044, cw - cw * 0.088, ch - cw * 0.088, cw * 0.007); x.stroke();
     const textA = 1 - clamp(p / 0.08);
     if (textA > 0) {
       x.globalAlpha = paper * textA;
       x.textAlign = 'center';
-      const top = -ch / 2;
-      x.fillStyle = STAND.accent;
-      x.font = `600 ${cw * 0.036}px "Cormorant Garamond", Georgia, serif`;
-      if ('letterSpacing' in x) (x as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${cw * 0.011}px`;
-      x.fillText('WALIMATULURUS', 0, top + ch * 0.085);
-      if ('letterSpacing' in x) (x as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
-      // the sprig: two rules and a leaf
-      const oy = top + ch * 0.115;
-      x.strokeStyle = STAND.accent; x.lineWidth = cw * 0.005; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(-cw * 0.17, oy); x.lineTo(-cw * 0.04, oy); x.moveTo(cw * 0.04, oy); x.lineTo(cw * 0.17, oy); x.stroke();
-      x.fillStyle = 'rgba(80,108,69,.25)';
-      x.beginPath(); x.moveTo(0, oy + cw * 0.025); x.bezierCurveTo(-cw * 0.025, oy, -cw * 0.02, oy - cw * 0.02, 0, oy - cw * 0.035); x.bezierCurveTo(cw * 0.02, oy - cw * 0.02, cw * 0.025, oy, 0, oy + cw * 0.025); x.fill(); x.stroke();
       x.fillStyle = STAND.ink;
-      x.font = `400 ${cw * 0.15}px "Great Vibes", cursive`;
-      x.fillText('Aina & Hakim', 0, top + ch * 0.235);
+      x.font = `400 ${cw * 0.155}px "Great Vibes", cursive`;
+      x.fillText('Aina & Hakim', 0, -ch / 2 + ch * 0.17);
+      x.font = `500 ${cw * 0.056}px "Cormorant Garamond", Georgia, serif`;
+      x.fillText(props.L.hero.card, 0, ch * 0.315);
       x.fillStyle = STAND.muted;
-      x.font = `500 ${cw * 0.052}px "Cormorant Garamond", Georgia, serif`;
-      x.fillText(props.L.hero.card, 0, top + ch * 0.3);
-      x.fillStyle = STAND.ink;
-      x.font = `600 ${cw * 0.044}px Inter, sans-serif`;
-      x.fillText('indahnya.my/aina-hakim', 0, ch / 2 - ch * 0.085);
+      x.font = `600 ${cw * 0.04}px Inter, sans-serif`;
+      x.fillText('indahnya.my/aina-hakim', 0, ch * 0.385);
       x.globalAlpha = paper;
     }
-    // the QR's panel and its four corner brackets
-    const pad = cw * 0.035, px0 = qx0 - pad, py0 = qy0 - pad, pw = qs + pad * 2;
+    // the QR's light panel
+    const pad = cw * 0.035;
     x.fillStyle = '#ffffff';
-    x.beginPath(); x.roundRect(px0, py0, pw, pw, cw * 0.04); x.fill();
-    if (textA > 0) {
-      x.globalAlpha = paper * textA;
-      const o = cw * 0.025, L = cw * 0.06;
-      x.strokeStyle = STAND.accent; x.lineWidth = cw * 0.007; x.lineCap = 'round';
-      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
-        const ex = sx < 0 ? px0 - o : px0 + pw + o, ey = sy < 0 ? py0 - o : py0 + pw + o;
-        x.beginPath(); x.moveTo(ex, ey - sy * L); x.lineTo(ex, ey); x.lineTo(ex - sx * L, ey); x.stroke();
-      }
-      x.globalAlpha = paper;
-    }
+    x.beginPath(); x.roundRect(qx0 - pad, qy0 - pad, qs + pad * 2, qs + pad * 2, cw * 0.04); x.fill();
     // the styled eyes and the bloom (shared/utils/qr-art.ts), until the modules take over
     if (restA > 0) {
       x.globalAlpha = paper * restA;

@@ -73,7 +73,14 @@ export default defineNuxtConfig({
     stripe: { secretKey: '', webhookSecret: '', priceStd: '', priceFull: '' },
     google: { clientId: '', clientSecret: '' },
     smtp: { url: '', from: 'Indahnya <hello@indahnya.my>' },
-    public: { siteUrl: 'http://localhost:3180' },
+    public: {
+      siteUrl: 'http://localhost:3180',
+      /**
+       * The static preview on Cloudflare Pages (scripts/pages/): no server, so
+       * the host side is closed (/mula) and the TV try stays in the browser.
+       */
+      preview: false,
+    },
   },
   nitro: { experimental: { tasks: true } },
 });

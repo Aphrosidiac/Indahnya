@@ -15,7 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy:pages": "./scripts/pages/deploy.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3",

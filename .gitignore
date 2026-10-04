@@ -27,3 +27,6 @@ logs
 .data/
 *.log
 .DS_Store
+
+# Cloudflare Pages preview build (scripts/pages/deploy.sh)
+.pages

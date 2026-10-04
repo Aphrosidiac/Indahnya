@@ -17,9 +17,13 @@ import { qrArtDataUrl } from '~~/shared/utils/qr-art';
  * Whatever they send goes through the real pipeline and cuts into the
  * slideshow here, named, with a burst. On a phone the same thing is a
  * button: pick a photo, watch it land.
+ *
+ * In the static preview (no server) the QR opens the sample gallery instead,
+ * and a picked photo plays from the browser itself: it is never uploaded.
  */
 const props = defineProps<{ L: LandingCopy }>();
 const emit = defineEmits<{ dim: [on: boolean] }>();
+const preview = !!useRuntimeConfig().public.preview;
 
 const wrap = ref<HTMLElement>();
 const tvEl = ref<HTMLElement>();
@@ -58,6 +62,7 @@ const landed = ref(0);
 let poll: ReturnType<typeof setInterval> | undefined;
 async function start() {
   if (session.value || failed.value) return;
+  if (preview) { pairQr.value ||= qrArtDataUrl(`${location.origin}/aina-hakim/gambar${props.L.nav.lang === 'BM' ? '?lang=en' : ''}`, { margin: 1.4 }); return; }
   try {
     const s = await $fetch<{ k: string; slug: string; expiresAt: string; name: string | null }>('/api/cuba', { method: 'POST', body: {} });
     session.value = s;
@@ -88,9 +93,18 @@ const picker = ref<HTMLInputElement>();
 const sending = computed(() => up.active.value);
 const upError = computed(() => up.items.value.find(i => i.state === 'failed')?.error ?? null);
 async function pick() { await start(); picker.value?.click(); }
+const local: string[] = [];
 function onPick(e: Event) {
   const files = (e.target as HTMLInputElement).files;
-  if (files?.length) { up.clear(); up.add(Array.from(files).slice(0, 6)); }
+  if (files?.length && preview) {
+    for (const f of Array.from(files).slice(0, 6)) {
+      const src = URL.createObjectURL(f);
+      local.push(src);
+      queue.push({ key: src, src, name: props.L.live.you, fresh: true });
+    }
+    landed.value += Math.min(files.length, 6);
+    advance();
+  } else if (files?.length) { up.clear(); up.add(Array.from(files).slice(0, 6)); }
   (e.target as HTMLInputElement).value = '';
 }
 watch(() => up.done.value, (n, o) => { if (n > o) void check(); });
@@ -158,6 +172,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   triggers.forEach(t => t.kill()); io?.disconnect(); pre?.disconnect();
   clearTimeout(timer); clearInterval(poll);
+  local.forEach(u => URL.revokeObjectURL(u));
 });
 
 const total = Object.keys(PHOTOS).length;
@@ -190,9 +205,9 @@ const total = Object.keys(PHOTOS).length;
               <p class="mt-1 text-[clamp(10px,1vw,14px)] text-white/70">Aina &amp; Hakim · <span class="tabular-nums">{{ total + landed }}</span> {{ L.live.photos }}</p>
             </div>
             <div v-if="!phone" class="flex shrink-0 items-end gap-3">
-              <p class="hidden text-right text-[clamp(10px,1vw,14px)] font-semibold leading-tight text-white sm:block">{{ L.live.tvScan }}</p>
+              <p class="hidden text-right text-[clamp(10px,1vw,14px)] font-semibold leading-tight text-white sm:block">{{ preview ? L.live.tvScanPreview : L.live.tvScan }}</p>
               <div class="relative w-[clamp(64px,9.5%,112px)] rounded-[8px] bg-white p-1.5">
-                <img v-if="pairQr" :src="pairQr" :alt="L.live.tvScan" class="block w-full" />
+                <img v-if="pairQr" :src="pairQr" :alt="preview ? L.live.tvScanPreview : L.live.tvScan" class="block w-full" />
                 <div v-else class="aspect-square w-full animate-pulse rounded-[4px] bg-[#ebe8e5]" />
                 <div ref="burstRoot" class="pointer-events-none absolute left-1/2 top-1/2" aria-hidden="true" />
               </div>
@@ -206,7 +221,7 @@ const total = Object.keys(PHOTOS).length;
       <div ref="tryBar" class="mx-auto mt-6 flex w-full max-w-[1180px] flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-10">
         <div class="max-w-[640px]">
           <p class="text-[18px] font-semibold">{{ L.live.tryTitle }}</p>
-          <p class="l-dw2 mt-1 text-[15px] leading-[1.55]">{{ phone ? L.live.tryBodyPhone : L.live.tryBody }}</p>
+          <p class="l-dw2 mt-1 text-[15px] leading-[1.55]">{{ preview ? L.live.tryBodyPreview : phone ? L.live.tryBodyPhone : L.live.tryBody }}</p>
           <p v-if="upError" class="mt-2 text-[14px] font-medium text-[#fda29b]" role="alert">{{ upError }}</p>
         </div>
         <div class="flex shrink-0 flex-wrap items-center gap-3">
@@ -218,7 +233,7 @@ const total = Object.keys(PHOTOS).length;
           </button>
           <button v-else type="button" class="l-btn l-btn-ghost-night l-btn-sm" :disabled="sending" @click="pick">
             <Loader2 v-if="sending" class="size-4 animate-spin" :stroke-width="2" aria-hidden="true" /><Monitor v-else class="size-4" :stroke-width="2" aria-hidden="true" />
-            {{ sending ? L.live.trySending : L.live.tryDesk }}
+            {{ sending ? L.live.trySending : preview ? L.live.tryDeskPreview : L.live.tryDesk }}
           </button>
           <input ref="picker" type="file" accept="image/*" multiple class="sr-only" tabindex="-1" aria-hidden="true" @change="onPick">
         </div>

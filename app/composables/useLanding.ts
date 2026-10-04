@@ -60,6 +60,9 @@ export const LANDING = {
       tryMore: 'Upload lagi',
       tryLimit: 'Cubaan ni enam gambar je. Buat majlis sendiri untuk tanpa had.',
       you: 'Korang',
+      tvScanPreview: 'Scan untuk tengok contoh',
+      tryBodyPreview: 'Pilih satu gambar dan tengok dia naik atas skrin ni. Ni versi pratonton: gambar tu tak keluar dari browser korang.',
+      tryDeskPreview: 'Pilih gambar dari komputer',
     },
     kad: {
       title: 'Kad jemputan yang orang betul‑betul buka.',
@@ -170,6 +173,9 @@ export const LANDING = {
       tryMore: 'Upload another',
       tryLimit: 'This demo takes six photos. Create your own event for unlimited.',
       you: 'You',
+      tvScanPreview: 'Scan to see the sample',
+      tryBodyPreview: 'Pick a photo and watch it land on this screen. This is a preview: the photo never leaves your browser.',
+      tryDeskPreview: 'Pick a photo from this computer',
     },
     kad: {
       title: 'An invitation people actually open.',

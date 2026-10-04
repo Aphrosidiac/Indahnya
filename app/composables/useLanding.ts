@@ -8,7 +8,7 @@
  */
 export const LANDING = {
   ms: {
-    nav: { how: 'Cara guna', kad: 'Kad', pricing: 'Harga', faq: 'Soalan', login: 'Log masuk', lang: 'EN', menu: 'Menu', close: 'Tutup' },
+    nav: { how: 'Cara guna', kad: 'Kad', pricing: 'Harga', faq: 'Soalan', about: 'Tentang', login: 'Log masuk', lang: 'EN', menu: 'Menu', close: 'Tutup' },
     cta: 'Buat majlis percuma',
     sample: 'Tengok contoh',
     hero: {
@@ -118,7 +118,7 @@ export const LANDING = {
     footer: { about: 'Tentang', credit: 'Gambar contoh dari majlis sebenar, oleh', on: 'di Unsplash', and: 'dan', disclaimer: 'Orang dalam gambar tak ada kaitan dengan Indahnya dan bukan pelanggan kami, dan nama dalam contoh (Aina & Hakim, tetamu, ucapan) semua rekaan.', takedown: 'Ni gambar korang dan nak kami buang? Hubungi kami.', by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', contact: 'Hubungi' } },
   },
   en: {
-    nav: { how: 'How it works', kad: 'Invitation', pricing: 'Pricing', faq: 'FAQ', login: 'Sign in', lang: 'BM', menu: 'Menu', close: 'Close' },
+    nav: { how: 'How it works', kad: 'Invitation', pricing: 'Pricing', faq: 'FAQ', about: 'About', login: 'Sign in', lang: 'BM', menu: 'Menu', close: 'Close' },
     cta: 'Create your event free',
     sample: 'See a sample',
     hero: {

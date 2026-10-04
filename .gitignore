@@ -30,3 +30,4 @@ logs
 
 # Cloudflare Pages preview build (scripts/pages/deploy.sh)
 .pages
+.wrangler

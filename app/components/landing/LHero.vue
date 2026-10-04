@@ -29,24 +29,40 @@ const cv = ref<HTMLCanvasElement>();
 const copy = ref<HTMLElement>();
 const floatRoot = ref<HTMLElement>();
 const caption = ref<HTMLElement>();
+const glow = ref<HTMLElement>();
 const reduced = ref(false);
 
 /* ── the floating polaroids around the card: the photos that are coming ── */
 const FLOAT = [
-  { id: 'g04', dx: -1.12, dy: 0.42, w: 0.46, r: -8, d: 1.2 },
-  { id: 'g08', dx: 0.98, dy: -0.66, w: 0.6, r: 6, d: 0.7 },
-  { id: 'g21', dx: 1.14, dy: 0.42, w: 0.48, r: 9, d: 1.5 },
-  { id: 'g11', dx: 0.3, dy: 1.02, w: 0.56, r: -4, d: 0.9 },
-  { id: 'g02', dx: -0.86, dy: -0.9, w: 0.44, r: -6, d: 1.3 },
-  { id: 'g20', dx: -0.62, dy: 1.04, w: 0.5, r: 5, d: 0.6 },
+  { id: 'g04', dx: -1.02, dy: 0.5, w: 0.5, r: -8, d: 1.3 },
+  { id: 'g08', dx: 0.98, dy: -0.72, w: 0.58, r: 6, d: 0.8 },
+  { id: 'g21', dx: 1.12, dy: 0.36, w: 0.5, r: 9, d: 1.5 },
+  { id: 'g11', dx: 0.42, dy: 1.04, w: 0.56, r: -4, d: 1 },
+  { id: 'g02', dx: -1.3, dy: -0.32, w: 0.4, r: -6, d: 0.55, far: true },
+  { id: 'g20', dx: -0.46, dy: 1.1, w: 0.46, r: 5, d: 0.7 },
+  { id: 'g14', dx: 0.16, dy: -1.12, w: 0.38, r: -3, d: 0.5, far: true },
+  { id: 'g15', dx: 1.5, dy: -0.18, w: 0.36, r: -7, d: 0.45, far: true },
+  { id: 'g22', dx: -1.66, dy: 0.74, w: 0.38, r: 10, d: 0.5, far: true },
+  { id: 'g18', dx: 1.42, dy: 0.98, w: 0.42, r: 4, d: 0.6, far: true },
 ];
+/* ── the live feed under the buttons, and the card's counter: the gallery filling while you read ── */
+const FEED: { name: string; ids: string[] }[] = [
+  { name: 'Makcik Ros', ids: ['g04', 'g20', 'g11'] }, { name: 'Uncle Lim', ids: ['g14'] }, { name: 'Team Office', ids: ['g09', 'g02', 'g18', 'g15', 'g01'] },
+  { name: 'Kak Yati', ids: ['g21', 'g15'] }, { name: 'Abang Faiz', ids: ['g08', 'g03', 'g22', 'g07'] }, { name: 'Nadia & Irfan', ids: ['g10', 'g17'] }, { name: 'Hana', ids: ['g18'] },
+];
+let feedSeq = 0;
+const feed = ref(FEED.slice(0, 3).map(f => ({ ...f, key: feedSeq++ })).reverse());
+const liveCount = ref(127);
+let feedTimer: ReturnType<typeof setInterval> | undefined;
+const feedLine = (n: number) => props.L.hero.feedUp.replace('{n}', String(n));
+
 const floaters = FLOAT.map((f, i) => ({ ...f, name: GUEST_NAMES[(i * 5) % GUEST_NAMES.length]!, tall: PHOTOS[f.id]![1] > PHOTOS[f.id]![0] }));
-const floatBox = ref({ cx: 0, cy: 0, cw: 0 });
+const floatBox = ref({ cx: 0, cy: 0, cw: 0, rot: 0 });
 /** Polaroids that would land on the words are left out at this size. */
 const floatHidden = ref<boolean[]>(FLOAT.map(() => false));
 function placeFloaters() {
   const r = cardRest();
-  floatBox.value = { cx: r.cx, cy: r.cy, cw: r.cw };
+  floatBox.value = { cx: r.cx, cy: r.cy, cw: r.cw, rot: r.rot };
   const top = stage.value?.getBoundingClientRect().top ?? 0;
   const words = [...(copy.value?.querySelectorAll('[data-words]') ?? [])].map(el => el.getBoundingClientRect());
   floatHidden.value = FLOAT.map((f) => {
@@ -81,8 +97,9 @@ const rnd = (n: number) => { const s = Math.sin(n * 12.9898 + 78.233) * 43758.54
 /** Where the card sits at rest, and how big. */
 function cardRest() {
   const desk = W >= 900;
-  const cw = desk ? clamp(W * 0.21, 250, 330) : Math.min(W * 0.58, 230);
-  return { cw, ch: cw * 1.42, cx: desk ? W * 0.765 : W * 0.5, cy: desk ? H * 0.615 : H * 0.84, rot: desk ? -5 : -4 };
+  const col = Math.min(W, 1360), left = (W - col) / 2;
+  const cw = desk ? clamp(col * 0.21, 250, 320) : Math.min(W * 0.58, 230);
+  return { cw, ch: cw * 1.42, cx: desk ? left + col * 0.79 : W * 0.5, cy: desk ? H * 0.6 : H * 0.84, rot: desk ? -5 : -4 };
 }
 /** The card's state at progress a (0 rest → 1 centred, straight, its QR filling the screen). */
 function cardAt(a: number) {
@@ -151,7 +168,7 @@ function assign() {
     t.rows = Math.max(1, Math.ceil(n / t.cols));
     const dist = Math.hypot(centres[ti]!.x - 0.5, centres[ti]!.y - 0.5);
     t.delay = dist * 0.14;
-    list.forEach((d, k) => mods.push({ u: d.u, v: d.v, tile: ti, cell: k, delay: 0.17 + dist * 0.16 + rnd(k + ti * 31) * 0.1 }));
+    list.forEach((d, k) => mods.push({ u: d.u, v: d.v, tile: ti, cell: k, delay: 0.24 + dist * 0.2 + rnd(k + ti * 31) * 0.1 }));
     t.px = undefined;
   });
   tiles.forEach(sample);
@@ -176,6 +193,22 @@ function cover(x: CanvasRenderingContext2D, im: HTMLImageElement, dx: number, dy
   x.drawImage(im, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
+const SH_PAD = 60;
+let shadowCache: { key: string; c: HTMLCanvasElement } | null = null;
+function cardShadow(cw: number, ch: number) {
+  const key = `${Math.round(cw)}x${Math.round(ch)}@${dpr}`;
+  if (shadowCache?.key === key) return shadowCache.c;
+  const c = document.createElement('canvas');
+  c.width = Math.round((cw + SH_PAD * 2) * dpr); c.height = Math.round((ch + SH_PAD * 2) * dpr);
+  const x = c.getContext('2d')!;
+  x.scale(dpr, dpr);
+  x.shadowColor = 'rgba(60,48,36,.24)'; x.shadowBlur = 40; x.shadowOffsetY = 0;
+  x.fillStyle = '#fdfcfb';
+  x.beginPath(); x.roundRect(SH_PAD, SH_PAD, cw, ch, cw * 0.055); x.fill();
+  shadowCache = { key, c };
+  return c;
+}
+
 function draw() {
   const c = cv.value; if (!c) return;
   const x = c.getContext('2d')!;
@@ -183,7 +216,7 @@ function draw() {
   x.clearRect(0, 0, W, H);
   if (!qrData) return;
 
-  const a = easeIO(clamp(p / 0.2));
+  const a = easeIO(clamp(p / 0.14));
   const card = cardAt(a);
   const qs = card.cw * 0.7;
   const qx0 = -qs / 2, qy0 = card.ch * 0.56 - card.ch / 2 - qs / 2; // QR's top-left in card-local units
@@ -192,16 +225,22 @@ function draw() {
   const toScreen = (lx: number, ly: number) => ({ x: card.cx + (lx * cos - ly * sin) * card.k, y: card.cy + (lx * sin + ly * cos) * card.k });
 
   // the paper card
-  const paper = 1 - clamp((p - 0.12) / 0.16);
+  const paper = 1 - clamp((p - 0.16) / 0.14);
   if (paper > 0) {
     x.save();
     x.globalAlpha = paper;
     x.translate(card.cx, card.cy); x.rotate(card.rot); x.scale(card.k, card.k);
-    x.shadowColor = `rgba(60,48,36,${0.22 * (1 - a)})`; x.shadowBlur = 40 / card.k; x.shadowOffsetY = 18 / card.k;
+    // the card's shadow: blurred once per size (see cardShadow), drawn as an image; a canvas
+    // shadowBlur here cost a dropped frame on every scroll step while the card grew
+    const sh = cardShadow(card.cw, card.ch);
+    if (sh && a < 1) {
+      x.save(); x.globalAlpha = paper * (1 - a);
+      x.drawImage(sh, -card.cw / 2 - SH_PAD, -card.ch / 2 - SH_PAD + 18, card.cw + SH_PAD * 2, card.ch + SH_PAD * 2);
+      x.restore();
+    }
     x.fillStyle = '#fdfcfb';
     x.beginPath(); x.roundRect(-card.cw / 2, -card.ch / 2, card.cw, card.ch, card.cw * 0.055); x.fill();
-    x.shadowColor = 'transparent';
-    const textA = 1 - clamp(p / 0.1);
+    const textA = 1 - clamp(p / 0.08);
     if (textA > 0) {
       x.globalAlpha = paper * textA;
       x.textAlign = 'center';
@@ -222,7 +261,7 @@ function draw() {
   const ink = [26, 26, 26];
   for (const m of mods) {
     const t = tiles[m.tile]!;
-    const tm = easeIO(clamp((p - m.delay) / 0.34));
+    const tm = easeIO(clamp((p - m.delay) / 0.26));
     const s = toScreen(qx0 + m.u * qs, qy0 + m.v * qs);
     const col = m.cell % t.cols, row = Math.floor(m.cell / t.cols);
     const cw = t.w / t.cols, ch = t.h / t.rows;
@@ -246,7 +285,7 @@ function draw() {
 
   // the photos resolve over their mosaic
   for (const t of tiles) {
-    const ia = easeO(clamp((p - 0.66 - t.delay * 0.5) / 0.18));
+    const ia = easeO(clamp((p - 0.75 - t.delay * 0.5) / 0.12));
     if (ia <= 0 || !t.img) continue;
     x.save();
     x.globalAlpha = ia;
@@ -271,19 +310,20 @@ function resize() {
 /* the DOM layers follow the same progress */
 function applyDom() {
   if (copy.value) {
-    const o = 1 - clamp(p / 0.12);
+    const o = 1 - clamp(p / 0.08);
     copy.value.style.opacity = String(o);
     copy.value.style.transform = `translateY(${-p * 160}px)`;
     copy.value.style.visibility = o <= 0 ? 'hidden' : '';
   }
   if (floatRoot.value) {
-    const o = 1 - clamp(p / 0.1);
+    const o = 1 - clamp(p / 0.07);
     floatRoot.value.style.opacity = String(o);
     floatRoot.value.style.transform = `scale(${1 + p * 1.6})`;
     floatRoot.value.style.visibility = o <= 0 ? 'hidden' : '';
   }
+  if (glow.value) glow.value.style.opacity = String(1 - clamp(p / 0.1));
   if (caption.value) {
-    const o = clamp((p - 0.84) / 0.1);
+    const o = clamp((p - 0.9) / 0.07);
     caption.value.style.opacity = String(o);
     caption.value.style.transform = `translateY(${(1 - o) * 24}px)`;
     caption.value.style.pointerEvents = o > 0.5 ? 'auto' : 'none';
@@ -316,9 +356,15 @@ onMounted(async () => {
   Promise.all([document.fonts?.load('640 24px "Bricolage Grotesque Variable"'), document.fonts?.load('600 16px Inter')]).then(invalidate).catch(() => {});
 
   if (reduced.value) return;
+  feedTimer = setInterval(() => {
+    if (document.hidden || p > 0.08) return;
+    const next = FEED[feedSeq % FEED.length]!;
+    feed.value = [{ ...next, key: feedSeq++ }, ...feed.value].slice(0, 3);
+    liveCount.value += next.ids.length;
+  }, 2800);
   const { gsap, ST } = await boot();
   trigger = ST.create({
-    trigger: wrap.value!, start: 'top top', end: 'bottom bottom', scrub: true,
+    trigger: wrap.value!, start: 'top top', end: 'bottom bottom', scrub: 0.9,
     onUpdate: (s) => { p = s.progress; applyDom(); invalidate(); },
   });
 
@@ -334,20 +380,27 @@ onMounted(async () => {
   }
 });
 onBeforeUnmount(() => {
+  clearInterval(feedTimer);
   ro?.disconnect(); trigger?.kill(); cancelAnimationFrame(raf);
   if (onMove) removeEventListener('pointermove', onMove);
 });
 </script>
 
 <template>
-  <section ref="wrap" class="relative" :class="reduced ? 'h-[100dvh]' : 'h-[270vh]'" aria-labelledby="hero-title">
+  <section ref="wrap" class="relative" :class="reduced ? 'h-[100dvh]' : 'h-[440vh]'" aria-labelledby="hero-title">
     <div ref="stage" class="sticky top-0 h-[100dvh] min-h-[560px] overflow-hidden">
+      <div v-if="floatBox.cw" ref="glow" class="hero-glow pointer-events-none absolute [will-change:opacity]" :style="{ left: `${floatBox.cx}px`, top: `${floatBox.cy}px`, width: `${floatBox.cw * 3}px`, height: `${floatBox.cw * 3}px` }" aria-hidden="true" />
       <canvas ref="cv" class="pointer-events-none absolute inset-0 size-full" aria-hidden="true" />
 
       <!-- the photos that are coming: polaroids around the card, captioned with who sent them -->
-      <div v-if="floatBox.cw" ref="floatRoot" class="pointer-events-none absolute inset-0 origin-center" aria-hidden="true">
+      <div v-if="floatBox.cw" ref="floatRoot" class="pointer-events-none absolute inset-0 origin-center [will-change:transform,opacity]" aria-hidden="true">
+        <div class="absolute z-[2]" :style="{ left: `${floatBox.cx}px`, top: `${floatBox.cy}px`, transform: `rotate(${floatBox.rot}deg) translate(${floatBox.cw * 0.5 - 20}px, ${-floatBox.cw * 0.71 - 14}px) translateX(-100%)` }">
+          <span class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#1a1a1a] pl-2.5 pr-3 text-[12px] font-semibold text-white shadow-[0_10px_24px_-10px_rgba(0,0,0,.5)]">
+            <span class="live-dot size-1.5 rounded-full bg-[#ff5a4f]" />LIVE<span class="ml-1 font-medium tabular-nums text-white/75">{{ liveCount }} {{ L.hero.live }}</span>
+          </span>
+        </div>
         <div
-          v-for="(f, i) in floaters" :key="f.id" class="hero-float absolute" :class="floatHidden[i] && 'hidden'" :data-depth="f.d"
+          v-for="(f, i) in floaters" :key="f.id" class="hero-float absolute" :class="[floatHidden[i] && 'hidden', f.far ? 'is-far z-0' : 'z-[1]']" :data-depth="f.d"
           :style="{ left: `${floatBox.cx + f.dx * floatBox.cw}px`, top: `${floatBox.cy + f.dy * floatBox.cw}px`, width: `${f.w * floatBox.cw}px`, '--r': `${f.r}deg`, '--i': i }"
         >
           <div class="hero-polaroid">
@@ -358,7 +411,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- the words -->
-      <div ref="copy" class="l-wrap relative flex h-full flex-col pb-10 pt-[104px] md:pt-[128px] lg:pt-[19vh]">
+      <div ref="copy" class="l-wrap relative flex h-full flex-col [will-change:transform,opacity] pb-10 pt-[104px] md:pt-[128px] lg:pt-[19vh]">
         <p data-words class="hero-in self-start text-[14px] font-semibold text-[#27622a] md:text-[15px]" style="--d: 0">{{ L.hero.eyebrow }}</p>
         <h1 id="hero-title" class="l-display mt-4 text-[clamp(44px,7.4vw,116px)] text-[#1a1a1a] md:mt-5">
           <span class="hero-line block"><span data-words class="hero-in inline-block" style="--d: 1">{{ L.hero.h1a }}</span></span>
@@ -370,6 +423,17 @@ onBeforeUnmount(() => {
             <NuxtLink to="/app?new=1" class="l-btn l-btn-go">{{ L.cta }}<ArrowRight class="size-[18px]" :stroke-width="2" aria-hidden="true" /></NuxtLink>
             <NuxtLink to="/aina-hakim" class="l-btn l-btn-line">{{ L.sample }}</NuxtLink>
           </div>
+          <TransitionGroup tag="ul" name="feed" data-words class="feed relative mt-10 hidden w-[340px] min-[900px]:block [@media(max-height:680px)]:!hidden" aria-hidden="true">
+            <li v-for="(f, k) in feed" :key="f.key" class="feed-item flex items-center gap-3 rounded-[18px] bg-[#fdfcfb] p-2.5 pr-4" :style="{ '--k': k }">
+              <span class="flex w-[86px] shrink-0 -space-x-3">
+                <img v-for="id in f.ids.slice(0, 3)" :key="id" :src="photo(id)" alt="" class="size-10 rounded-[10px] border-2 border-[#fdfcfb] object-cover" />
+              </span>
+              <span class="min-w-0 flex-1 text-[14px] leading-[18px]">
+                <span class="block truncate"><b class="font-semibold text-[#1a1a1a]">{{ f.name }}</b> <span class="text-[#55524f]">{{ feedLine(f.ids.length) }}</span></span>
+                <span class="block text-[12px] text-[#75716d]">{{ L.hero.feedNow }}</span>
+              </span>
+            </li>
+          </TransitionGroup>
         </div>
       </div>
 
@@ -395,6 +459,14 @@ onBeforeUnmount(() => {
   box-shadow: 0 1px 0 rgb(26 26 26 / .04), 0 18px 40px -18px rgb(60 48 36 / .45);
   transform: rotate(var(--r));
 }
+.hero-float.is-far .hero-polaroid { opacity: .82; }
+.hero-glow { transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(closest-side, rgb(125 213 111 / .22), rgb(125 213 111 / 0)); pointer-events: none; }
+.feed-item { box-shadow: 0 1px 0 rgb(26 26 26 / .04), 0 14px 30px -20px rgb(60 48 36 / .35); }
+.feed-item + .feed-item { margin-top: 8px; }
+.feed-item { transform-origin: left center; opacity: calc(1 - var(--k) * .28); transform: scale(calc(1 - var(--k) * .03)); }
+.feed-move, .feed-item { transition: transform .6s var(--l-ease), opacity .6s; }
+.feed-enter-from { opacity: 0 !important; transform: translateY(-14px) scale(.96) !important; }
+.feed-leave-active { display: none; }
 .hero-line { overflow: clip; padding-bottom: .06em; margin-bottom: -.06em; }
 @media (prefers-reduced-motion: no-preference) {
   .hero-in { animation: hero-in 1.1s var(--l-ease) backwards; animation-delay: calc(var(--d) * 90ms + 120ms); }

@@ -97,6 +97,8 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
 @keyframes float { to { transform: rotate(calc(var(--r) * -0.6)) translateY(-14px); } }
 .drift { transition: translate .9s cubic-bezier(.16, 1, .3, 1); }
 .wordmark { display: block; width: calc(100% - 32px); max-width: 1500px; margin: 5vw auto -5.4vw; color: #1a1a1a; }
+/* where the vine shows (LVine, wide screens), the letters stand whole on a strip of ground for its roots */
+@media (min-width: 1392px) { .wordmark { margin-bottom: 124px; } }
 @media (prefers-reduced-motion: no-preference) {
   .wm-photo { animation: pan 26s ease-in-out infinite alternate; transform-box: view-box; }
 }

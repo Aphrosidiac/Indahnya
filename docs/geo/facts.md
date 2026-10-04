@@ -27,7 +27,7 @@ Last checked against the code: 2026-10-04.
 | Privacy | Couple pages noindex; EXIF/GPS stripped from shown copies; originals private; approval mode | /tentang, /privasi |
 | Law | PDPA 2010 notice in BM and EN | /privasi |
 | Operator | FF Dev Studio, Malaysia (ffdev.studio) | footer, /tentang, /privasi, /terma |
-| Contact | hello@indahnya.my · WhatsApp +60 13-907 8719 | /tentang, /privasi, /terma; WhatsApp link in landing footer |
+| Contact | hello@ffdev.studio · WhatsApp +60 13-907 8719 | /tentang and JSON-LD; WhatsApp link in landing footer. /privasi and /terma still say hello@indahnya.my (owner to decide) |
 
 ## Not published (owner decisions, see owner-todo.md)
 

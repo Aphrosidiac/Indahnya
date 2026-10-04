@@ -14,7 +14,7 @@ export function siteGraph(site: string, lang: 'ms' | 'en') {
       description: en ? 'A small software studio in Malaysia. Builds and runs Indahnya.' : 'Studio perisian kecil di Malaysia. Bina dan jalankan Indahnya.',
       address: { '@type': 'PostalAddress', addressCountry: 'MY' },
       contactPoint: {
-        '@type': 'ContactPoint', contactType: 'customer support', email: 'hello@indahnya.my', url: 'https://wa.me/60139078719',
+        '@type': 'ContactPoint', contactType: 'customer support', email: 'hello@ffdev.studio', url: 'https://wa.me/60139078719',
         areaServed: 'MY', availableLanguage: ['ms', 'en'],
       },
     },

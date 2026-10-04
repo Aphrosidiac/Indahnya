@@ -3,6 +3,7 @@ import '~/assets/css/landing.css';
 import { ArrowRight, Check, Mail, MessageCircle } from 'lucide-vue-next';
 import LNav from '~/components/landing/LNav.vue';
 import LFinal from '~/components/landing/LFinal.vue';
+import QrStand from '~/components/print/QrStand.vue';
 import { LANDING, type LandingLang } from '~/composables/useLanding';
 import { ABOUT } from '~/composables/useAbout';
 import { qrArtDataUrl } from '~~/shared/utils/qr-art';
@@ -64,11 +65,16 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
             <p class="l-lead mt-8 !max-w-[60ch]">{{ A.intro }}</p>
             <p class="mt-5 text-[13px] text-[#75716d]">{{ A.updated }}</p>
           </div>
-          <!-- the product in a glance: the QR on the table, and what it gathers -->
-          <div class="relative mx-auto aspect-[4/5] w-full max-w-[420px] lg:col-span-5" aria-hidden="true">
-            <img :src="photo('g07')" alt="" class="absolute right-0 top-0 w-[72%] rotate-[4deg] rounded-[14px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.55)]" />
-            <img :src="photo('g04')" alt="" class="absolute bottom-[4%] left-0 w-[52%] -rotate-[5deg] rounded-[14px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.55)]" />
-            <div class="absolute bottom-[18%] right-[6%] w-[36%] rotate-[6deg] rounded-[14px] bg-[#fdfcfb] p-[4%] shadow-[0_24px_50px_-24px_rgba(60,48,36,.5)]"><img :src="demoQr" alt="" class="w-full" /></div>
+          <!-- the product in a glance: the table cards guests meet (no people, so nobody reads as a customer) -->
+          <div class="relative mx-auto aspect-[5/4] w-full max-w-[480px] lg:col-span-5" aria-hidden="true">
+            <QrStand
+              class="!absolute right-[2%] top-0 w-[47%] rotate-[6deg] overflow-hidden rounded-[12px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.55)]"
+              :url="`${site}/aina-hakim`" link="indahnya.my/aina-hakim" template="emas" :names="{ a: 'Aina', b: 'Hakim' }" date="15.08.2026" :locale="lang"
+            />
+            <QrStand
+              class="!absolute bottom-0 left-[2%] w-[47%] -rotate-[5deg] overflow-hidden rounded-[12px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.55)]"
+              :url="`${site}/aina-hakim`" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" date="15.08.2026" :locale="lang"
+            />
           </div>
         </div>
       </section>
@@ -126,7 +132,7 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
             <p class="mt-4 text-[17px] leading-[1.6] text-[#b9b6b1]">{{ A.who.p }}</p>
             <div class="mt-auto flex flex-wrap gap-2 pt-8">
               <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="l-btn l-btn-go"><MessageCircle class="size-5" :stroke-width="2" aria-hidden="true" />{{ A.who.wa }}</a>
-              <a href="mailto:hello@indahnya.my" class="l-btn bg-white/10 text-[#f3f1ee] hover:bg-white/15"><Mail class="size-5" :stroke-width="2" aria-hidden="true" />{{ A.who.email }}</a>
+              <a href="mailto:hello@ffdev.studio" class="l-btn bg-white/10 text-[#f3f1ee] hover:bg-white/15"><Mail class="size-5" :stroke-width="2" aria-hidden="true" />{{ A.who.email }}</a>
             </div>
           </div>
         </div>

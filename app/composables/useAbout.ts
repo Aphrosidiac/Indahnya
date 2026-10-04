@@ -31,7 +31,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
       ['Harga', 'Percuma, RM0 (50 upload, simpan 30 hari selepas majlis); RM59 sekali bayar (upload tanpa had, simpan setahun); RM99 sekali bayar (upload tanpa had, simpan dua tahun)'],
       ['Bayaran', 'Melalui Stripe: FPX, kad atau GrabPay, dalam Ringgit'],
       ['Dibina oleh', 'FF Dev Studio, Malaysia'],
-      ['Hubungi', 'hello@indahnya.my · WhatsApp +60 13-907 8719'],
+      ['Hubungi', 'hello@ffdev.studio · WhatsApp +60 13-907 8719'],
     ],
     why: {
       h: 'Kenapa Indahnya wujud',
@@ -59,7 +59,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
     who: {
       h: 'Siapa di belakang Indahnya',
       p: 'Indahnya dibina dan dijalankan oleh FF Dev Studio, studio kecil di Malaysia. Kalau ada masalah, WhatsApp kami. Orang yang bina Indahnya yang jawab.',
-      wa: 'WhatsApp kami', email: 'hello@indahnya.my',
+      wa: 'WhatsApp kami', email: 'hello@ffdev.studio',
     },
   },
   en: {
@@ -78,7 +78,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
       ['Pricing', 'Free, RM0 (50 uploads, kept 30 days after the event); RM59 one-time (unlimited uploads, kept one year); RM99 one-time (unlimited uploads, kept two years)'],
       ['Payment', 'Through Stripe: FPX, card or GrabPay, in Ringgit'],
       ['Built by', 'FF Dev Studio, Malaysia'],
-      ['Contact', 'hello@indahnya.my · WhatsApp +60 13-907 8719'],
+      ['Contact', 'hello@ffdev.studio · WhatsApp +60 13-907 8719'],
     ],
     why: {
       h: 'Why Indahnya exists',
@@ -106,7 +106,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
     who: {
       h: 'Who is behind Indahnya',
       p: 'Indahnya is built and run by FF Dev Studio, a small studio in Malaysia. If something goes wrong, WhatsApp us. The people who built Indahnya are the ones who answer.',
-      wa: 'WhatsApp us', email: 'hello@indahnya.my',
+      wa: 'WhatsApp us', email: 'hello@ffdev.studio',
     },
   },
 };

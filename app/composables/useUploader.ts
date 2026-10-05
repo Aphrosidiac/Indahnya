@@ -1,3 +1,5 @@
+import { effectScope } from 'vue';
+
 /**
  * The guest upload pipeline, browser side.
  *
@@ -23,6 +25,12 @@
  *   - a video over a minute is refused before a byte is sent;
  *   - the little previews are drawn small, one at a time, never as 30
  *     full-size 12 MP images in memory (iOS reloads a tab for less).
+ *
+ * With `persist` there is ONE uploader per gallery for the life of the page:
+ * leaving the gallery tab and coming back reattaches to the uploads still
+ * running instead of starting a second copy of them. Across browser tabs,
+ * each saved file belongs to the tab that is sending it (a heartbeat in
+ * IndexedDB); another tab only takes over files whose tab has gone quiet.
  */
 export interface UploadItem {
   key: string; file: File; name: string; preview: string | null;
@@ -32,6 +40,10 @@ export interface UploadItem {
   awaiting: boolean;
   error: string | null; thumb: string | null;
   slot: Slot | null;
+  /** A video whose length is still being read: not scheduled until it is known. */
+  checking: boolean;
+  /** Fresh slots taken because an old one's signature had expired (at most one). */
+  reslots: number;
 }
 
 interface Part { n: number; size: number; url: string; etag?: string }
@@ -40,7 +52,11 @@ type SlotAnswer = { name: string; id?: string; url?: string; type?: string; part
 
 const BACKOFF_MS = [1000, 3000, 8000, 15000, 30000, 45000, 60000, 60000];
 const PARALLEL = 3;
-/** Matches the server's per-browser reservation in a free gallery (MEDIA_LIMITS.cappedPendingPerGuest). */
+/**
+ * Slots a browser holds at once: the server lets one browser hold this many
+ * fresh reservations in a free gallery (MEDIA_LIMITS.cappedPendingPerGuest),
+ * and the uploader never asks past it.
+ */
 const SLOT_BATCH = 10;
 const STALL_MS = 45_000;
 /** A slot's signed URLs live 3 h on the server; past this, ask for a new one rather than be refused. */
@@ -53,11 +69,38 @@ export interface UploaderMsgs {
 const MSG_MS: UploaderMsgs = {
   dropped: 'Upload terputus — tekan cuba lagi',
   videoTooLong: s => `Video ${s} saat — had ${VIDEO_MAX_SEC} saat`,
-  failedProcess: 'Gagal proses',
+  failedProcess: 'Tak dapat diproses',
   noSlot: 'Tak dapat slot',
 };
 
-export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?: Partial<UploaderMsgs> } = {}) {
+type Opts = { persist?: boolean; msgs?: Partial<UploaderMsgs> };
+type Uploader = ReturnType<typeof createUploader>;
+const galleries = new Map<string, Uploader>();
+
+export function useUploader(slug: () => string, opts: Opts = {}) {
+  if (opts.persist && import.meta.client) {
+    const key = slug();
+    let u = galleries.get(key);
+    if (!u) {
+      // lives with the page, not the component: a remount finds the same uploads
+      u = effectScope(true).run(() => createUploader(slug, opts))!;
+      galleries.set(key, u);
+      u.attach();
+      void u.restore();
+    }
+    return u.api;
+  }
+  const u = createUploader(slug, opts);
+  if (import.meta.client) {
+    onMounted(() => u.attach());
+    onBeforeUnmount(() => u.detach());
+  }
+  return u.api;
+}
+
+let seq = 0;
+
+function createUploader(slug: () => string, opts: Opts) {
   const M = { ...MSG_MS, ...opts.msgs };
   const items = ref<UploadItem[]>([]);
   const done = computed(() => items.value.filter(i => i.state === 'ready').length);
@@ -69,11 +112,13 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
   /** Files brought back from an earlier visit that had not finished. */
   const resumed = ref(0);
 
-  const store = opts.persist && import.meta.client ? useUploadStore() : null;
+  const store = opts.persist && import.meta.client ? uploadStore() : null;
 
   /* ── adding files ──────────────────────────────────────────────── */
-  function makeItem(f: File, key = `${Date.now()}-${Math.random().toString(36).slice(2)}`, slot: Slot | null = null): UploadItem {
-    return { key, file: f, name: f.name, preview: null, id: slot?.id ?? null, pct: 0, state: slot ? 'signed' : 'queued', awaiting: false, error: null, thumb: null, slot };
+  function makeItem(f: File, key?: string, slot: Slot | null = null): UploadItem {
+    // sortable: files come back from IndexedDB in the order they were added
+    key ??= `${Date.now()}-${String(seq++).padStart(6, '0')}`;
+    return { key, file: f, name: f.name, preview: null, id: slot?.id ?? null, pct: 0, state: slot ? 'signed' : 'queued', awaiting: false, error: null, thumb: null, slot, checking: false, reslots: 0 };
   }
 
   /** Push and hand back the REACTIVE copies: changes made through the plain objects would never reach the screen. */
@@ -82,41 +127,61 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
     return items.value.slice(-list.length);
   }
 
+  const isVideo = (f: File) => f.type.startsWith('video/') || /\.(mov|mp4|m4v|3gp|webm)$/i.test(f.name);
+
   async function add(files: FileList | File[]) {
     const fresh = push(Array.from(files).map(f => makeItem(f)));
-    for (const it of fresh) void store?.put(slug(), it);
+    for (const it of fresh) { it.checking = isVideo(it.file); void store?.put(slug(), it); }
     previews(fresh);
-    // a video over the limit never leaves the phone
-    await Promise.all(fresh.filter(it => it.file.type.startsWith('video/') || /\.(mov|mp4|m4v|3gp|webm)$/i.test(it.name)).map(async (it) => {
+    pump();
+    // a video over the limit never leaves the phone: it is not scheduled until its length is known
+    await Promise.all(fresh.filter(it => it.checking).map(async (it) => {
       const sec = await videoSeconds(it.file);
+      it.checking = false;
       if (sec !== null && sec > VIDEO_MAX_SEC + 1) fail(it, M.videoTooLong(Math.round(sec)));
     }));
     pump();
   }
 
-  /** Bring back what an earlier visit left unfinished. */
-  async function restore() {
+  /**
+   * Bring back what an earlier visit (or a tab that has since gone quiet)
+   * left unfinished. Files still held by another tab that looks alive are
+   * looked at again every 15 s: a tab the phone killed a moment ago keeps
+   * looking alive until its heartbeat goes stale, and its files must still
+   * come back on their own.
+   */
+  async function restore(tries = 0) {
     if (!store) return;
-    const saved = await store.list(slug());
-    if (!saved.length) return;
-    const back = push(saved.map(r => makeItem(r.file, r.key, r.slot && Date.now() - r.slot.at < SLOT_TTL_MS ? r.slot : null)));
-    resumed.value = back.length;
-    previews(back);
-    pump();
+    const have = new Set(items.value.map(i => i.key));
+    const { mine, held } = await store.claim(slug());
+    const fresh = mine.filter(r => !have.has(r.key));
+    if (fresh.length) {
+      const back = push(fresh.map(r => makeItem(r.file, r.key, r.slot && Date.now() - r.slot.at < SLOT_TTL_MS ? r.slot : null)));
+      resumed.value += back.length;
+      previews(back);
+      pump();
+    }
+    if (held && tries < 40) setTimeout(() => void restore(tries + 1), 15_000);
   }
 
   function fail(it: UploadItem, error: string) {
+    const held = it.id && ['signing', 'signed', 'uploading', 'offline', 'queued'].includes(it.state) ? it.id : null;
     it.state = 'failed'; it.error = error;
     // a file that cannot go is not kept for a later visit; a retry adds it back
     void store?.remove(it.key);
+    // hand its slot back: in a free gallery it would otherwise hold a place (and block new slots) until its hold ends
+    if (held) void $fetch(`/api/g/${slug()}/media/${held}`, { method: 'DELETE' }).catch(() => {});
   }
 
   /* ── the pump: slots ahead of need, three transfers at a time ──── */
   let asking = false;
   let inFlight = 0;
+  /** Slots this browser holds that the server still counts as reserved. */
+  const holding = () => items.value.filter(i => i.id && ['signed', 'uploading', 'offline'].includes(i.state)).length;
   function pump() {
     if (!asking && items.value.filter(i => i.state === 'signed').length < PARALLEL) {
-      const batch = items.value.filter(i => i.state === 'queued').slice(0, SLOT_BATCH);
+      const room = SLOT_BATCH - holding();
+      const batch = room > 0 ? items.value.filter(i => i.state === 'queued' && !i.checking).slice(0, room) : [];
       if (batch.length) void askSlots(batch);
     }
     while (inFlight < PARALLEL) {
@@ -126,7 +191,7 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
       it.state = 'uploading';
       void send(it).finally(() => { inFlight--; pump(); });
     }
-    syncKeepAwake();
+    void syncKeepAwake();
   }
 
   async function askSlots(batch: UploadItem[]) {
@@ -136,6 +201,8 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
       const r = await $fetch<{ uploads: SlotAnswer[] }>(`/api/g/${slug()}/uploads`, { method: 'POST', body: { files: batch.map(i => ({ name: i.name, type: i.file.type || '', bytes: i.file.size })) } });
       r.uploads.forEach((s, n) => {
         const it = batch[n]!;
+        // failed meanwhile: hand back the slot it was just given
+        if (it.state !== 'signing') { if (s.id) void $fetch(`/api/g/${slug()}/media/${s.id}`, { method: 'DELETE' }).catch(() => {}); return; }
         if (s.error || !s.id || (!s.url && !s.parts)) { fail(it, s.error ?? M.noSlot); return; }
         it.id = s.id;
         it.slot = { id: s.id, type: s.type ?? it.file.type, url: s.url, parts: s.parts?.map(p => ({ ...p })), at: Date.now() };
@@ -146,7 +213,7 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
       const status = (e as { statusCode?: number }).statusCode ?? 0;
       if (status === 429 || status === 0 || status >= 500) {
         // too many at once, or the line dropped: these files wait and ask again
-        batch.forEach((i) => { i.state = 'queued'; });
+        batch.forEach((i) => { if (i.state === 'signing') i.state = 'queued'; });
         await sleep(status === 429 ? 15_000 : 5_000);
         if (!navigator.onLine) await waitOnline();
       } else {
@@ -160,6 +227,7 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
   async function send(it: UploadItem) {
     const slot = it.slot!;
     for (let attempt = 0; ; attempt++) {
+      let stage: 'put' | 'complete' = 'put';
       try {
         it.state = 'uploading';
         let parts: { n: number; etag: string }[] | undefined;
@@ -179,15 +247,19 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
         } else {
           await xhrPut(slot.url!, it.file, slot.type, (loaded) => { it.pct = Math.round((loaded / it.file.size) * 100); });
         }
+        stage = 'complete';
         await $fetch(`/api/g/${slug()}/uploads/${slot.id}/complete`, { method: 'POST', body: { parts }, retry: 3, retryDelay: 1500 });
+        if ((it.state as UploadItem['state']) === 'failed') return; // given up on meanwhile
         it.pct = 100; it.state = 'processing';
         void store?.remove(it.key);
         follow(it);
         return;
       } catch (e) {
         const status = (e as { status?: number; statusCode?: number }).status ?? (e as { statusCode?: number }).statusCode ?? 0;
-        // the store refused the signature (an expired URL from an old visit): drop the slot and ask for a fresh one, once
-        if ((status === 403 || status === 400) && attempt === 0 && Date.now() - slot.at > 60_000) {
+        // the store refused a URL signed hours ago (a slot brought back from an earlier visit):
+        // hand the slot back and ask for a fresh one — once per file, never in a loop
+        if (stage === 'put' && status === 403 && it.reslots < 1 && Date.now() - slot.at > 60 * 60_000) {
+          it.reslots++;
           await $fetch(`/api/g/${slug()}/media/${slot.id}`, { method: 'DELETE' }).catch(() => {});
           it.slot = null; it.id = null; it.pct = 0; it.state = 'queued';
           void store?.put(slug(), it);
@@ -244,22 +316,24 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
         // the bytes are safely in; a busy worker is slow, not broken, and the gallery shows them when they land
         for (const [id, f] of following) if (Date.now() - f.since > 10 * 60_000) { f.it.state = 'ready'; following.delete(id); }
       }
-    } finally { polling = false; syncKeepAwake(); }
+    } finally { polling = false; void syncKeepAwake(); }
   }
 
   /* ── retry / clear ─────────────────────────────────────────────── */
   async function retry(it: UploadItem) {
     // hand back the old slot first, or it holds a place in a free gallery's cap until its hold ends
     const old = it.id;
-    it.state = 'signing'; it.error = null; it.pct = 0; it.id = null; it.slot = null;
+    it.state = 'signing'; it.error = null; it.pct = 0; it.id = null; it.slot = null; it.reslots = 0;
     if (old) await $fetch(`/api/g/${slug()}/media/${old}`, { method: 'DELETE' }).catch(() => {});
     it.state = 'queued';
     void store?.put(slug(), it);
     pump();
   }
+  /** Forget what is finished (ready or failed); what is still going stays. */
   function clear() {
-    items.value.filter(i => i.preview).forEach(i => URL.revokeObjectURL(i.preview!));
-    items.value = items.value.filter(i => !['ready', 'failed'].includes(i.state));
+    const gone = items.value.filter(i => ['ready', 'failed'].includes(i.state));
+    gone.forEach((i) => { if (i.preview) URL.revokeObjectURL(i.preview); });
+    items.value = items.value.filter(i => !gone.includes(i));
     resumed.value = 0;
   }
 
@@ -272,35 +346,50 @@ export function useUploader(slug: () => string, opts: { persist?: boolean; msgs?
     }
   }
 
-  /* ── keep the phone awake, warn before leaving ─────────────────── */
+  /* ── keep the phone awake, warn before leaving, own the saved files ─ */
   let lock: { release: () => Promise<void> } | null = null;
+  let attached = false;
   async function syncKeepAwake() {
     if (!import.meta.client) return;
-    const want = sending.value && document.visibilityState === 'visible';
+    const want = attached && sending.value && document.visibilityState === 'visible';
     try {
-      if (want && !lock && 'wakeLock' in navigator) lock = await (navigator as unknown as { wakeLock: { request: (t: 'screen') => Promise<{ release: () => Promise<void>; addEventListener: (e: string, f: () => void) => void }> } }).wakeLock.request('screen').then((l) => { l.addEventListener('release', () => { lock = null; }); return l; });
-      else if (!want && lock) { await lock.release(); lock = null; }
+      if (want && !lock && 'wakeLock' in navigator) {
+        const l = await (navigator as unknown as { wakeLock: { request: (t: 'screen') => Promise<{ release: () => Promise<void>; addEventListener: (e: string, f: () => void) => void }> } }).wakeLock.request('screen');
+        l.addEventListener('release', () => { if (lock === l) lock = null; });
+        lock = l;
+      } else if (!want && lock) { const l = lock; lock = null; await l.release(); }
     } catch { /* not allowed (battery saver, iframe): uploads still run */ }
   }
-  function onVisible() { if (document.visibilityState === 'visible') { void syncKeepAwake(); pump(); } }
+  function onVisible() { if (document.visibilityState === 'visible') pump(); else void syncKeepAwake(); }
   function onLeave(e: BeforeUnloadEvent) { if (sending.value) { e.preventDefault(); e.returnValue = ''; } }
   function onOnline() { pump(); }
-  if (import.meta.client) {
-    onMounted(() => {
-      document.addEventListener('visibilitychange', onVisible);
-      addEventListener('beforeunload', onLeave);
-      addEventListener('online', onOnline);
-      void restore();
-    });
-    onBeforeUnmount(() => {
-      document.removeEventListener('visibilitychange', onVisible);
-      removeEventListener('beforeunload', onLeave);
-      removeEventListener('online', onOnline);
-      void lock?.release();
-    });
+  /** Closing or leaving the page: hand the saved files over at once instead of after the heartbeat goes stale. */
+  function onHide(e: PageTransitionEvent) { if (!e.persisted) void store?.release(); }
+  let beat: ReturnType<typeof setInterval> | undefined;
+  function attach() {
+    if (attached) return;
+    attached = true;
+    document.addEventListener('visibilitychange', onVisible);
+    addEventListener('beforeunload', onLeave);
+    addEventListener('online', onOnline);
+    addEventListener('pagehide', onHide);
+    if (store) { void store.beat(); beat = setInterval(() => void store.beat(), 15_000); }
+    void syncKeepAwake();
+  }
+  function detach() {
+    attached = false;
+    document.removeEventListener('visibilitychange', onVisible);
+    removeEventListener('beforeunload', onLeave);
+    removeEventListener('online', onOnline);
+    removeEventListener('pagehide', onHide);
+    clearInterval(beat);
+    void syncKeepAwake();
   }
 
-  return { items, add, retry, clear, done, awaiting, failed, offline, active, sending, resumed };
+  return {
+    attach, detach, restore,
+    api: { items, add, retry, clear, done, awaiting, failed, offline, active, sending, resumed },
+  };
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -339,34 +428,62 @@ async function smallPreview(file: File): Promise<string | null> {
 
 /**
  * Files waiting to be sent, kept in IndexedDB so a killed tab can carry on.
+ * Each record names the tab sending it; the tab stamps a heartbeat every
+ * 15 s. A page only takes over records whose tab has been quiet for 45 s —
+ * a second tab on the same gallery never sends the first tab's files again.
  * Best effort: a private window, a full disk or an old browser simply means
  * nothing is kept, and uploads work as before.
  */
-interface Saved { key: string; slug: string; file: File; slot: Slot | null }
-function useUploadStore() {
-  const DB = 'indahnya-uploads', OS = 'files';
+interface Saved { key: string; slug: string; file: File; slot: Slot | null; owner?: string }
+const TAB = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+const QUIET_MS = 45_000;
+function uploadStore() {
+  const DB = 'indahnya-uploads', FILES = 'files', OWNERS = 'owners';
   let dbp: Promise<IDBDatabase | null> | null = null;
   const open = () => (dbp ??= new Promise((resolve) => {
     try {
-      const r = indexedDB.open(DB, 1);
-      r.onupgradeneeded = () => { r.result.createObjectStore(OS, { keyPath: 'key' }).createIndex('slug', 'slug'); };
+      const r = indexedDB.open(DB, 2);
+      r.onupgradeneeded = (e) => {
+        const db = r.result;
+        if ((e as IDBVersionChangeEvent).oldVersion < 1) db.createObjectStore(FILES, { keyPath: 'key' }).createIndex('slug', 'slug');
+        if (!db.objectStoreNames.contains(OWNERS)) db.createObjectStore(OWNERS, { keyPath: 'tab' });
+      };
       r.onsuccess = () => resolve(r.result);
       r.onerror = () => resolve(null);
+      r.onblocked = () => resolve(null);
     } catch { resolve(null); }
   }));
-  const tx = async <T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T> | void): Promise<T | undefined> => {
+  const tx = async <T>(stores: string[], mode: IDBTransactionMode, fn: (t: IDBTransaction) => IDBRequest<T> | void): Promise<T | undefined> => {
     const db = await open(); if (!db) return undefined;
     return new Promise((resolve) => {
       try {
-        const t = db.transaction(OS, mode); const req = fn(t.objectStore(OS));
+        const t = db.transaction(stores, mode); const req = fn(t);
         t.oncomplete = () => resolve(req ? req.result : undefined);
         t.onerror = t.onabort = () => resolve(undefined);
       } catch { resolve(undefined); }
     });
   };
+  const record = (slug: string, it: UploadItem): Saved => ({ key: it.key, slug, file: it.file, slot: it.slot ? JSON.parse(JSON.stringify(it.slot)) : null, owner: TAB });
   return {
-    put: (slug: string, it: UploadItem) => tx('readwrite', s => s.put({ key: it.key, slug, file: it.file, slot: it.slot ? JSON.parse(JSON.stringify(it.slot)) : null } satisfies Saved)),
-    remove: (key: string) => tx('readwrite', s => s.delete(key)),
-    list: async (slug: string) => (await tx<Saved[]>('readonly', s => s.index('slug').getAll(slug))) ?? [],
+    put: (slug: string, it: UploadItem) => tx([FILES], 'readwrite', t => t.objectStore(FILES).put(record(slug, it))),
+    remove: (key: string) => tx([FILES], 'readwrite', t => t.objectStore(FILES).delete(key)),
+    beat: () => tx([OWNERS], 'readwrite', t => t.objectStore(OWNERS).put({ tab: TAB, at: Date.now() })),
+    release: () => tx([OWNERS], 'readwrite', t => t.objectStore(OWNERS).delete(TAB)),
+    /** Take over this gallery's files whose tab has gone quiet; they become this tab's. */
+    async claim(slug: string) {
+      const [saved, owners] = await Promise.all([
+        tx<Saved[]>([FILES], 'readonly', t => t.objectStore(FILES).index('slug').getAll(slug)),
+        tx<{ tab: string; at: number }[]>([OWNERS], 'readonly', t => t.objectStore(OWNERS).getAll()),
+      ]);
+      const alive = new Set((owners ?? []).filter(o => o.tab !== TAB && Date.now() - o.at < QUIET_MS).map(o => o.tab));
+      const mine = (saved ?? []).filter(r => !r.owner || !alive.has(r.owner)).sort((a, b) => (a.key < b.key ? -1 : 1));
+      const held = (saved ?? []).length - mine.length;
+      await tx([FILES, OWNERS], 'readwrite', (t) => {
+        for (const r of mine) if (r.owner !== TAB) t.objectStore(FILES).put({ ...r, owner: TAB });
+        // tabs long gone leave no trace
+        for (const o of owners ?? []) if (Date.now() - o.at > 86_400_000) t.objectStore(OWNERS).delete(o.tab);
+      });
+      return { mine, held };
+    },
   };
 }

@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { and, eq, count, sql } from 'drizzle-orm';
+import { and, eq, count, sql, inArray } from 'drizzle-orm';
 import { useDb, media } from '../../../../db';
 import { eventBySlug } from '../../../../utils/public';
 import { ensureGuest } from '../../../../utils/guest';
 import { uploadsOpen, uploadsUsed, SLOT_HOLD_MIN } from '../../../../utils/events';
 import { PLANS, MEDIA_LIMITS } from '../../../../utils/plans';
 import { newId } from '../../../../utils/ids';
-import { presignPut, createMultipart, presignParts, MULTIPART_MIN } from '../../../../utils/storage';
+import { presignPut, createMultipart, presignParts, abortMultipart, MULTIPART_MIN } from '../../../../utils/storage';
 import { readBodyAs } from '../../../../utils/validate';
 import { rateLimit, clientIp } from '../../../../utils/rate';
 import { SANDBOX } from '../../../../utils/sandbox';
@@ -92,13 +92,22 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const uploads = await Promise.all(plan.map(async (p, i) => {
-    if (p.error) return { name: p.name, error: p.error };
-    const bytes = files[i]!.bytes;
-    if (bytes < MULTIPART_MIN) return { name: p.name, id: p.id!, type: p.type!, url: await presignPut(p.originalKey!, p.type!, bytes) };
-    const uploadId = await createMultipart(p.originalKey!, p.type!);
-    await useDb().update(media).set({ uploadId }).where(eq(media.id, p.id!));
-    return { name: p.name, id: p.id!, type: p.type!, parts: await presignParts(p.originalKey!, uploadId, bytes) };
-  }));
-  return { uploads };
+  try {
+    const uploads = await Promise.all(plan.map(async (p, i) => {
+      if (p.error) return { name: p.name, error: p.error };
+      const bytes = files[i]!.bytes;
+      if (bytes < MULTIPART_MIN) return { name: p.name, id: p.id!, type: p.type!, url: await presignPut(p.originalKey!, p.type!, bytes) };
+      const uploadId = await createMultipart(p.originalKey!, p.type!);
+      await useDb().update(media).set({ uploadId }).where(eq(media.id, p.id!));
+      return { name: p.name, id: p.id!, type: p.type!, parts: await presignParts(p.originalKey!, uploadId, bytes) };
+    }));
+    return { uploads };
+  } catch (e) {
+    // the bucket failed half way: give the whole batch's slots back at once instead of leaving them reserved
+    const ids = wanted.map(p => p.id!);
+    const open = await useDb().update(media).set({ status: 'failed', error: 'Tak dapat slot' })
+      .where(and(inArray(media.id, ids), eq(media.status, 'pending'))).returning({ key: media.originalKey, uploadId: media.uploadId });
+    for (const o of open) if (o.uploadId) await abortMultipart(o.key, o.uploadId);
+    throw e;
+  }
 });

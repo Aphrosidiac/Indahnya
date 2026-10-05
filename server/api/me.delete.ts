@@ -22,8 +22,8 @@ export default defineEventHandler(async (event) => {
   const owned = await db.transaction(async (tx) => {
     const rows = await tx.update(events).set({ deletedAt: now, purgeAfter: now })
       .where(and(eq(events.ownerId, u.id), isNull(events.purgedAt))).returning({ id: events.id });
-    // majlis already deleted earlier lose what was left of their undo window
-    await tx.update(events).set({ purgeAfter: now }).where(eq(events.ownerId, u.id));
+    // majlis already deleted earlier lose what was left of their undo window; none keeps the couple's names
+    await tx.update(events).set({ purgeAfter: now, title: 'Majlis dipadam', names: { a: '—' }, venue: {} }).where(eq(events.ownerId, u.id));
     await tx.delete(eventMembers).where(eq(eventMembers.userId, u.id));
     await tx.delete(sessions).where(eq(sessions.userId, u.id));
     await tx.update(users).set({ email: `deleted-${u.id.toLowerCase()}@deleted.invalid`, name: null, googleSub: null, deletedAt: now }).where(eq(users.id, u.id));

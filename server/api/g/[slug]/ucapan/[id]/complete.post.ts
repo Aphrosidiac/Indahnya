@@ -25,7 +25,9 @@ export default defineEventHandler(async (event) => {
   const release = await voiceSlot();
   // claim it: a retried request must not transcode twice. `processing` is its own state,
   // so neither the guest's delete nor the host's list mistakes it for a finished failure.
-  const [won] = await db.update(messages).set({ status: 'processing' }).where(and(eq(messages.id, m.id), eq(messages.status, 'pending'))).returning({ id: messages.id });
+  let won: { id: string } | undefined;
+  try { [won] = await db.update(messages).set({ status: 'processing' }).where(and(eq(messages.id, m.id), eq(messages.status, 'pending'))).returning({ id: messages.id }); }
+  catch (e) { release(); throw e; }
   if (!won) { release(); return { id: m.id, status: 'processing' }; }
   const status = ev.settings.approvalMode ? 'hidden' as const : 'visible' as const;
   const audioKey = `events/${ev.id.toLowerCase()}/ucapan/${m.id.toLowerCase()}.m4a`;

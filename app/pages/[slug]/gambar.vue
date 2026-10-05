@@ -57,7 +57,7 @@ onMounted(() => {
 /* ── upload ───────────────────────────────────────────────────────── */
 const up = useUploader(() => slug.value, {
   persist: true,
-  msgs: { dropped: t('gallery.dropped'), videoTooLong: n => t('gallery.video.long', { n }), failedProcess: t('gallery.failed', { n: 1 }) },
+  msgs: { dropped: t('gallery.dropped'), videoTooLong: n => t('gallery.video.long', { n }), failedProcess: t('gallery.failed.one') },
 });
 /* uploads an earlier visit left unfinished carry on by themselves: show them */
 watch(() => up.resumed.value, (n) => { if (n) { sheet.value = true; ui.ok(t('gallery.resumed', { n })); } });

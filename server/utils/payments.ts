@@ -1,5 +1,5 @@
 import type Stripe from 'stripe';
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { and, eq, ne, sql, inArray } from 'drizzle-orm';
 import { useDb, payments, events } from '../db';
 import { stripe } from './stripe';
 import { clocksAfterPayment, offers } from './plans';
@@ -25,8 +25,8 @@ export async function applyPaidSession(s: Pick<Stripe.Checkout.Session, 'id' | '
   const intent = typeof s.payment_intent === 'string' ? s.payment_intent : s.payment_intent?.id ?? null;
   const out = await useDb().transaction(async (tx) => {
     const [p] = await tx.update(payments).set({ status: 'paid', paidAt: now, stripePaymentIntent: intent })
-      .where(and(eq(payments.stripeSessionId, s.id), ne(payments.status, 'paid'))).returning();
-    if (!p) return null; // unknown, or another request already applied it
+      .where(and(eq(payments.stripeSessionId, s.id), inArray(payments.status, ['open', 'expired']))).returning();
+    if (!p) return null; // unknown, already applied, or refunded (a late redelivery must not apply it again)
     const [ev] = await tx.select().from(events).where(eq(events.id, p.eventId)).for('update');
     const refund = async (why: string) => {
       await tx.update(payments).set({ needsRefund: true, note: why }).where(eq(payments.id, p.id));

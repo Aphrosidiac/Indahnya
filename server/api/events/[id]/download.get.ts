@@ -1,10 +1,12 @@
 import archiver from 'archiver';
 import type { Readable } from 'node:stream';
-import { and, eq, inArray, asc } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import { useDb, media, guests } from '../../../db';
 import { requireEventAccess } from '../../../utils/session';
 import { getStream } from '../../../utils/storage';
 import { downloadName, extOf, zipParts } from '../../../utils/media';
+
+const ZIPPED = ['ready', 'hidden', 'failed'];
 import { contentDisposition } from '../../../utils/disposition';
 
 /**
@@ -26,12 +28,12 @@ export default defineEventHandler(async (event) => {
   const { ev } = await requireEventAccess(event, getRouterParam(event, 'id')!);
   const all = await useDb().select({ m: media, guestName: guests.name, bytes: media.bytes }).from(media)
     .leftJoin(guests, eq(guests.id, media.guestId))
-    .where(and(eq(media.eventId, ev.id), inArray(media.status, ['ready', 'hidden', 'failed'])))
+    .where(eq(media.eventId, ev.id))
     .orderBy(asc(media.createdAt), asc(media.id));
   const parts = zipParts(all);
   const n = Math.max(1, parts.length);
   const part = Math.min(Math.max(Math.trunc(Number(getQuery(event).part)) || 1, 1), n);
-  const rows = parts[part - 1] ?? [];
+  const rows = (parts[part - 1] ?? []).filter(r => ZIPPED.includes(r.m.status));
   setHeader(event, 'content-type', 'application/zip');
   setHeader(event, 'content-disposition', contentDisposition(n > 1 ? `indahnya-${ev.slug}-bahagian-${part}-dari-${n}.zip` : `indahnya-${ev.slug}.zip`));
   setHeader(event, 'cache-control', 'no-store');

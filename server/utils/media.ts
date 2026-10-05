@@ -36,7 +36,11 @@ export const ZIP_PART_BYTES = 2 * 1024 ** 3;
 /**
  * Splits the download into parts by size, in upload order. Deterministic, so
  * the part list the dashboard shows and the part a link downloads agree.
- * A file bigger than a part gets a part of its own.
+ * A file bigger than a part gets a part of its own. Callers pass EVERY upload
+ * row (whatever its status) and filter inside each part: a photo hidden or
+ * deleted between downloading part 1 and part 2 then moves no boundary, so
+ * nothing is skipped or repeated. Only new uploads (at the end) change the
+ * last part.
  */
 export function zipParts<T extends { bytes: number }>(rows: T[], limit = ZIP_PART_BYTES): T[][] {
   const parts: T[][] = [];

@@ -75,9 +75,15 @@ export default defineNitroPlugin((nitro) => {
 
   async function tick(lane: JobLane) {
     while (!stopping && busy[lane] < LANES[lane]) {
-      const j = await claim(lane).catch((e) => { console.error('[worker] claim', (e as Error).message); return null; });
-      if (!j) break;
+      // reserve the slot BEFORE awaiting the claim: two ticks overlapping must not both pass the check
       busy[lane]++;
+      const j = await claim(lane).catch((e) => { console.error('[worker] claim', (e as Error).message); return null; });
+      if (!j || stopping) {
+        busy[lane]--;
+        // claimed while shutting down: hand it straight back for the next process
+        if (j) await db.update(jobs).set({ lockedAt: null, attempts: j.attempts }).where(eq(jobs.id, j.id)).catch(() => {});
+        break;
+      }
       const p = runJob(j).catch(e => console.error('[worker] bookkeeping', (e as Error).message)).finally(() => {
         busy[lane]--; running.delete(p);
         if (!stopping) setTimeout(() => void tick(lane), 0);

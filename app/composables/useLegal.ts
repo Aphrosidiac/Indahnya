@@ -32,7 +32,7 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Teknikal: alamat IP (untuk keselamatan dan had cubaan), dan cookie yang perlu untuk sistem jalan — satu untuk log masuk tuan majlis, satu untuk kenal browser tetamu supaya "Gambar saya", RSVP dan padam gambar sendiri boleh berfungsi. Tak ada cookie iklan, analitik atau tracking pihak ketiga.',
       ] },
       { h: 'Maklumat dalam gambar dan video', p: [
-        'Gambar dan video dari phone selalunya ada metadata, termasuk kadang-kadang lokasi GPS tempat ia diambil. Salinan yang dipaparkan dalam galeri, atas TV dan dalam kad dah dibuang semua metadata ni. Fail asal disimpan secara tertutup, dan hanya tuan majlis boleh download fail asal (contohnya dalam zip) — fail asal tu masih ada metadata asalnya.',
+        'Gambar dan video dari phone selalunya ada metadata, termasuk kadang-kadang lokasi GPS tempat gambar tu diambil. Salinan yang dipaparkan dalam galeri, atas TV dan dalam kad dah dibuang semua metadata ni. Fail asal disimpan secara tertutup, dan hanya tuan majlis boleh download fail asal (contohnya dalam zip) — fail asal tu masih ada metadata asalnya.',
       ] },
       { h: 'Kenapa kami guna data ni', ul: [
         'Untuk jalankan galeri, slideshow, kad jemputan, RSVP, susunan tempat duduk dan ucapan untuk majlis korang.',
@@ -48,22 +48,22 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Pembekal yang bantu kami jalankan Indahnya: Cloudflare (simpanan dan penghantaran gambar), penyedia server kami, Stripe (bayaran), penyedia email, dan Google (kalau korang pilih log masuk dengan Google). Mereka proses data hanya untuk tujuan tu.',
       ] },
       { h: 'Pemindahan ke luar Malaysia', p: [
-        'Sesetengah pembekal di atas simpan atau proses data di luar Malaysia — contohnya pusat data Cloudflare di rantau Asia Pasifik, dan Stripe serta Google di Amerika Syarikat dan Eropah. Kami hanya guna pembekal yang terikat dengan kontrak dan polisi perlindungan data yang sekurang-kurangnya setara dengan perlindungan di bawah undang-undang Malaysia.',
+        'Sesetengah pembekal di atas simpan atau proses data di luar Malaysia — contohnya pusat data Cloudflare di rantau Asia Pasifik, dan Stripe serta Google di Amerika Syarikat dan Eropah. Kami pilih pembekal yang ada kontrak dan polisi jaga data, paling kurang sama macam yang undang-undang Malaysia minta.',
       ] },
       { h: 'Berapa lama kami simpan', ul: [
         'Gambar, video dan ucapan disimpan ikut pakej: Percuma 30 hari selepas majlis, Indahnya 1 tahun, Indahnya Lengkap 2 tahun. Kami email tuan majlis 14 hari sebelum tamat, pada hari ia tamat, dan sekali lagi sekurang-kurangnya 7 hari sebelum dipadam.',
         'Selepas tempoh simpanan tamat, ada sekurang-kurangnya 30 hari lagi untuk download atau lanjutkan. Lepas tu semua gambar, video dan ucapan dipadam terus, bersama data tetamu (RSVP, nombor telefon, susunan meja) dan butiran peribadi dalam kad (nama ibu bapa, nombor telefon, akaun bank). Yang tinggal hanya tajuk dan tarikh majlis dalam senarai tuan majlis.',
-        'Kalau tuan majlis padam majlis, ia terus hilang dari link tetamu, dan semua kandungannya dipadam terus selepas 7 hari (dalam tempoh tu tuan majlis boleh pulihkan).',
+        'Kalau tuan majlis padam majlis, majlis tu terus hilang dari link tetamu, dan lepas 7 hari semua isinya dipadam terus (sebelum tu tuan majlis boleh pulihkan).',
         'Tuan majlis boleh padam akaun bila-bila masa dari dashboard: semua majlis milik akaun tu dipadam terus serta-merta, dan email serta nama dibuang dari rekod kami.',
         'Tetamu boleh padam gambar dan ucapan sendiri dalam tempoh yang tuan majlis benarkan (biasanya 24 jam).',
         'Link log masuk tamat dalam 15 minit. Sesi log masuk tamat selepas 90 hari.',
         'Rekod bayaran disimpan selama yang diperlukan oleh undang-undang cukai dan perakaunan (biasanya 7 tahun), tanpa gambar atau data tetamu.',
       ] },
       { h: 'Hak korang', p: [
-        'Korang boleh minta akses kepada data peribadi korang, minta salinannya dalam format yang biasa digunakan, minta ia dibetulkan, hadkan penggunaannya, tarik balik persetujuan, atau minta ia dipadam. Tuan majlis boleh buat kebanyakan ni sendiri dari dashboard. Tetamu yang nak gambar, ucapan atau RSVP diturunkan boleh minta tuan majlis, atau hubungi kami terus dengan link majlis dan butiran yang terlibat. Kami balas dalam 21 hari.',
+        'Korang boleh minta tengok data peribadi korang, minta salinan data tu (dalam fail biasa), minta ia dibetulkan, minta kami hadkan guna data tu, tarik balik persetujuan, atau minta ia dipadam. Tuan majlis boleh buat kebanyakan ni sendiri dari dashboard. Tetamu yang nak gambar, ucapan atau RSVP diturunkan boleh minta tuan majlis, atau hubungi kami terus dengan link majlis dan butiran yang terlibat. Kami balas dalam 21 hari.',
       ] },
       { h: 'Keselamatan', p: [
-        'Semua sambungan guna HTTPS. Fail asal dan fail tersembunyi disimpan dalam simpanan tertutup, bukan awam. Akses tuan majlis guna link sekali guna, bukan password yang boleh dicuri, dan token log masuk disimpan dalam bentuk yang tak boleh diguna semula kalau bocor. Tiada sistem yang 100% selamat, tapi kami ambil langkah yang munasabah untuk lindungi data korang. Kalau berlaku kebocoran data yang boleh menjejaskan korang, kami maklumkan korang dan Pesuruhjaya Perlindungan Data Peribadi seperti yang dikehendaki undang-undang.',
+        'Semua sambungan guna HTTPS. Fail asal dan fail tersembunyi disimpan dalam simpanan tertutup, bukan awam. Akses tuan majlis guna link sekali guna, bukan password yang boleh dicuri, dan token log masuk disimpan dalam bentuk yang tak boleh diguna semula kalau bocor. Tiada sistem yang 100% selamat, tapi kami ambil langkah yang munasabah untuk lindungi data korang. Kalau berlaku kebocoran data yang boleh menjejaskan korang, kami maklumkan korang dan Pesuruhjaya Perlindungan Data Peribadi, macam yang undang-undang minta.',
       ] },
       { h: 'Kanak-kanak', p: [
         'Majlis selalunya ada budak-budak dalam gambar. Tuan majlis bertanggungjawab siapa yang dapat link galeri, dan boleh sembunyi atau padam mana-mana gambar bila-bila masa.',

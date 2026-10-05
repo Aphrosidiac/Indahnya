@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { and, eq } from 'drizzle-orm';
 import { useDb, media, events } from '../db';
-import { getBuffer, getStream, put, delEverywhere } from '../utils/storage';
+import { getBuffer, getStream, put, del, delEverywhere } from '../utils/storage';
 import { MEDIA_LIMITS } from '../utils/plans';
 import { exifMoment } from '../utils/exif-time';
 import { heicToJpeg, HeicError } from '../utils/heic';
@@ -136,7 +136,12 @@ export async function processMedia(id: string) {
     const won = await useDb().update(media).set(set).where(and(eq(media.id, mid), eq(media.status, 'uploaded'))).returning({ id: media.id });
     if (won.length) return;
     const [now] = await useDb().select({ status: media.status, key: media.key }).from(media).where(eq(media.id, mid));
-    if (now && (now.status === 'ready' || now.status === 'hidden') && now.key === set.key) return;
+    if (now && (now.status === 'ready' || now.status === 'hidden') && now.key === set.key) {
+      // same keys, landed by an earlier run — but if the host hid it since, the copies this run
+      // just wrote to the public bucket must not stay there
+      if (now.status === 'hidden' && where === 'public') await del(keys, 'public');
+      return;
+    }
     await delEverywhere(keys);
   }
 }

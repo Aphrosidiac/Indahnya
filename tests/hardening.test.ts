@@ -100,3 +100,25 @@ describe('nothing is sold that cannot be delivered', () => {
     expect(offers(paid, t, { applying: true }).map(o => o.kind)).toContain('renew');
   });
 });
+
+describe('review follow-ups', () => {
+  const end = D('2027-01-01T00:00:00Z');
+  const ev = (x: object = {}) => ({ storageEndsAt: end, settings: settings(), deletedAt: null, purgedAt: null, purgeAfter: null, ...x });
+  it('a final warning sent late (day 40) is honoured in full: no purge at the day-45 hard stop', () => {
+    const late = settings({ finalWarningAt: new Date(end.getTime() + days(40)).toISOString() });
+    expect(purgeDue(ev({ settings: late }), end.getTime() + days(45)).due).toBe(false);
+    expect(purgeDue(ev({ settings: late }), end.getTime() + days(47)).due).toBe(true);
+  });
+  it('the dev /media route is refused as a media domain, media.indahnya.my is not', () => {
+    const bad = (u: string) => /^\/media(\/|$)/.test(new URL(u).pathname);
+    expect(bad('https://media.indahnya.my')).toBe(false);
+    expect(bad('http://localhost:3180/media')).toBe(true);
+  });
+  it('zip boundaries do not move when a photo in an early part is deleted', () => {
+    const G = 1024 ** 3;
+    const rows = [1, 0.9, 0.5, 1.5, 0.4].map((g, i) => ({ i, bytes: g * G, status: 'ready' }));
+    const before = zipParts(rows, 2 * G).map(p => p.map(r => r.i));
+    rows[1]!.status = 'deleted';
+    expect(zipParts(rows, 2 * G).map(p => p.map(r => r.i))).toEqual(before);
+  });
+});

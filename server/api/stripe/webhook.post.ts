@@ -1,7 +1,7 @@
 import type Stripe from 'stripe';
 import { and, eq } from 'drizzle-orm';
 import { useDb, payments } from '../../db';
-import { stripe } from '../../utils/stripe';
+import { stripe, isLiveKey } from '../../utils/stripe';
 import { applyPaidSession } from '../../utils/payments';
 import { opsAlert } from '../../utils/alert';
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   let evt: Stripe.Event;
   try { evt = stripe().webhooks.constructEvent(raw, sig, cfg.webhookSecret); }
   catch { throw createError({ statusCode: 400, statusMessage: 'Bad signature' }); }
-  if (evt.livemode !== cfg.secretKey.startsWith('sk_live')) {
+  if (evt.livemode !== isLiveKey(cfg.secretKey)) {
     console.warn(`[stripe] ignored ${evt.livemode ? 'live' : 'test'} event ${evt.id} on a ${evt.livemode ? 'test' : 'live'} server`);
     return { received: true };
   }
@@ -51,10 +51,12 @@ export default defineEventHandler(async (event) => {
       const ch = evt.data.object;
       const intent = typeof ch.payment_intent === 'string' ? ch.payment_intent : ch.payment_intent?.id;
       if (!intent) break;
-      const [p] = await db.update(payments).set({ status: 'refunded', needsRefund: false })
-        .where(eq(payments.stripePaymentIntent, intent)).returning({ eventId: payments.eventId });
+      // only a FULL refund closes the payment; a partial one is noted and the payment stays paid
+      const [p] = ch.refunded
+        ? await db.update(payments).set({ status: 'refunded', needsRefund: false }).where(eq(payments.stripePaymentIntent, intent)).returning({ eventId: payments.eventId })
+        : await db.update(payments).set({ note: `partially refunded: RM${(ch.amount_refunded / 100).toFixed(2)}` }).where(eq(payments.stripePaymentIntent, intent)).returning({ eventId: payments.eventId });
       // the plan is NOT taken back automatically: a refund is a decision someone made, and they decide this too
-      if (p && ch.refunded) opsAlert('Payment refunded', `Payment ${intent} for event ${p.eventId} was refunded in full. The event keeps its plan until someone changes it.`);
+      if (p) opsAlert('Payment refunded', `Payment ${intent} for event ${p.eventId}: ${ch.refunded ? 'refunded in full' : `partly refunded (RM${(ch.amount_refunded / 100).toFixed(2)})`}. The event keeps its plan until someone changes it.`);
       break;
     }
     case 'charge.dispute.created': {

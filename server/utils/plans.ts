@@ -1,4 +1,5 @@
-import type { Plan } from '../db/schema';
+import type { Plan, EventSettings } from '../db/schema';
+import { renewable } from './retention';
 
 /**
  * The pricing table from PLAN.md, as numbers. Free is limited by count and
@@ -27,6 +28,13 @@ export const MEDIA_LIMITS = {
   filesPerBatch: 30,
   /** Slots one browser may hold open (asked for, not yet sent) at once. */
   pendingPerGuest: 90,
+  /** Fresh slots one browser may hold at once in a capped (free) gallery. The uploader asks in batches of this size. */
+  cappedPendingPerGuest: 10,
+  /** Slots one address may take in a capped (free) gallery per SLOT_HOLD window. */
+  cappedSlotsPerIp: 40,
+  /** The landing's sandbox: small photos only, and a ceiling for everyone together. */
+  sandboxPhotoBytes: 15 * 1024 * 1024,
+  sandboxSlotsPerHour: 600,
 };
 
 export const days = (n: number) => n * 86_400_000;
@@ -51,7 +59,10 @@ export function planClocks(plan: Plan, from: Date, eventDate: Date | null | unde
 
 const later = (a: Date, b: Date) => (a.getTime() >= b.getTime() ? a : b);
 
-interface ClockState { plan: Plan; date: Date | null; uploadWindowEndsAt: Date; storageEndsAt: Date; purgedAt: Date | null; deletedAt?: Date | null; planPaidAt?: Date | null }
+interface ClockState {
+  plan: Plan; date: Date | null; uploadWindowEndsAt: Date; storageEndsAt: Date; purgedAt: Date | null; deletedAt?: Date | null; planPaidAt?: Date | null;
+  purgeStartedAt?: Date | null; purgeAfter?: Date | null; settings?: EventSettings;
+}
 
 export type Offer = { plan: Exclude<Plan, 'free'>; kind: 'upgrade' | 'renew'; cents: number };
 
@@ -60,10 +71,14 @@ export type Offer = { plan: Exclude<Plan, 'free'>; kind: 'upgrade' | 'renew'; ce
  *   - a higher plan: an upgrade. From a paid plan, only the difference is charged.
  *   - the same paid plan: a renewal, offered in the last 30 days of storage or
  *     during the grace month after it — "extend by paying again".
- * Nothing for a purged or deleted event: there is nothing left to extend.
+ * Nothing for a purged or deleted event, or one whose purge is due: there is
+ * nothing left to extend.
  */
-export function offers(ev: ClockState, now = new Date()): Offer[] {
-  if (ev.purgedAt || ev.deletedAt) return [];
+export function offers(ev: ClockState, now = new Date(), o: { applying?: boolean } = {}): Offer[] {
+  if (ev.purgedAt || ev.deletedAt || ev.purgeStartedAt) return [];
+  // past the grace month (or about to be purged) there is nothing left to sell; a payment
+  // already made is judged without that margin — it landed before the purge began, so it counts
+  if (!o.applying && !renewable({ ...ev, settings: ev.settings ?? ({} as EventSettings) }, now.getTime())) return [];
   const out: Offer[] = [];
   for (const plan of ['std', 'full'] as const) {
     if (RANK[plan] > RANK[ev.plan]) {

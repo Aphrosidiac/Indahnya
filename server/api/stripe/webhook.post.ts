@@ -1,57 +1,67 @@
-import { and, eq, ne, sql } from 'drizzle-orm';
-import { useDb, payments, events } from '../../db';
+import type Stripe from 'stripe';
+import { and, eq } from 'drizzle-orm';
+import { useDb, payments } from '../../db';
 import { stripe } from '../../utils/stripe';
-import { clocksAfterPayment } from '../../utils/plans';
+import { applyPaidSession } from '../../utils/payments';
+import { opsAlert } from '../../utils/alert';
 
 /**
- * `checkout.session.completed` flips the plan. Idempotent on the session id:
- * Stripe retries, and the success page also asks us to reconcile, sometimes
- * in the same second — so the open→paid step is one conditional UPDATE, and
- * only the request that wins it touches the event.
+ * Stripe's events, verified against the raw body. Subscribe the endpoint to:
+ *   checkout.session.completed, checkout.session.async_payment_succeeded,
+ *   checkout.session.async_payment_failed, checkout.session.expired,
+ *   charge.refunded, charge.dispute.created
+ *
+ * An event from the other mode (a test event reaching the live server, or
+ * the reverse) is acknowledged and ignored. A database error answers 500,
+ * so Stripe retries it.
  */
 export default defineEventHandler(async (event) => {
   const { stripe: cfg } = useRuntimeConfig();
   const sig = getHeader(event, 'stripe-signature');
   const raw = await readRawBody(event);
-  if (!sig || !raw) throw createError({ statusCode: 400 });
-  let evt;
+  if (!sig || !raw || !cfg.webhookSecret) throw createError({ statusCode: 400 });
+  let evt: Stripe.Event;
   try { evt = stripe().webhooks.constructEvent(raw, sig, cfg.webhookSecret); }
   catch { throw createError({ statusCode: 400, statusMessage: 'Bad signature' }); }
-  if (evt.type === 'checkout.session.completed' || evt.type === 'checkout.session.async_payment_succeeded') {
-    const s = evt.data.object;
-    if (s.payment_status === 'paid') await applyPaidSession(s.id);
+  if (evt.livemode !== cfg.secretKey.startsWith('sk_live')) {
+    console.warn(`[stripe] ignored ${evt.livemode ? 'live' : 'test'} event ${evt.id} on a ${evt.livemode ? 'test' : 'live'} server`);
+    return { received: true };
   }
-  if (evt.type === 'checkout.session.expired' || evt.type === 'checkout.session.async_payment_failed') {
-    await useDb().update(payments).set({ status: 'expired' })
-      .where(and(eq(payments.stripeSessionId, evt.data.object.id), eq(payments.status, 'open')));
+  const db = useDb();
+  switch (evt.type) {
+    case 'checkout.session.completed':
+    case 'checkout.session.async_payment_succeeded': {
+      const s = evt.data.object;
+      // FPX can complete the session before the money moves: wait for async_payment_succeeded
+      if (s.payment_status === 'paid') {
+        const r = await applyPaidSession(s);
+        if (r === null) {
+          const [known] = await db.select({ id: payments.id }).from(payments).where(eq(payments.stripeSessionId, s.id));
+          if (!known) console.warn(`[stripe] paid session ${s.id} is not one of ours`);
+        }
+      }
+      break;
+    }
+    case 'checkout.session.expired':
+    case 'checkout.session.async_payment_failed':
+      await db.update(payments).set({ status: 'expired' })
+        .where(and(eq(payments.stripeSessionId, evt.data.object.id), eq(payments.status, 'open')));
+      break;
+    case 'charge.refunded': {
+      const ch = evt.data.object;
+      const intent = typeof ch.payment_intent === 'string' ? ch.payment_intent : ch.payment_intent?.id;
+      if (!intent) break;
+      const [p] = await db.update(payments).set({ status: 'refunded', needsRefund: false })
+        .where(eq(payments.stripePaymentIntent, intent)).returning({ eventId: payments.eventId });
+      // the plan is NOT taken back automatically: a refund is a decision someone made, and they decide this too
+      if (p && ch.refunded) opsAlert('Payment refunded', `Payment ${intent} for event ${p.eventId} was refunded in full. The event keeps its plan until someone changes it.`);
+      break;
+    }
+    case 'charge.dispute.created': {
+      const d = evt.data.object;
+      opsAlert('Payment disputed', `Dispute ${d.id} on charge ${typeof d.charge === 'string' ? d.charge : d.charge.id}: RM${(d.amount / 100).toFixed(2)}, reason ${d.reason}. Respond in the Stripe dashboard.`);
+      break;
+    }
   }
   return { received: true };
 });
-
-const RANK = { free: 0, std: 1, full: 2 } as const;
-
-export async function applyPaidSession(sessionId: string) {
-  const db = useDb();
-  const now = new Date();
-  return db.transaction(async (tx) => {
-    const [p] = await tx.update(payments).set({ status: 'paid', paidAt: now })
-      .where(and(eq(payments.stripeSessionId, sessionId), ne(payments.status, 'paid'))).returning();
-    if (!p) return null; // unknown, or another request already applied it
-    const [ev] = await tx.select().from(events).where(eq(events.id, p.eventId)).for('update');
-    if (!ev) return p;
-    if (ev.purgedAt || ev.deletedAt) {
-      // paid inside the session's 24 h after the gallery was purged or deleted: nothing to extend
-      console.error(`[stripe] REFUND NEEDED: session ${sessionId} paid for ${ev.deletedAt ? 'deleted' : 'purged'} event ${ev.id}`);
-      return p;
-    }
-    const kind = RANK[p.plan] > RANK[ev.plan] ? 'upgrade' : 'renew';
-    const plan = RANK[p.plan] > RANK[ev.plan] ? p.plan : ev.plan;
-    const c = clocksAfterPayment(ev, kind, p.plan, now);
-    await tx.update(events).set({
-      plan, planPaidAt: now, ...c,
-      // the retention mails start over for the new clock
-      settings: sql`${events.settings} - 'notified'`,
-    }).where(eq(events.id, ev.id));
-    return p;
-  });
-}

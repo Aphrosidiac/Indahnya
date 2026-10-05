@@ -25,6 +25,8 @@ export interface EventSettings {
   guestDeleteHours: number;
   /** Retention mails already sent for the current storage clock (reset when a payment moves it). */
   notified?: string[];
+  /** When the last warning before deletion went out (ISO). The purge waits at least 7 days after it. */
+  finalWarningAt?: string;
   /** The landing's sample gallery: readable by anyone, never accepts uploads. */
   demo?: boolean;
   /** The landing's "cuba sekarang" sandbox: a visitor sees only their own uploads, and everything goes within the hour. */
@@ -39,16 +41,19 @@ export const users = pgTable('users', {
   name: text('name'),
   googleSub: text('google_sub'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  /** Account deleted: the email is replaced and the name cleared; payments keep pointing here for the books. */
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, t => [uniqueIndex('users_email_uq').on(t.email)]);
 
+/** `id` is the SHA-256 of the cookie's token: a leaked table or backup holds no live session. */
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, t => [index('sessions_expires_idx').on(t.expiresAt)]);
 
-/** One-shot sign-in links. Consumed on first use, dead after 15 minutes. */
+/** One-shot sign-in links. Consumed on first use, dead after 15 minutes. `id` is the SHA-256 of the emailed token. */
 export const loginTokens = pgTable('login_tokens', {
   id: text('id').primaryKey(),
   email: text('email').notNull(),
@@ -77,14 +82,29 @@ export const events = pgTable('events', {
   purgedAt: timestamp('purged_at', { withTimezone: true }),
   /** Set when the owner deletes the majlis. Unlike a retention purge, a deleted majlis leaves the host's list. */
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  /** A deleted majlis is purged after this (7 days to change their mind; at once when the whole account goes). */
+  purgeAfter: timestamp('purge_after', { withTimezone: true }),
+  /** The purge has begun: from here no payment can extend the event (see purgeEvent and applyPaidSession). */
+  purgeStartedAt: timestamp('purge_started_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [uniqueIndex('events_slug_uq').on(t.slug), index('events_owner_idx').on(t.ownerId)]);
+
+/**
+ * Every slug an event has given up (a paid rename, a deleted majlis). Never
+ * reusable: a printed QR or a shared WhatsApp link keeps opening the event it
+ * was made for, never a stranger's kad with a stranger's bank account.
+ */
+export const slugHistory = pgTable('slug_history', {
+  slug: text('slug').primaryKey(),
+  eventId: text('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('slug_history_event_idx').on(t.eventId)]);
 
 export const eventMembers = pgTable('event_members', {
   eventId: text('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   role: text('role').$type<'owner' | 'cohost'>().notNull(),
-}, t => [primaryKey({ columns: [t.eventId, t.userId] })]);
+}, t => [primaryKey({ columns: [t.eventId, t.userId] }), index('event_members_user_idx').on(t.userId)]);
 
 /** A guest is a browser, not a person: the cookie token is the identity. */
 export const guests = pgTable('guests', {
@@ -108,8 +128,12 @@ export const media = pgTable('media', {
    */
   originalKey: text('original_key').notNull(),
   key: text('key'),
+  /** 1200px WebP for the lightbox on a phone (the 2400px JPEG is the download). */
+  midKey: text('mid_key'),
   thumbKey: text('thumb_key'),
   posterKey: text('poster_key'),
+  /** A large file goes up in parts (S3 multipart): the upload to complete, or abort if it is abandoned. */
+  uploadId: text('upload_id'),
   mime: text('mime').notNull(),
   bytes: bigint('bytes', { mode: 'number' }).notNull(),
   width: integer('width'),
@@ -119,13 +143,18 @@ export const media = pgTable('media', {
   error: text('error'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   readyAt: timestamp('ready_at', { withTimezone: true }),
-}, t => [index('media_event_status_idx').on(t.eventId, t.status, t.createdAt)]);
+}, t => [
+  index('media_event_status_idx').on(t.eventId, t.status, t.createdAt),
+  /** The feed and the TV page by id. */
+  index('media_event_status_id_idx').on(t.eventId, t.status, t.id),
+  index('media_guest_idx').on(t.guestId, t.status),
+]);
 
 export const reactions = pgTable('reactions', {
   mediaId: text('media_id').notNull().references(() => media.id, { onDelete: 'cascade' }),
   guestId: text('guest_id').notNull().references(() => guests.id, { onDelete: 'cascade' }),
   kind: text('kind').$type<'love' | 'party' | 'cry'>().notNull(),
-}, t => [primaryKey({ columns: [t.mediaId, t.guestId] })]);
+}, t => [primaryKey({ columns: [t.mediaId, t.guestId] }), index('reactions_guest_idx').on(t.guestId)]);
 
 export const messages = pgTable('messages', {
   id: text('id').primaryKey(),
@@ -147,7 +176,7 @@ export const messages = pgTable('messages', {
   audioSrcKey: text('audio_src_key'),
   durationSec: integer('duration_sec'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, t => [index('messages_event_idx').on(t.eventId, t.createdAt)]);
+}, t => [index('messages_event_idx').on(t.eventId, t.createdAt), index('messages_guest_idx').on(t.guestId, t.status)]);
 
 export const tables = pgTable('tables', {
   id: text('id').primaryKey(),
@@ -155,7 +184,7 @@ export const tables = pgTable('tables', {
   name: text('name').notNull(),
   capacity: integer('capacity').notNull().default(10),
   sort: integer('sort').notNull().default(0),
-});
+}, t => [index('tables_event_idx').on(t.eventId)]);
 
 export const rsvps = pgTable('rsvps', {
   id: text('id').primaryKey(),
@@ -180,6 +209,7 @@ export const rsvps = pgTable('rsvps', {
   /** One reply per browser, enforced by the database: two open tabs cannot make two. */
   uniqueIndex('rsvps_guest_uq').on(t.eventId, t.guestId).where(sql`${t.guestId} is not null`),
   index('rsvps_phone_idx').on(t.eventId, t.phoneKey),
+  index('rsvps_guest_idx').on(t.guestId),
 ]);
 
 export const kad = pgTable('kad', {
@@ -197,21 +227,61 @@ export const payments = pgTable('payments', {
   userId: text('user_id').notNull().references(() => users.id),
   stripeSessionId: text('stripe_session_id').notNull(),
   plan: text('plan').$type<Plan>().notNull(),
+  /** What was priced at checkout. The payment buys exactly this, or it is refunded — never reinterpreted. */
+  kind: text('kind').$type<'upgrade' | 'renew'>(),
   amountCents: integer('amount_cents').notNull(),
-  status: text('status').$type<'open' | 'paid' | 'expired'>().notNull().default('open'),
+  status: text('status').$type<'open' | 'paid' | 'expired' | 'refunded'>().notNull().default('open'),
+  /** Paid but nothing was applied (the offer was gone, the event purged, the amount wrong): someone must refund it. */
+  needsRefund: boolean('needs_refund').notNull().default(false),
+  note: text('note'),
+  stripePaymentIntent: text('stripe_payment_intent'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   paidAt: timestamp('paid_at', { withTimezone: true }),
-}, t => [uniqueIndex('payments_session_uq').on(t.stripeSessionId)]);
+}, t => [
+  uniqueIndex('payments_session_uq').on(t.stripeSessionId),
+  index('payments_event_idx').on(t.eventId, t.status),
+  index('payments_intent_idx').on(t.stripePaymentIntent),
+]);
 
-/** Work for the media worker. A row per upload; claimed with SKIP LOCKED. */
+export type JobKind = 'process_media' | 'purge_event' | 'kad_gc';
+/**
+ * Lanes keep the queue fair at a wedding's peak: photos never wait behind a
+ * 100 MB video, and a purge walking a bucket never takes a photo's slot.
+ * Each lane has its own concurrency in the worker.
+ */
+export type JobLane = 'photo' | 'video' | 'maint';
+
+/** Work for the media worker. A row per upload; claimed with SKIP LOCKED, per lane, lowest priority first. */
 export const jobs = pgTable('jobs', {
   id: text('id').primaryKey(),
-  kind: text('kind').$type<'process_media' | 'purge_event' | 'zip_event' | 'kad_gc'>().notNull(),
+  kind: text('kind').$type<JobKind>().notNull(),
   ref: text('ref').notNull(),
+  lane: text('lane').$type<JobLane>().notNull().default('photo'),
+  /** Lower runs first inside a lane (a guest's photo 0, the landing's sandbox 5). */
+  priority: integer('priority').notNull().default(0),
   attempts: integer('attempts').notNull().default(0),
   runAfter: timestamp('run_after', { withTimezone: true }).notNull().defaultNow(),
   lockedAt: timestamp('locked_at', { withTimezone: true }),
   doneAt: timestamp('done_at', { withTimezone: true }),
   error: text('error'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, t => [index('jobs_queue_idx').on(t.doneAt, t.runAfter)]);
+}, t => [
+  index('jobs_claim_idx').on(t.lane, t.priority, t.runAfter).where(sql`${t.doneAt} is null`),
+  index('jobs_ref_idx').on(t.ref),
+]);
+
+/**
+ * Fixed-window counters for rate limits, shared by every web process (an
+ * UNLOGGED table: fast, and a crash forgiving everyone is fine). Swept hourly.
+ */
+export const rateLimits = pgTable('rate_limits', {
+  key: text('key').notNull(),
+  bucket: bigint('bucket', { mode: 'number' }).notNull(),
+  n: integer('n').notNull().default(0),
+}, t => [primaryKey({ columns: [t.key, t.bucket] })]);
+
+/** Liveness: each worker process stamps its row every minute; /api/health reads it. */
+export const heartbeats = pgTable('heartbeats', {
+  name: text('name').primaryKey(),
+  at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+});

@@ -26,8 +26,9 @@ sheets, and a one-time RM price. Built by [FF Dev Studio](https://ffdev.studio).
   bucket holds originals (full EXIF, GPS included) and hidden media and has
   no public access at all. The browser PUTs originals to presigned URLs
   (type and exact size signed); the app never touches the bytes
-- **In-process worker** (`server/plugins/worker.ts`) — sharp, heic-convert,
-  ffmpeg; claims jobs with `SKIP LOCKED`
+- **Media worker** (`server/plugins/worker.ts`) — its own PM2 process in
+  production; sharp, libheif (in a child process), ffmpeg; claims jobs per
+  lane (photo / video / maint) with `SKIP LOCKED`
 - **Stripe** (MY) — one-time Checkout per event, webhook + reconcile
 - **Tailwind v4** with the design system in `app/ui/` (tokens, 34
   primitives, the motion rules)
@@ -57,24 +58,15 @@ Sign-in is by magic link. In dev, without `NUXT_SMTP_URL`, the link is printed t
 the server log instead of mailed — copy it from there. In production a
 missing `NUXT_SMTP_URL` is an error: sign-in links never go to a log.
 
-## Production checklist
+## Production
 
-- **R2**: two buckets. Custom domain (`media.indahnya.my`) on the public one
-  ONLY. CORS on the private bucket: `PUT` from `https://indahnya.my` with
-  headers `content-type, content-length`. The dev `/media` route does not
-  exist in a production build.
-- **Env**: everything in `.env.example`, set in the environment the server
-  STARTS with (PM2 `env`/`env_file`). Runtime config is only read from
-  `NUXT_*` names at startup — a bare `STRIPE_SECRET_KEY` is ignored, and
-  nothing is taken from the build machine. Needs `NUXT_SMTP_URL`, the Stripe
-  keys and webhook secret (`checkout.session.completed`,
-  `checkout.session.async_payment_succeeded`, `…async_payment_failed`,
-  `…expired` → `/api/stripe/webhook`).
-- **nginx**: HSTS, `client_max_body_size` small (uploads never pass through
-  the app), `X-Forwarded-For` set (rate limits read it).
-- **Demo**: run `scripts/seed-demo.ts` once so `/aina-hakim` exists.
-- One PM2 process runs the web app *and* the worker; set `WORKER=0` on any
-  extra web-only instance.
+Everything for a deploy is in [docs/deploy.md](docs/deploy.md): packages
+(ffmpeg, libheif), R2 buckets with CORS that exposes `ETag`, the PM2 file
+(`ecosystem.config.cjs`: a web process and a separate media worker), the
+nginx template (`deploy/nginx.conf`), migrations (`scripts/migrate.mjs`),
+backups (`scripts/backup-db.sh`), the Stripe webhook events, the health check
+(`/api/health`) and rollback. A production server refuses to start when a
+required setting is missing.
 
 ## Layout
 

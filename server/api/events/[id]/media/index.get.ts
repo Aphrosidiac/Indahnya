@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     ? q.status.split(',').filter(s => (STATES as readonly string[]).includes(s)) as (typeof STATES[number])[]
     : [...STATES];
   if (!wanted.length) return { items: [], next: null };
-  const limit = Math.min(Math.max(Number(q.limit) || 60, 1), 200);
+  const limit = Math.min(Math.max(Math.trunc(Number(q.limit)) || 60, 1), 200);
   const where = [eq(media.eventId, ev.id), inArray(media.status, wanted)];
   if (typeof q.cursor === 'string' && q.cursor) where.push(lt(media.id, q.cursor));
   const rows = await useDb().select({ m: media, guestName: guests.name }).from(media)

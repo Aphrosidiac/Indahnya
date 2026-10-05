@@ -56,7 +56,7 @@ export async function sweepSandbox() {
   const cut = new Date(Date.now() - SANDBOX.ttlMs);
   const old = await db.select().from(media).where(and(eq(media.eventId, ev.id), lt(media.createdAt, cut))).limit(500);
   if (old.length) {
-    await delEverywhere(old.flatMap(m => [m.key, m.thumbKey, m.posterKey]).filter((k): k is string => !!k));
+    await delEverywhere(old.flatMap(m => [m.key, m.midKey, m.thumbKey, m.posterKey]).filter((k): k is string => !!k));
     await del(old.map(m => m.originalKey), 'private');
     await db.delete(jobs).where(inArray(jobs.ref, old.map(m => m.id)));
     await db.delete(media).where(inArray(media.id, old.map(m => m.id)));

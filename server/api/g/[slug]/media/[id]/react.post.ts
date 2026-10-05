@@ -4,7 +4,7 @@ import { useDb, media, reactions } from '../../../../../db';
 import { eventBySlug } from '../../../../../utils/public';
 import { ensureGuest } from '../../../../../utils/guest';
 import { readBodyAs } from '../../../../../utils/validate';
-import { rateLimit } from '../../../../../utils/rate';
+import { rateLimit, clientIp } from '../../../../../utils/rate';
 
 const Body = z.object({ kind: z.enum(['love', 'party', 'cry']).nullable() });
 
@@ -16,8 +16,10 @@ export default defineEventHandler(async (event) => {
   const db = useDb();
   const [m] = await db.select({ id: media.id }).from(media).where(and(eq(media.id, id), eq(media.eventId, ev.id), eq(media.status, 'ready')));
   if (!m) throw createError({ statusCode: 404 });
+  // per address before a guest row can be minted (a dewan is one wifi, so generous)
+  await rateLimit(`react:ip:${clientIp(event)}`, 600, 60_000);
   const g = await ensureGuest(event, ev.id);
-  rateLimit(`react:${g.id}`, 120, 60_000);
+  await rateLimit(`react:${g.id}`, 120, 60_000);
   if (kind) {
     await db.insert(reactions).values({ mediaId: id, guestId: g.id, kind })
       .onConflictDoUpdate({ target: [reactions.mediaId, reactions.guestId], set: { kind } });

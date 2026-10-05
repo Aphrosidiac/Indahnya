@@ -17,7 +17,7 @@ const Body = z.object({ kind: z.enum(['photo', 'qr', 'music']), type: z.string()
 export default defineEventHandler(async (event) => {
   const { ev, user } = await requireEventAccess(event, getRouterParam(event, 'id')!);
   const { kind, type, bytes } = await readBodyAs(event, Body);
-  rateLimit(`kad-asset:${user.id}`, 60, 10 * 60_000);
+  await rateLimit(`kad-asset:${user.id}`, 60, 10 * 60_000);
   const spec = KAD_ASSET_TYPES[kind];
   const t = type.toLowerCase();
   if (ev.purgedAt) throw createError({ statusCode: 410, statusMessage: 'Majlis ni dah tamat simpanan' });

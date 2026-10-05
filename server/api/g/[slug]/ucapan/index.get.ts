@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (!ev.settings.modules.ucapan) throw createError({ statusCode: 404, statusMessage: 'Ucapan ditutup' });
   const q = getQuery(event);
   const me = await currentGuest(event, ev.id);
-  const limit = Math.min(Math.max(Number(q.limit) || 30, 1), 60);
+  const limit = Math.min(Math.max(Math.trunc(Number(q.limit)) || 30, 1), 60);
   const where = [eq(messages.eventId, ev.id), eq(messages.status, 'visible')];
   if (typeof q.cursor === 'string' && q.cursor) where.push(lt(messages.id, q.cursor));
   const rows = await useDb().select().from(messages).where(and(...where)).orderBy(desc(messages.id)).limit(limit + 1);

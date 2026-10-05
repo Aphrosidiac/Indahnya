@@ -16,7 +16,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "test": "vitest run",
-    "deploy:pages": "./scripts/pages/deploy.sh"
+    "deploy:pages": "./scripts/pages/deploy.sh",
+    "db:migrate:prod": "node --env-file-if-exists=.env scripts/migrate.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3",

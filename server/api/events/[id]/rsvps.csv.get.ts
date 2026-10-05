@@ -1,6 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { useDb, rsvps, tables } from '../../../db';
 import { requireEventAccess } from '../../../utils/session';
+import { contentDisposition } from '../../../utils/disposition';
 
 /**
  * The guest list for Excel / Google Sheets. UTF-8 with a BOM (so Excel reads
@@ -21,6 +22,6 @@ export default defineEventHandler(async (event) => {
   const lines = [head, ...rows.map(({ r, table }) => [r.name, r.phone?.replace(/^\+/, '') ?? '', r.attending ? 'Ya' : 'Tidak', r.pax, r.side, r.meal, table, r.note, r.source === 'host' ? 'Tuan majlis' : 'Tetamu', fmt(r.updatedAt)])]
     .map(l => l.map(cell).join(','));
   setHeader(event, 'content-type', 'text/csv; charset=utf-8');
-  setHeader(event, 'content-disposition', `attachment; filename="rsvp-${ev.slug}.csv"`);
+  setHeader(event, 'content-disposition', contentDisposition(`rsvp-${ev.slug}.csv`));
   return `﻿${lines.join('\r\n')}\r\n`;
 });

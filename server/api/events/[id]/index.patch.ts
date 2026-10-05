@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { useDb, events } from '../../../db';
+import { eq, sql } from 'drizzle-orm';
+import { useDb, events, slugHistory } from '../../../db';
 import { requireEventAccess } from '../../../utils/session';
-import { slugify, RESERVED } from '../../../utils/slug';
+import { slugify, slugTaken, isUniqueViolation } from '../../../utils/slug';
 import { PLANS, planClocks } from '../../../utils/plans';
 import { readBodyAs } from '../../../utils/validate';
 import { parseEventDate } from '../../../utils/dates';
@@ -57,20 +57,39 @@ export default defineEventHandler(async (event) => {
   if (b.slug !== undefined && b.slug !== ev.slug) {
     if (!PLANS[ev.plan].customSlug) throw createError({ statusCode: 402, statusMessage: 'Link sendiri untuk pakej berbayar' });
     const s = slugify(b.slug);
-    if (s.length < 3 || RESERVED.has(s) || s.startsWith('deleted-')) throw createError({ statusCode: 400, statusMessage: 'Link tu tak boleh guna' });
-    const [hit] = await useDb().select({ id: events.id }).from(events).where(eq(events.slug, s));
-    if (hit && hit.id !== ev.id) throw createError({ statusCode: 409, statusMessage: 'Link tu dah ada orang guna' });
-    patch.slug = s;
+    if (s.length < 3 || s.startsWith('deleted-')) throw createError({ statusCode: 400, statusMessage: 'Link tu tak boleh guna' });
+    if (await slugTaken(s, ev.id)) throw createError({ statusCode: 409, statusMessage: 'Link tu dah ada orang guna' });
+    if (s !== ev.slug) patch.slug = s;
   }
+  /**
+   * Settings are merged INTO the stored object by the database (jsonb ||),
+   * only for the sections this request sent: a save from a stale tab cannot
+   * undo what another writer set meanwhile (the retention mails' record, a
+   * payment clearing it, a co-host's change to another section).
+   */
+  let settingsPatch: Record<string, unknown> | null = null;
   if (b.settings) {
-    patch.settings = {
-      ...ev.settings, ...b.settings,
-      modules: { ...ev.settings.modules, ...(b.settings.modules ?? {}) },
-      slideshow: { ...ev.settings.slideshow, ...(b.settings.slideshow ?? {}) },
-      rsvp: { ...rsvpSettings(ev), ...(b.settings.rsvp ?? {}) },
-    } as typeof ev.settings;
+    const s = b.settings;
+    settingsPatch = {
+      ...(s.locale !== undefined ? { locale: s.locale } : {}),
+      ...(s.approvalMode !== undefined ? { approvalMode: s.approvalMode } : {}),
+      ...(s.guestDeleteHours !== undefined ? { guestDeleteHours: s.guestDeleteHours } : {}),
+      ...(s.modules ? { modules: { ...ev.settings.modules, ...s.modules } } : {}),
+      ...(s.slideshow ? { slideshow: { ...ev.settings.slideshow, ...s.slideshow } } : {}),
+      ...(s.rsvp ? { rsvp: { ...rsvpSettings(ev), ...s.rsvp } } : {}),
+    };
   }
-  if (!Object.keys(patch).length) return ev;
-  const [row] = await useDb().update(events).set(patch).where(eq(events.id, ev.id)).returning();
-  return row;
+  if (!Object.keys(patch).length && !settingsPatch) return ev;
+  const set = { ...patch, ...(settingsPatch ? { settings: sql`${events.settings} || ${JSON.stringify(settingsPatch)}::jsonb` } : {}) };
+  try {
+    return await useDb().transaction(async (tx) => {
+      // the old link keeps working for this event and can never be taken by another one
+      if (patch.slug) await tx.insert(slugHistory).values({ slug: ev.slug, eventId: ev.id }).onConflictDoNothing();
+      const [row] = await tx.update(events).set(set as typeof patch).where(eq(events.id, ev.id)).returning();
+      return row;
+    });
+  } catch (e) {
+    if (isUniqueViolation(e)) throw createError({ statusCode: 409, statusMessage: 'Link tu dah ada orang guna' });
+    throw e;
+  }
 });

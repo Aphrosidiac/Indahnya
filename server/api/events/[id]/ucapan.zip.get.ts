@@ -4,6 +4,8 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import { useDb, messages } from '../../../db';
 import { requireEventAccess } from '../../../utils/session';
 import { getStream } from '../../../utils/storage';
+import { safeName } from '../../../utils/media';
+import { contentDisposition } from '../../../utils/disposition';
 
 /**
  * Every wish as a keepsake: ucapan.txt with the words, and the voice notes
@@ -11,13 +13,15 @@ import { getStream } from '../../../utils/storage';
  * recording open at a time, everything released if the download is cancelled.
  */
 const stamp = (d: Date) => new Date(d.getTime() + 8 * 3_600_000).toISOString().replace(/[:T]/g, '-').slice(0, 16);
-const safe = (s: string | null) => (s ?? 'Tetamu').normalize('NFKD').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 30) || 'Tetamu';
+const safe = (s: string | null) => safeName(s ?? '') || 'Tetamu';
 
 export default defineEventHandler(async (event) => {
   const { ev } = await requireEventAccess(event, getRouterParam(event, 'id')!);
   const rows = await useDb().select().from(messages).where(and(eq(messages.eventId, ev.id), inArray(messages.status, ['visible', 'hidden']))).orderBy(asc(messages.createdAt));
   setHeader(event, 'content-type', 'application/zip');
-  setHeader(event, 'content-disposition', `attachment; filename="ucapan-${ev.slug}.zip"`);
+  setHeader(event, 'content-disposition', contentDisposition(`ucapan-${ev.slug}.zip`));
+  setHeader(event, 'cache-control', 'no-store');
+  setHeader(event, 'x-accel-buffering', 'no');
   const zip = archiver('zip', { zlib: { level: 6 } });
   const res = event.node.res;
   let aborted = false, current: Readable | null = null, cancel: ((e: Error) => void) | null = null;

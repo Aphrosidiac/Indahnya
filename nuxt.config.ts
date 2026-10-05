@@ -1,4 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-01',
@@ -25,8 +28,6 @@ export default defineNuxtConfig({
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
-        { rel: 'preconnect', href: 'https://rsms.me/' },
-        { rel: 'stylesheet', href: 'https://rsms.me/inter/inter.css' },
       ],
     },
   },
@@ -46,8 +47,8 @@ export default defineNuxtConfig({
     '/masuk': { ssr: false, headers: { 'x-robots-tag': 'noindex' } },
     '/tv/**': { ssr: false, headers: { 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer' } },
     '/api/**': { headers: { 'x-robots-tag': 'noindex, nofollow', 'cache-control': 'no-store' } },
-    /** The gallery widget couples paste into an e-kad on another platform: framing allowed, here only. */
-    '/embed/**': { headers: { 'content-security-policy': 'frame-ancestors *', 'x-frame-options': 'ALLOWALL', 'x-robots-tag': 'noindex' } },
+    /** The gallery widget couples paste into an e-kad on another platform: framing allowed, here only (its CSP: server/plugins/csp.ts). */
+    '/embed/**': { headers: { 'x-frame-options': 'ALLOWALL', 'x-robots-tag': 'noindex' } },
   },
   /**
    * Defaults are for local dev only. Every value is overridden at RUNTIME by
@@ -73,8 +74,18 @@ export default defineNuxtConfig({
     stripe: { secretKey: '', webhookSecret: '', priceStd: '', priceFull: '' },
     google: { clientId: '', clientSecret: '' },
     smtp: { url: '', from: 'Indahnya <hello@indahnya.my>' },
+    /** Where alerts go: refunds needed, jobs given up, purges without a warning, mail failures. */
+    alertEmail: '',
+    /** Optional: purge media URLs from Cloudflare's edge on hide/delete (token needs Zone → Cache Purge). */
+    cloudflare: { zoneId: '', apiToken: '' },
     public: {
       siteUrl: 'http://localhost:3180',
+      /**
+       * Who runs the service, shown on /privasi and /terma (the e-commerce
+       * regulations want the registered name, number and address). Required
+       * in production: the server refuses to start without them.
+       */
+      legal: { name: '', reg: '', address: '' },
       /**
        * The static preview on Cloudflare Pages (scripts/pages/): no server, so
        * the host side is closed (/mula) and the TV try stays in the browser.
@@ -82,5 +93,12 @@ export default defineNuxtConfig({
       preview: false,
     },
   },
-  nitro: { experimental: { tasks: true } },
+  nitro: {
+    experimental: { tasks: true },
+    /**
+     * heic-convert is only ever loaded by a child process (server/utils/heic.ts),
+     * never imported, so the tracer would leave it out of .output: name it.
+     */
+    externals: { traceInclude: [require.resolve('heic-convert')] },
+  },
 });

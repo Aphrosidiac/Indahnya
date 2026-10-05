@@ -7,7 +7,7 @@ const { slug, ev, me, t, lang, displayName, setMe, setMeta } = await useGuestEve
 const ui = useUi();
 setMeta({ title: `${t('gallery.title')} · ${displayName.value}`, description: t('gallery.upload.sub') });
 
-interface Item { id: string; kind: 'photo' | 'video'; width: number | null; height: number | null; durationSec: number | null; createdAt: string; takenAt: string | null; guestName: string | null; url: string; thumb: string | null; poster: string | null; reactions: Record<string, number>; mine: string | null; canDelete: boolean }
+interface Item { id: string; kind: 'photo' | 'video'; width: number | null; height: number | null; durationSec: number | null; createdAt: string; takenAt: string | null; guestName: string | null; url: string; mid: string | null; thumb: string | null; poster: string | null; reactions: Record<string, number>; mine: string | null; canDelete: boolean }
 
 /* ── the feed ─────────────────────────────────────────────────────── */
 /**
@@ -55,7 +55,12 @@ onMounted(() => {
 });
 
 /* ── upload ───────────────────────────────────────────────────────── */
-const up = useUploader(() => slug.value);
+const up = useUploader(() => slug.value, {
+  persist: true,
+  msgs: { dropped: t('gallery.dropped'), videoTooLong: n => t('gallery.video.long', { n }), failedProcess: t('gallery.failed', { n: 1 }) },
+});
+/* uploads an earlier visit left unfinished carry on by themselves: show them */
+watch(() => up.resumed.value, (n) => { if (n) { sheet.value = true; ui.ok(t('gallery.resumed', { n })); } });
 const input = ref<HTMLInputElement>();
 const sheet = ref(false);
 const askName = ref(false);
@@ -205,7 +210,7 @@ const total = (m: Item) => Object.values(m.reactions).reduce((a, b) => a + b, 0)
     <Transition name="pop">
       <div v-if="sheet" class="card fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[80vh] w-full max-w-[560px] overflow-hidden rounded-b-none pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:rounded-b-[16px] sm:pb-0" role="dialog" aria-modal="true" :aria-label="t('gallery.upload')">
         <div class="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
-          <div class="min-w-0" aria-live="polite"><p class="text-[15px] font-semibold leading-6 text-ink-900">{{ sheetTitle }}</p><p class="text-[12px] leading-4 text-ink-500">{{ up.done.value }} / {{ up.items.value.length }}</p></div>
+          <div class="min-w-0" aria-live="polite"><p class="text-[15px] font-semibold leading-6 text-ink-900">{{ sheetTitle }}</p><p class="text-[12px] leading-4 text-ink-500">{{ up.done.value }} / {{ up.items.value.length }}<template v-if="up.sending.value"> · {{ t('gallery.leave') }}</template></p></div>
           <button type="button" class="grid size-8 shrink-0 place-items-center rounded-[8px] text-ink-500 hover:bg-sand hover:text-ink-900" :aria-label="t('gallery.close')" @click="closeSheet"><X class="size-[18px]" :stroke-width="1.75" /></button>
         </div>
         <Meter bare :pct="up.items.value.length ? Math.round(up.items.value.reduce((a, i) => a + (i.state === 'ready' ? 100 : i.state === 'failed' ? 0 : i.pct), 0) / up.items.value.length) : 0" tone="green" class="mx-5" />
@@ -250,7 +255,7 @@ const total = (m: Item) => Object.values(m.reactions).reduce((a, b) => a + b, 0)
         <button v-if="idx < items.length - 1" type="button" class="absolute right-2 top-1/2 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:grid" :aria-label="t('gallery.next')" @click="step(1)"><ChevronRight class="size-6" :stroke-width="1.75" /></button>
         <div class="flex min-h-0 flex-1 items-center justify-center p-2" @click.self="viewing = null">
           <video v-if="viewing.kind === 'video'" :key="viewing.id" :src="viewing.url" :poster="viewing.poster ?? undefined" controls autoplay playsinline class="max-h-full max-w-full rounded-[12px]" />
-          <img v-else :key="viewing.id" :src="viewing.url" alt="" class="reveal-flat max-h-full max-w-full rounded-[12px] object-contain" />
+          <img v-else :key="viewing.id" :src="viewing.mid ?? viewing.url" :srcset="viewing.mid ? `${viewing.mid} 1200w, ${viewing.url} 2400w` : undefined" sizes="100vw" alt="" class="reveal-flat max-h-full max-w-full rounded-[12px] object-contain" />
         </div>
         <div class="flex items-center justify-center gap-2 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
           <button v-for="r in REACT" :key="r.kind" type="button"

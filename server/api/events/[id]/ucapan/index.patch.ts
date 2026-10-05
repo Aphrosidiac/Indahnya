@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { useDb, messages } from '../../../../db';
 import { requireEventAccess } from '../../../../utils/session';
-import { move, delEverywhere } from '../../../../utils/storage';
+import { move, delEverywhere, cdnPurge } from '../../../../utils/storage';
 import { readBodyAs } from '../../../../utils/validate';
 
 const Body = z.object({ ids: z.array(z.string().max(40)).min(1).max(500), action: z.enum(['hide', 'show', 'delete']) });
@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
   const db = useDb();
   const rows = await db.select({ id: messages.id }).from(messages).where(and(eq(messages.eventId, ev.id), inArray(messages.id, ids)));
   let n = 0;
+  const unpublished: string[] = [];
   for (const { id } of rows) {
     const done = await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`message:${id}`}))`);
@@ -26,15 +27,18 @@ export default defineEventHandler(async (event) => {
       if (action === 'delete') {
         await tx.update(messages).set({ status: 'deleted', body: null, audioKey: null, audioSrcKey: null }).where(eq(messages.id, id));
         await delEverywhere([m.audioKey, m.audioSrcKey].filter((k): k is string => !!k));
+        if (m.status === 'visible' && m.audioKey) unpublished.push(m.audioKey);
         return true;
       }
       const toHidden = action === 'hide';
       if ((toHidden && m.status !== 'visible') || (!toHidden && m.status !== 'hidden')) return false;
       if (m.audioKey) await (toHidden ? move(m.audioKey, 'public', 'private') : move(m.audioKey, 'private', 'public'));
       await tx.update(messages).set({ status: toHidden ? 'hidden' : 'visible' }).where(eq(messages.id, id));
+      if (toHidden && m.audioKey) unpublished.push(m.audioKey);
       return true;
     });
     if (done) n++;
   }
+  await cdnPurge(unpublished);
   return { ok: true, n };
 });

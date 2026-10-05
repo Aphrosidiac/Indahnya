@@ -15,14 +15,16 @@ const DAY = 86_400_000;
 export async function scheduleKadGc(eventId: string) {
   const [pending] = await useDb().select({ id: jobs.id }).from(jobs)
     .where(and(eq(jobs.kind, 'kad_gc'), eq(jobs.ref, eventId), isNull(jobs.doneAt))).limit(1);
-  if (!pending) await enqueue('kad_gc', eventId, DAY);
+  if (!pending) await enqueue('kad_gc', eventId, { delayMs: DAY });
 }
 
 /** Deletes what the saved kad does not point at: processed files older than a day, raw uploads past their PUT window. */
 export async function kadGc(eventId: string) {
   const [row] = await useDb().select().from(kad).where(eq(kad.eventId, eventId));
   const f = KadFields.safeParse(row?.fields ?? {});
-  const keep = new Set([...(f.success ? kadKeys(f.data) : []), row?.ogKey].filter(Boolean) as string[]);
+  // a saved kad this code can no longer read is not "a kad that uses nothing": deleting every asset of a live kad is worse than keeping strays
+  if (!f.success) throw new Error(`kad ${eventId} does not parse; not collecting its files`);
+  const keep = new Set([...kadKeys(f.data), row?.ogKey].filter(Boolean) as string[]);
   const now = Date.now();
   const prefix = kadPrefix(eventId);
   const stale = (await listDated(prefix, 'public')).filter(o => !keep.has(o.key) && now - o.at.getTime() > DAY).map(o => o.key);

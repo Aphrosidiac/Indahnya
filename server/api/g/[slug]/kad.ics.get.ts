@@ -3,6 +3,7 @@ import { useDb, kad } from '../../../db';
 import { eventBySlug } from '../../../utils/public';
 import { kadView } from '../../../utils/kad';
 import { kadStart } from '../../../../shared/utils/kad-view';
+import { contentDisposition } from '../../../utils/disposition';
 
 /**
  * "Simpan tarikh": the majlis as a calendar entry, in UTC (the kad's times
@@ -48,6 +49,6 @@ export default defineEventHandler(async (event) => {
     'END:VEVENT', 'END:VCALENDAR', '',
   ].map(fold).join('\r\n');
   setHeader(event, 'content-type', 'text/calendar; charset=utf-8');
-  setHeader(event, 'content-disposition', `attachment; filename="${ev.slug}.ics"`);
+  setHeader(event, 'content-disposition', contentDisposition(`${ev.slug}.ics`));
   return body;
 });

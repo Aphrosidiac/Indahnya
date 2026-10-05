@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { useDb, media } from '../../../../db';
 import { requireEventAccess } from '../../../../utils/session';
-import { move, del, delEverywhere } from '../../../../utils/storage';
+import { move, del, delEverywhere, cdnPurge } from '../../../../utils/storage';
 import { readBodyAs } from '../../../../utils/validate';
 
 const Body = z.object({ ids: z.array(z.string().max(40)).min(1).max(500), action: z.enum(['hide', 'show', 'delete']) });
@@ -25,24 +25,29 @@ export default defineEventHandler(async (event) => {
   const db = useDb();
   const rows = await db.select({ id: media.id }).from(media).where(and(eq(media.eventId, ev.id), inArray(media.id, ids)));
   let n = 0;
+  const unpublished: string[] = [];
   for (const { id } of rows) {
     const done = await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`media:${id}`}))`);
       const [m] = await tx.select().from(media).where(eq(media.id, id));
       if (!m || m.status === 'deleted') return false;
-      const served = [m.key, m.thumbKey, m.posterKey].filter((k, i, a): k is string => !!k && a.indexOf(k) === i);
+      const served = [m.key, m.midKey, m.thumbKey, m.posterKey].filter((k, i, a): k is string => !!k && a.indexOf(k) === i);
       if (action === 'delete') {
-        await tx.update(media).set({ status: 'deleted', key: null, thumbKey: null, posterKey: null }).where(eq(media.id, id));
+        await tx.update(media).set({ status: 'deleted', key: null, midKey: null, thumbKey: null, posterKey: null }).where(eq(media.id, id));
         await Promise.all([delEverywhere(served), del([m.originalKey], 'private')]);
+        if (m.status === 'ready') unpublished.push(...served);
         return true;
       }
       const toHidden = action === 'hide';
       if ((toHidden && m.status !== 'ready') || (!toHidden && m.status !== 'hidden')) return false;
       await Promise.all(served.map(k => (toHidden ? move(k, 'public', 'private') : move(k, 'private', 'public'))));
       await tx.update(media).set({ status: toHidden ? 'hidden' : 'ready' }).where(eq(media.id, id));
+      if (toHidden) unpublished.push(...served);
       return true;
     });
     if (done) n++;
   }
+  // the edge's copies of what just left the public bucket go now, not when they expire
+  await cdnPurge(unpublished);
   return { ok: true, n };
 });

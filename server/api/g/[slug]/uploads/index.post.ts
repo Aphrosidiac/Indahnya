@@ -3,10 +3,10 @@ import { and, eq, count, sql } from 'drizzle-orm';
 import { useDb, media } from '../../../../db';
 import { eventBySlug } from '../../../../utils/public';
 import { ensureGuest } from '../../../../utils/guest';
-import { uploadsOpen, uploadsUsed } from '../../../../utils/events';
+import { uploadsOpen, uploadsUsed, SLOT_HOLD_MIN } from '../../../../utils/events';
 import { PLANS, MEDIA_LIMITS } from '../../../../utils/plans';
 import { newId } from '../../../../utils/ids';
-import { presignPut } from '../../../../utils/storage';
+import { presignPut, createMultipart, presignParts, MULTIPART_MIN } from '../../../../utils/storage';
 import { readBodyAs } from '../../../../utils/validate';
 import { rateLimit, clientIp } from '../../../../utils/rate';
 import { SANDBOX } from '../../../../utils/sandbox';
@@ -28,10 +28,11 @@ function resolveType(name: string, declared: string) {
 
 /**
  * Step 1 of an upload: the browser says what it has, we say where to put it.
- * The cap is checked against rows already claimed (pending counts — a guest
- * who asks for 30 slots has 30 slots), inside a per-event advisory lock, so
- * two phones cannot both take the last free upload. Nothing here touches the
- * bytes. The answer carries the Content-Type to PUT with, which is signed.
+ * The cap is checked against rows already claimed (a fresh slot holds its
+ * place for SLOT_HOLD_MIN — see uploadsUsed), inside a per-event advisory
+ * lock, so two phones cannot both take the last free upload. Nothing here
+ * touches the bytes. The answer carries the Content-Type to PUT with, which
+ * is signed — or, for a file over MULTIPART_MIN, one signed URL per part.
  */
 export default defineEventHandler(async (event) => {
   const ev = await eventBySlug(event, { sandbox: true });
@@ -40,20 +41,25 @@ export default defineEventHandler(async (event) => {
   if (!ev.settings.modules.gambar) throw createError({ statusCode: 403, statusMessage: 'Galeri ditutup' });
   const { files } = await readBodyAs(event, Body);
   const guest = await ensureGuest(event, ev.id);
-  rateLimit(`slots:guest:${guest.id}`, 40, 10 * 60_000);
-  rateLimit(`slots:ip:${clientIp(event)}`, 600, 10 * 60_000);
+  const ip = clientIp(event);
+  await rateLimit(`slots:guest:${guest.id}`, 40, 10 * 60_000);
+  await rateLimit(`slots:ip:${ip}`, 600, 10 * 60_000);
 
   const plan: { name: string; id?: string; kind?: 'photo' | 'video'; type?: string; originalKey?: string; error?: string }[] = files.map((f) => {
     const type = resolveType(f.name, f.type);
     const kind = !type ? null : PHOTO[type] ? 'photo' as const : 'video' as const;
     if (!type || !kind) return { name: f.name, error: 'Jenis fail tak disokong' };
-    const max = kind === 'photo' ? MEDIA_LIMITS.photoBytes : MEDIA_LIMITS.videoBytes;
+    const max = ev.settings.sandbox ? MEDIA_LIMITS.sandboxPhotoBytes : kind === 'photo' ? MEDIA_LIMITS.photoBytes : MEDIA_LIMITS.videoBytes;
     if (f.bytes > max) return { name: f.name, error: `Fail terlalu besar (had ${Math.round(max / 1048576)} MB)` };
     const id = newId();
     return { name: f.name, id, kind, type, originalKey: `events/${ev.id.toLowerCase()}/orig/${id.toLowerCase()}.${PHOTO[type] ?? VIDEO[type]}` };
   });
   if (ev.settings.sandbox) for (const p of plan) if (p.kind === 'video') { p.error = 'Cubaan ni untuk gambar sahaja'; delete p.id; }
   const wanted = plan.filter(p => p.id);
+  const cap = PLANS[ev.plan].uploadCap;
+  if (wanted.length && ev.settings.sandbox) await rateLimit('slots:sandbox', MEDIA_LIMITS.sandboxSlotsPerHour, 3_600_000, wanted.length);
+  // a capped gallery: one address cannot reserve the whole free allowance
+  if (wanted.length && cap !== null && !ev.settings.sandbox) await rateLimit(`slots:capped:${ev.id}:${ip}`, MEDIA_LIMITS.cappedSlotsPerIp, SLOT_HOLD_MIN * 60_000, wanted.length);
 
   if (wanted.length) {
     await useDb().transaction(async (tx) => {
@@ -64,14 +70,18 @@ export default defineEventHandler(async (event) => {
           throw createError({ statusCode: 402, statusMessage: `Cubaan ni ${SANDBOX.perVisitor} gambar je. Buat majlis sendiri untuk lagi.` });
         }
       }
-      const cap = PLANS[ev.plan].uploadCap;
-      if (cap !== null) {
+      if (cap !== null && !ev.settings.sandbox) {
         const used = await uploadsUsed(ev.id, tx);
         if (used + wanted.length > cap) {
           throw createError({ statusCode: 402, statusMessage: `Galeri ni dah penuh (${cap} gambar untuk pakej percuma)`, data: { used, cap, left: Math.max(0, cap - used) } });
         }
       }
-      const [open] = await tx.select({ n: count() }).from(media).where(and(eq(media.guestId, guest.id), eq(media.status, 'pending')));
+      const [open] = await tx.select({ n: count(), fresh: sql<number>`count(*) filter (where ${media.createdAt} > now() - make_interval(mins => ${SLOT_HOLD_MIN}))` })
+        .from(media).where(and(eq(media.guestId, guest.id), eq(media.status, 'pending')));
+      // in a capped gallery a browser holds a handful of reservations at a time (the uploader asks as it goes)
+      if (cap !== null && !ev.settings.sandbox && Number(open?.fresh ?? 0) + wanted.length > MEDIA_LIMITS.cappedPendingPerGuest) {
+        throw createError({ statusCode: 429, statusMessage: 'Tunggu upload yang ada siap dulu' });
+      }
       if (Number(open?.n ?? 0) + wanted.length > MEDIA_LIMITS.pendingPerGuest) {
         throw createError({ statusCode: 429, statusMessage: 'Tunggu upload yang ada siap dulu' });
       }
@@ -82,8 +92,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const uploads = await Promise.all(plan.map(async (p, i) => p.error
-    ? { name: p.name, error: p.error }
-    : { name: p.name, id: p.id!, type: p.type!, url: await presignPut(p.originalKey!, p.type!, files[i]!.bytes) }));
+  const uploads = await Promise.all(plan.map(async (p, i) => {
+    if (p.error) return { name: p.name, error: p.error };
+    const bytes = files[i]!.bytes;
+    if (bytes < MULTIPART_MIN) return { name: p.name, id: p.id!, type: p.type!, url: await presignPut(p.originalKey!, p.type!, bytes) };
+    const uploadId = await createMultipart(p.originalKey!, p.type!);
+    await useDb().update(media).set({ uploadId }).where(eq(media.id, p.id!));
+    return { name: p.name, id: p.id!, type: p.type!, parts: await presignParts(p.originalKey!, uploadId, bytes) };
+  }));
   return { uploads };
 });

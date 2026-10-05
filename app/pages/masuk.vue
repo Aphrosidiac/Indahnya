@@ -15,24 +15,31 @@ const error = ref('');
 const next = computed(() => safeNext(route.query.next));
 
 /**
- * The emailed link lands here with ?t=. The token is spent by this POST, not
- * by the GET that opened the page: mail scanners fetch links but do not run
- * the page, so a scanned link still works when the host taps it.
+ * The emailed link lands here with ?t=. The token is spent only when the
+ * host presses "Log masuk" — not by the GET that opened the page (mail
+ * scanners fetch links) and not on load (scanners that run pages, and a
+ * stranger's link opened in your browser, would otherwise sign you in or
+ * out without a word).
  */
+const pendingToken = ref('');
+async function spend() {
+  const t = pendingToken.value;
+  if (!t || verifying.value) return;
+  verifying.value = true;
+  try {
+    const r = await $fetch<{ next: string }>('/api/auth/magic/verify', { method: 'POST', body: { t } });
+    auth.restored = false;
+    await auth.restore();
+    return router.replace(safeNext(r.next));
+  } catch (e) {
+    error.value = apiError(e, 'Link tu dah tamat. Minta yang baru.');
+    pendingToken.value = '';
+    router.replace({ query: {} });
+  } finally { verifying.value = false; }
+}
 onMounted(async () => {
   const t = typeof route.query.t === 'string' ? route.query.t : '';
-  if (t) {
-    verifying.value = true;
-    try {
-      const r = await $fetch<{ next: string }>('/api/auth/magic/verify', { method: 'POST', body: { t } });
-      auth.restored = false;
-      await auth.restore();
-      return router.replace(safeNext(r.next));
-    } catch (e) {
-      error.value = apiError(e, 'Link tu dah tamat. Minta yang baru.');
-      router.replace({ query: {} });
-    } finally { verifying.value = false; }
-  }
+  if (t) { pendingToken.value = t; return; }
   await auth.restore();
   if (auth.user) return router.replace(next.value);
   if (route.query.error === 'expired') error.value = 'Link tu dah tamat. Minta yang baru.';
@@ -56,9 +63,10 @@ async function submit() {
     <div class="w-full max-w-[380px]">
       <div class="mb-7 flex justify-center"><NuxtLink to="/" aria-label="Indahnya — laman utama"><Logo :size="28" /></NuxtLink></div>
 
-      <div v-if="verifying" class="card p-6 text-center" role="status">
-        <span class="mx-auto block size-6 animate-spin rounded-full border-2 border-line-200 border-t-ink-700" aria-hidden="true" />
-        <p class="mt-3 text-[14px] leading-5 text-ink-600">Tengah log masuk…</p>
+      <div v-if="pendingToken" class="card p-6">
+        <h1 class="text-[20px] leading-7 font-semibold">Log masuk ke Indahnya</h1>
+        <p class="mt-1 text-[14px] leading-5 text-ink-500">Tekan butang ni untuk teruskan. Link ni boleh guna sekali je.</p>
+        <Btn variant="primary" size="lg" block class="mt-6" :loading="verifying" @click="spend">Log masuk</Btn>
       </div>
 
       <form v-else-if="!sent" class="card p-6" novalidate @submit.prevent="submit">

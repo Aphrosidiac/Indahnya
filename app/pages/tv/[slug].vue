@@ -22,7 +22,7 @@ const slug = String(route.params.slug).toLowerCase();
 const token = String(route.query.token ?? '');
 
 interface Item { id: string; kind: 'photo' | 'video'; width: number | null; height: number | null; guestName: string | null; url: string; poster: string | null }
-interface Feed { event: { title: string; names: { a: string; b?: string }; type: string; slug: string; locale: 'ms' | 'en'; settings: { intervalSec: number; showNames: boolean; shuffle: boolean } }; items: Item[]; live: string[] }
+interface Feed { event: { title: string; names: { a: string; b?: string }; type: string; slug: string; locale: 'ms' | 'en'; settings: { intervalSec: number; showNames: boolean; shuffle: boolean } }; items: Item[]; live?: string[]; liveTag: string }
 
 const feed = ref<Feed | null>(null);
 const error = ref('');
@@ -38,23 +38,27 @@ const en = computed(() => feed.value?.event.locale === 'en');
 const qr = computed(() => `${siteUrl()}/${slug}/gambar`);
 const qrImg = ref('');
 
+/** The ids still on show, as of the last list the server sent (it sends one only when it changed). */
+let live: string[] = [];
+let liveTag = '';
 async function pull(since?: string) {
   try {
-    const r = await $fetch<Feed>(`/api/tv/${slug}`, { query: { token, since } });
+    const r = await $fetch<Feed>(`/api/tv/${slug}`, { query: { token, since, liveTag: liveTag || undefined } });
+    if (r.live) { live = r.live; liveTag = r.liveTag; }
     if (!feed.value) { feed.value = r; pool.value = r.items; }
     else {
       feed.value.event = r.event;
       if (r.items.length) { pool.value = [...r.items, ...pool.value]; queue.value = [...r.items, ...queue.value]; }
     }
-    prune(new Set(r.live));
+    prune(new Set(live));
     // live but not here: approved, shown again, or processed late — older than `since`, so fetch them by id
     const have = new Set(pool.value.map(i => i.id));
-    const missing = r.live.filter(id => !have.has(id)).slice(0, 100);
+    const missing = live.filter(id => !have.has(id)).slice(0, 100);
     if (missing.length) {
-      const m = await $fetch<Feed>(`/api/tv/${slug}`, { query: { token, ids: missing.join(',') } });
+      const m = await $fetch<Feed>(`/api/tv/${slug}`, { query: { token, ids: missing.join(','), liveTag } });
       const fresh = m.items.filter(i => !have.has(i.id));
       if (fresh.length) {
-        const order = new Map(r.live.map((id, n) => [id, n]));
+        const order = new Map(live.map((id, n) => [id, n]));
         pool.value = [...pool.value, ...fresh].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
         queue.value = [...fresh, ...queue.value];
       }
@@ -65,7 +69,7 @@ async function pull(since?: string) {
     // 404 is a verdict (bad or rotated link); anything else is the wifi, and the show goes on
     if (status === 404 || !feed.value) {
       error.value = status === 404 ? apiError(e, 'Link TV tak sah') : 'Tak dapat sambung — cuba lagi sekejap lagi…';
-      feed.value = null; pool.value = []; queue.value = []; layers.value = [null, null];
+      feed.value = null; pool.value = []; queue.value = []; layers.value = [null, null]; live = []; liveTag = '';
       // a dead link stays dead: stop asking
       if (status === 404) { clearedForGood = true; clearedForGoodRef.value = true; clearInterval(poller); clearTimeout(timer); }
     }

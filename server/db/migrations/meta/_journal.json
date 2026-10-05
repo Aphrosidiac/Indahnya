@@ -43,6 +43,13 @@
       "when": 1790238816616,
       "tag": "0005_rsvp_guest_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791189496768,
+      "tag": "0006_hardening",
+      "breakpoints": true
     }
   ]
 }

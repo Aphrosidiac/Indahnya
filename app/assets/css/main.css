@@ -1,3 +1,8 @@
+/* Inter, served from this site (no third-party font host: one less DNS lookup on dewan 4G, nothing to block, no visitor IPs sent elsewhere) */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
 @import "../../ui/tokens.css";
 @import "./guest-forms.css";
 

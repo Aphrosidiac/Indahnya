@@ -24,7 +24,7 @@ and accepted without discussion — change freely.
 | Event types | kahwin front door; aqiqah / birthday / corporate / graduation as types with copy tweaks only. |
 | Media | video ≤60 s and ≤100 MB/clip; photos stored at original res; HEIC → JPEG server-side; client resizes for preview only. |
 | Retention | window ends → 30-day grace with email warnings → hard delete from R2. Extend by paying again (renewal offered in the last 30 days of storage and in the grace month). |
-| Clocks | Upload + storage windows run from the LATER of payment/creation and the end of the majlis day (capped at 2 years' lead). Decided in the 2026-09-24 audit: clocks from creation expired free galleries before the wedding. |
+| Clocks | Upload + storage windows run from the LATER of payment/creation and the end of the majlis day (capped at 18 months' lead, `MAX_LEAD_DAYS` = 540). Decided in the 2026-09-24 audit: clocks from creation expired free galleries before the wedding. |
 | Upgrade price | std → full charges the difference (RM40). *default*, 2026-09-24 audit. |
 | Storage split | Two buckets: public (served copies of ready media, behind media.indahnya.my) and private (originals with EXIF/GPS, hidden and approval-pending media). 2026-09-24 audit. |
 | Vendor / photographer mode | not v1. Parked. |
@@ -213,6 +213,39 @@ payments         id, event_id, stripe_session_id, amount, plan, status
   timeout). Module off → the guest API returns no kad data at all.
 - Demo `/aina-hakim` seeds a full kad. Not in v1 of C: music by link
   (upload only — hot-linked audio breaks), ucapan/RSVP inside the kad (Phase B).
+
+## Hardening (2026-10-05)
+
+Production-readiness audit (`docs/audit-2026-10-05.md`) and the fixes for
+everything in it:
+
+- Served videos lost their GPS (`-map_metadata -1` on every ffmpeg call).
+- HEIC decodes in a child process (libheif's CLI, or heic-convert in a
+  throwaway node) with a declared-size check first: one iPhone photo used to
+  freeze the server 3–17 s.
+- The worker is its own PM2 process, with lanes (photo 2 / video 1 / maint 1),
+  a heartbeat-refreshed lock (stale after 5 min), at most 3 attempts, niced
+  ffmpeg with hard timeouts, and a drain on shutdown.
+- Rate limits live in Postgres and key on `X-Real-IP` from loopback only (XFF
+  was spoofable). Free-gallery slots hold their place 20 min, 10 per browser,
+  40 per address per window.
+- Purge re-checks under a row lock and marks `purge_started_at`; deleting a
+  majlis has a 7-day undo; retention mails catch up and the purge waits 7 days
+  after the final warning (hard stop at 45 days, alerted); purge clears the
+  kad's personal fields; a tail pass catches late PUTs; account deletion exists.
+- Payments buy exactly what was priced (kind stored) or are flagged
+  `needs_refund` + alerted; sibling sessions expire; sessions live 1 h;
+  refunds and disputes are handled; test/live events are told apart.
+- Old slugs are never reusable (`slug_history`) and redirect to the new one.
+- Zips are originals (video too), in ~2 GB parts; downloads carry RFC 5987
+  names. Sessions and sign-in tokens are stored hashed; sign-in needs a tap.
+- Large uploads go multipart; the uploader pipelines slots, detects stalls,
+  holds a wake lock, and resumes from IndexedDB after a killed tab.
+- CSP on every page, Inter self-hosted, 1200px lightbox images, a short CDN
+  cache with optional Cloudflare purge, `/api/health`, startup config check,
+  deploy files and runbook (`docs/deploy.md`), CI (checks only).
+- Copy: co-hosts are off the price list (the feature is parked), no "most
+  popular" before there are customers, privacy notice covers Phase B data.
 
 ## Audit (2026-09-24)
 

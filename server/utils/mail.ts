@@ -12,7 +12,7 @@ export async function sendMail(to: string, subject: string, html: string, text: 
   const { smtp } = useRuntimeConfig();
   if (!smtp.url) {
     if (!import.meta.dev) {
-      console.error(`[mail] NUXT_SMTP_URL is not set; "${subject}" to ${to} was NOT sent`);
+      console.error(`[mail] NUXT_SMTP_URL is not set; "${subject}" to ${maskEmail(to)} was NOT sent`);
       throw createError({ statusCode: 503, statusMessage: 'Email belum disambung' });
     }
     console.log(`\n[mail → ${to}] ${subject}\n${text}\n`);
@@ -21,3 +21,6 @@ export async function sendMail(to: string, subject: string, html: string, text: 
   transport ??= nodemailer.createTransport(smtp.url);
   await transport.sendMail({ from: smtp.from, to, subject, html, text });
 }
+
+/** For logs: enough to tell two hosts apart, not enough to be a mailing list. */
+export const maskEmail = (e: string) => e.replace(/^(.).*?(.)?@(.).*?(\.[^.]+)$/, (_, a, b, d, tld) => `${a}…${b ?? ''}@${d}…${tld}`);

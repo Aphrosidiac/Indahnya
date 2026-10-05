@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   return {
     items: await Promise.all(rows.map(async (m) => {
       const u = await mediaUrls(m);
-      return { id: m.id, status: m.status, kind: m.kind, error: m.error, width: m.width, height: m.height, thumb: u.thumb, url: u.url };
+      return { id: m.id, status: m.status, kind: m.kind, error: m.error, width: m.width, height: m.height, thumb: u.thumb, mid: u.mid, url: u.url };
     })),
   };
 });

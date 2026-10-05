@@ -14,7 +14,7 @@ const Body = z.object({ k: z.string().max(64).optional() });
  * QR. With `k` (the phone that scanned it): this browser adopts that visitor.
  */
 export default defineEventHandler(async (event) => {
-  rateLimit(`cuba:ip:${clientIp(event)}`, 30, 60 * 60_000);
+  await rateLimit(`cuba:ip:${clientIp(event)}`, 30, 60 * 60_000);
   const { k } = await readBodyAs(event, Body);
   const ev = await sandboxEvent();
   if (k) {

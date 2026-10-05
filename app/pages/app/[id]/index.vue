@@ -125,7 +125,13 @@ const uploadPct = computed(() => ev.value?.uploads.cap ? Math.min(100, Math.roun
           <Card title="Buat sekarang" :icon="Link2" flush>
             <ActionRow inset :to="`/app/${ev.id}/qr`" title="Print QR untuk meja" sub="A5, A4 atau kad meja" :icon="QrCode" tone="green" class="border-b border-line-100" />
             <ActionRow inset :to="`/app/${ev.id}/slideshow`" title="Pasang slideshow kat TV" sub="Gambar masuk live masa majlis" :icon="MonitorPlay" tone="blue" class="border-b border-line-100" />
-            <ActionRow inset :href="`/api/events/${ev.id}/download`" download title="Download semua (zip)" :sub="`${ev.counts.ready + ev.counts.hidden} fail, kualiti asal`" :icon="Download" tone="neutral" />
+            <ActionRow v-if="ev.zip.parts <= 1" id="download" inset :href="`/api/events/${ev.id}/download`" download title="Download semua (zip)" :sub="`${ev.zip.files} fail, kualiti asal · ${fmtBytes(ev.zip.bytes)}`" :icon="Download" tone="neutral" />
+            <template v-else>
+              <!-- a big majlis comes in parts: a dropped download costs one part, not the whole lot -->
+              <ActionRow v-for="n in ev.zip.parts" :id="n === 1 ? 'download' : undefined" :key="n" inset :href="`/api/events/${ev.id}/download?part=${n}`" download
+                :title="`Download semua — bahagian ${n} / ${ev.zip.parts}`" :sub="n === 1 ? `${ev.zip.files} fail, kualiti asal · ${fmtBytes(ev.zip.bytes)} semua` : 'Zip kualiti asal'" :icon="Download" tone="neutral"
+                :class="n < ev.zip.parts && 'border-b border-line-100'" />
+            </template>
           </Card>
 
           <Card tone="muted">

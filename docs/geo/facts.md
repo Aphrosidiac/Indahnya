@@ -19,8 +19,8 @@ Last checked against the code: 2026-10-04.
 | Screen | Live slideshow on the venue TV/screen | landing, /tentang |
 | Languages | Bahasa Melayu, English | landing, /tentang |
 | Price: Percuma | RM0: 50 uploads, upload window 30 days after the event, kept 30 days after the event | landing pricing, FAQ, /tentang |
-| Price: Indahnya | RM59 one-time: unlimited uploads, upload open 6 months, kept 1 year, own link, 1 co-host | landing pricing |
-| Price: Indahnya Lengkap | RM99 one-time: unlimited uploads, upload open 12 months, kept 2 years, own link, 5 co-hosts, no Indahnya badge on the kad | landing pricing |
+| Price: Indahnya | RM59 one-time: unlimited uploads, upload open 6 months, kept 1 year, own link | landing pricing |
+| Price: Indahnya Lengkap | RM99 one-time: unlimited uploads, upload open 12 months, kept 2 years, own link, no Indahnya badge on the kad | landing pricing |
 | Billing model | One-time per event; no subscription; no per-guest fee | landing pricing, FAQ |
 | Payment | Stripe: FPX, card, GrabPay, in MYR | landing pricing, /tentang, /terma |
 | Retention clock | Counts from the event day (or payment, whichever is later), not account creation | FAQ, /terma |

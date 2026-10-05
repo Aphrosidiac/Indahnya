@@ -33,6 +33,7 @@ useSeoMeta({
   ogTitle: title, ogDescription: () => d.value.intro, ogUrl: url, ogType: 'website', ogSiteName: 'Indahnya',
   ogLocale: () => (lang.value === 'en' ? 'en_MY' : 'ms_MY'), ogImage: `${site}/og.jpg`, ogImageWidth: 1200, ogImageHeight: 630, twitterCard: 'summary_large_image',
 });
+const legal = useRuntimeConfig().public.legal;
 const LINKS = [{ path: '/tentang', ms: 'Tentang', en: 'About' }, { path: '/privasi', ms: 'Privasi', en: 'Privacy' }, { path: '/terma', ms: 'Terma', en: 'Terms' }];
 </script>
 
@@ -46,6 +47,9 @@ const LINKS = [{ path: '/tentang', ms: 'Tentang', en: 'About' }, { path: '/priva
       <h1 class="text-[32px] font-semibold leading-[1.15] tracking-[-0.025em] text-ink-900">{{ d.title }}</h1>
       <p class="mt-2 text-[13px] text-ink-500">{{ d.updated }}</p>
       <p class="mt-6 text-[16px] leading-[1.65] text-ink-700">{{ d.intro }}</p>
+      <p v-if="legal.name" class="mt-4 rounded-[12px] border border-line-100 bg-surface-0 px-4 py-3 text-[14px] leading-[1.6] text-ink-700">
+        <span class="font-medium text-ink-900">{{ lang === 'en' ? 'Operated by' : 'Dikendalikan oleh' }}:</span> {{ legal.name }}<template v-if="legal.reg"> ({{ legal.reg }})</template><template v-if="legal.address">, {{ legal.address }}</template>
+      </p>
       <section v-for="s in d.sections" :key="s.h" class="mt-9">
         <h2 class="text-[18px] font-semibold leading-7 text-ink-900">{{ s.h }}</h2>
         <ul v-if="s.ul" class="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-[1.65] text-ink-700 marker:text-ink-300">

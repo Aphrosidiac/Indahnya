@@ -15,7 +15,12 @@
 # Restore (see docs/deploy.md): pg_restore --clean --if-exists -d "$DATABASE_URL" <file>
 set -euo pipefail
 ENV_FILE="${ENV_FILE:-/etc/indahnya/env}"
-[ -f "$ENV_FILE" ] && { set -a; . "$ENV_FILE"; set +a; }
+# read only the keys this script uses: the env file is written for Node's --env-file
+# (unquoted values with spaces are fine there, but break `source` in bash)
+envval() { [ -f "$ENV_FILE" ] && grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
+for k in DATABASE_URL BACKUP_S3_URI BACKUP_DIR AWS_PROFILE AWS_ENDPOINT_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+  [ -z "${!k:-}" ] && v="$(envval "$k" || true)" && [ -n "$v" ] && export "$k=$v"
+done
 : "${DATABASE_URL:?DATABASE_URL is not set}"
 DIR="${BACKUP_DIR:-/var/backups/indahnya}"
 mkdir -p "$DIR"

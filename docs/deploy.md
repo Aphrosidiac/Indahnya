@@ -66,8 +66,11 @@ by the app user.
    - `NUXT_PUBLIC_LEGAL_*` (registered name, SSM number, address)
    - `NUXT_ALERT_EMAIL`
 8. **nginx:** install `deploy/nginx.conf`, then run `nginx -t && systemctl reload nginx`.
-9. **Monitoring:** point an external uptime check at `https://indahnya.my/api/health`. It returns 503 when the database, the worker or the photo queue is unwell.
-10. **Backups:** add the cron line from `scripts/backup-db.sh`. Do **one test restore** into a scratch database before launch.
+9. **PM2:**
+   - `npm i -g pm2`, then `pm2 install pm2-logrotate`: logs rotate, the disk does not fill.
+   - `pm2 start ecosystem.config.cjs && pm2 save && pm2 startup`: the processes come back after a reboot.
+10. **Monitoring:** point an external uptime check at `https://indahnya.my/api/health`. It returns 503 when the database, the worker or the photo queue is unwell.
+11. **Backups:** add the cron line from `scripts/backup-db.sh`. Do **one test restore** into a scratch database before launch.
 
 ## Each deploy
 

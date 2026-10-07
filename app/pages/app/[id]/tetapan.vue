@@ -14,8 +14,8 @@ const tab = ref<Tab>('pakej');
 /* ── plan ─────────────────────────────────────────────────────────── */
 const PLANS = [
   { key: 'free', name: 'Percuma', price: 'RM0', rows: ['50 upload', 'Upload sampai 30 hari selepas majlis', 'Simpan 30 hari selepas majlis', 'Semua feature'] },
-  { key: 'std', name: 'Indahnya', price: 'RM59', rows: ['Upload tanpa had', 'Upload 6 bulan', 'Simpan 1 tahun', 'Link sendiri', '1 co-host'] },
-  { key: 'full', name: 'Indahnya Lengkap', price: 'RM99', rows: ['Upload tanpa had', 'Upload 12 bulan', 'Simpan 2 tahun', 'Link sendiri', '5 co-host', 'Tanpa badge Indahnya'] },
+  { key: 'std', name: 'Indahnya', price: 'RM59', rows: ['Upload tanpa had', 'Upload 6 bulan', 'Simpan 1 tahun', 'Link sendiri'] },
+  { key: 'full', name: 'Indahnya Lengkap', price: 'RM99', rows: ['Upload tanpa had', 'Upload 12 bulan', 'Simpan 2 tahun', 'Link sendiri', 'Tanpa badge Indahnya'] },
 ] as const;
 const offerFor = (plan: string) => ev.value?.offers.find(o => o.plan === plan);
 function offerLabel(o: { plan: string; kind: string; cents: number }) {
@@ -70,7 +70,7 @@ const confirmDelete = ref(false);
 const confirmText = ref('');
 async function destroy() {
   busy.value = true;
-  try { await $fetch(`/api/events/${id.value}`, { method: 'DELETE' }); await useEvents().load(true); ui.ok('Majlis dipadam'); router.push('/app'); }
+  try { await $fetch(`/api/events/${id.value}`, { method: 'DELETE' }); await useEvents().load(true); ui.ok('Majlis dipadam', 'Boleh pulihkan dari senarai majlis dalam 7 hari'); router.push('/app'); }
   catch (e) { ui.error('Tak jadi', apiError(e)); busy.value = false; }
 }
 </script>
@@ -132,7 +132,7 @@ async function destroy() {
           <template #footer><div class="flex justify-end"><Btn variant="primary" :loading="busy" @click="saveMajlis">Simpan</Btn></div></template>
         </Card>
         <Card title="Link" :icon="Link2" :sub="ev.planInfo.customSlug ? 'Tukar link pendek korang' : 'Link sendiri untuk pakej berbayar'">
-          <Field v-slot="{ id: f }" label="Link" :prefix="`${shortSite()}/`" :hint="ev.planInfo.customSlug ? 'Huruf kecil, nombor dan sengkang. Link lama akan terus mati.' : undefined">
+          <Field v-slot="{ id: f }" label="Link" :prefix="`${shortSite()}/`" :hint="ev.planInfo.customSlug ? 'Huruf kecil, nombor dan sengkang. QR dan link lama terus bawa tetamu ke link baru.' : undefined">
             <input :id="f" v-model="form.slug" type="text" :disabled="!ev.planInfo.customSlug" />
           </Field>
           <Btn v-if="!ev.planInfo.customSlug" variant="accent" size="sm" class="mt-3" @click="tab = 'pakej'"><Sparkles class="size-4" :stroke-width="1.75" aria-hidden="true" />Upgrade</Btn>
@@ -172,10 +172,10 @@ async function destroy() {
               <Chip :tone="m.role === 'owner' ? 'dark' : 'neutral'" size="sm">{{ m.role === 'owner' ? 'Pemilik' : 'Co-host' }}</Chip>
             </li>
           </ul>
-          <template #footer><p class="text-[12px] leading-4 text-ink-500">Jemput co-host — akan datang. Pakej semasa benarkan {{ ev.planInfo.cohosts }} co-host.</p></template>
+          <template #footer><p class="text-[12px] leading-4 text-ink-500">Jemput co-host — akan datang.</p></template>
         </Card>
         <Card title="Padam majlis" tone="default">
-          <p class="text-[13px] leading-[18px] text-ink-600">Semua gambar, video, ucapan dan RSVP akan dipadam terus. Tak boleh undo. Download dulu kalau nak simpan.</p>
+          <p class="text-[13px] leading-[18px] text-ink-600">Majlis terus hilang dari link dan QR tetamu. Semua gambar, video, ucapan dan RSVP dipadam terus selepas 7 hari — sebelum tu korang boleh pulihkan dari senarai majlis. Download dulu kalau nak simpan.</p>
           <Btn v-if="ev.isOwner" variant="danger-ghost" class="mt-4" @click="confirmDelete = true"><Trash2 class="size-4" :stroke-width="1.75" aria-hidden="true" />Padam majlis ni</Btn>
           <p v-else class="mt-4 text-[12px] leading-4 text-ink-500">Hanya pemilik boleh padam.</p>
         </Card>
@@ -187,7 +187,7 @@ async function destroy() {
     <Field v-slot="{ id: f }" :label="`Taip “${ev?.title}”`"><input :id="f" v-model="confirmText" type="text" autocomplete="off" /></Field>
     <div class="mt-5 flex justify-end gap-2">
       <Btn variant="secondary" @click="confirmDelete = false">Batal</Btn>
-      <Btn variant="danger" :disabled="confirmText.trim() !== ev?.title" :loading="busy" @click="destroy">Padam terus</Btn>
+      <Btn variant="danger" :disabled="confirmText.trim() !== ev?.title" :loading="busy" @click="destroy">Padam majlis</Btn>
     </div>
   </Modal>
 </template>

@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   const ev = await eventBySlug(event, { sandbox: true });
   const q = getQuery(event);
   const me = await currentGuest(event, ev.id);
-  const limit = Math.min(Number(q.limit) || 40, 100);
+  const limit = Math.min(Math.max(Math.trunc(Number(q.limit)) || 40, 1), 100);
   const where = [eq(media.eventId, ev.id), eq(media.status, 'ready')];
   if (typeof q.cursor === 'string' && q.cursor) where.push(lt(media.id, q.cursor));
   // the sandbox only ever shows a visitor their own photos
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
   const items = page.map(({ m, guestName }) => ({
     id: m.id, kind: m.kind, width: m.width, height: m.height, durationSec: m.durationSec,
     createdAt: m.createdAt, takenAt: m.takenAt, guestName,
-    url: publicUrl(m.key!), thumb: m.thumbKey ? publicUrl(m.thumbKey) : null, poster: m.posterKey ? publicUrl(m.posterKey) : null,
+    url: publicUrl(m.key!), mid: m.midKey ? publicUrl(m.midKey) : null, thumb: m.thumbKey ? publicUrl(m.thumbKey) : null, poster: m.posterKey ? publicUrl(m.posterKey) : null,
     reactions: tallyBy[m.id] ?? {}, mine: mineBy[m.id] ?? null,
     canDelete: !!me && m.guestId === me.id && Date.now() - m.createdAt.getTime() < deleteWindow,
   }));

@@ -21,9 +21,9 @@ export default defineEventHandler(async (event) => {
   if (!TYPES.includes(type)) throw createError({ statusCode: 400, statusMessage: 'Format rakaman tak disokong' });
   if (b.bytes > MEDIA_LIMITS.audioBytes) throw createError({ statusCode: 413, statusMessage: 'Rakaman terlalu besar' });
   // per IP first (a dewan is one wifi, so generous): a client that drops its cookie is a new guest every time
-  rateLimit(`ucapan:ip:${clientIp(event)}`, 120, 10 * 60_000);
+  await rateLimit(`ucapan:ip:${clientIp(event)}`, 120, 10 * 60_000);
   const g = await ensureGuest(event, ev.id);
-  rateLimit(`ucapan:${g.id}`, 10, 10 * 60_000);
+  await rateLimit(`ucapan:${g.id}`, 10, 10 * 60_000);
   const [open] = await useDb().select({ n: count() }).from(messages).where(and(eq(messages.guestId, g.id), eq(messages.status, 'pending')));
   if (Number(open?.n ?? 0) >= 3) throw createError({ statusCode: 429, statusMessage: 'Tunggu rakaman tadi siap dulu' });
   const id = newId();

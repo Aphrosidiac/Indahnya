@@ -12,8 +12,8 @@ import { rateLimit, clientIp } from '../../../utils/rate';
 export default defineEventHandler(async (event) => {
   const ev = await eventBySlug(event);
   if (!ev.settings.modules.tempat) throw createError({ statusCode: 404, statusMessage: 'Tempat duduk ditutup' });
-  rateLimit(`tempat:${clientIp(event)}`, 120, 60_000);
-  rateLimit(`tempat:ev:${ev.id}`, 1200, 60_000);
+  await rateLimit(`tempat:${clientIp(event)}`, 120, 60_000);
+  await rateLimit(`tempat:ev:${ev.id}`, 1200, 60_000);
   const q = String(getQuery(event).q ?? '').trim().replace(/[%_\\]/g, '');
   if (q.length < 3) return { items: [] };
   // from the start of a word: "ros" finds "Makcik Ros", but "a" + "b" + "c" cannot walk the whole list

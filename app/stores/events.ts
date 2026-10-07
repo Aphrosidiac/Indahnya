@@ -22,6 +22,8 @@ export interface EventDetail extends Omit<EventRow, 'mediaCount'> {
   uploads: { used: number; cap: number | null; open: boolean };
   rsvp: { n: number; yes: number; pax: number };
   ucapan: number;
+  /** The originals' zip: how many files, how big, and in how many ~2 GB parts it downloads. */
+  zip: { files: number; bytes: number; parts: number };
   planInfo: { name: string; priceCents: number; uploadCap: number | null; uploadWindowDays: number; storageDays: number; cohosts: number; customSlug: boolean; badgeFree: boolean };
   /** What this majlis can buy right now (an upgrade, at the difference, or a renewal). */
   offers: { plan: 'std' | 'full'; kind: 'upgrade' | 'renew'; cents: number }[];

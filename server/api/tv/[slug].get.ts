@@ -1,6 +1,9 @@
+import { createHash } from 'node:crypto';
 import { and, desc, eq, gt, inArray } from 'drizzle-orm';
-import { useDb, events, media, guests } from '../../db';
+import { useDb, media, guests } from '../../db';
 import { publicUrl } from '../../utils/storage';
+import { eventRowBySlug } from '../../utils/public';
+import { sameSecret } from '../../utils/ids';
 
 /**
  * The slideshow feed. Bearer is the event's tvToken (in the URL the host
@@ -10,15 +13,17 @@ import { publicUrl } from '../../utils/storage';
  *
  * `live` is every id still on show. The screen drops anything not in it,
  * so a photo the host hides mid-majlis leaves the TV within one poll — not
- * whenever the laptop is next reloaded.
+ * whenever the laptop is next reloaded. It is sent only when it changed:
+ * the screen passes back `liveTag`, and an unchanged list is just the tag
+ * (3,000 ids every few seconds is most of a poll's bytes).
  */
 const LIVE_MAX = 3000;
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')!.toLowerCase();
   const q = getQuery(event);
-  const [ev] = await useDb().select().from(events).where(eq(events.slug, slug));
-  if (!ev || ev.purgedAt || ev.deletedAt || typeof q.token !== 'string' || q.token !== ev.tvToken) throw createError({ statusCode: 404, statusMessage: 'Link TV tak sah' });
+  const ev = await eventRowBySlug(slug);
+  if (!ev || ev.purgedAt || ev.deletedAt || typeof q.token !== 'string' || !sameSecret(q.token, ev.tvToken)) throw createError({ statusCode: 404, statusMessage: 'Link TV tak sah' });
   const base = [eq(media.eventId, ev.id), eq(media.status, 'ready')];
   /**
    * `ids` fetches specific photos: ones that are live but OLDER than the
@@ -35,12 +40,15 @@ export default defineEventHandler(async (event) => {
       .where(and(...where)).orderBy(desc(media.id)).limit(500),
     useDb().select({ id: media.id }).from(media).where(and(...base)).orderBy(desc(media.id)).limit(LIVE_MAX),
   ]);
+  const ids2 = live.map(r => r.id);
+  const liveTag = createHash('sha1').update(ids2.join(',')).digest('base64url').slice(0, 16);
   return {
     event: { title: ev.title, names: ev.names, type: ev.type, slug: ev.slug, locale: ev.settings.locale, settings: ev.settings.slideshow },
     items: rows.filter(r => r.m.key).map(({ m, guestName }) => ({
       id: m.id, kind: m.kind, width: m.width, height: m.height, guestName,
       url: publicUrl(m.key!), poster: m.posterKey ? publicUrl(m.posterKey) : null,
     })),
-    live: live.map(r => r.id),
+    liveTag,
+    ...(q.liveTag === liveTag ? {} : { live: ids2 }),
   };
 });

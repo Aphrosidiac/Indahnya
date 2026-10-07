@@ -1,32 +1,33 @@
 import type { H3Event } from 'h3';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, gt, isNull } from 'drizzle-orm';
 import { useDb, sessions, users, events, eventMembers } from '../db';
-import { newId, newToken } from './ids';
+import { newId, newToken, tokenHash } from './ids';
 
 const COOKIE = 'indahnya_s';
 const TTL = 90 * 86_400_000;
 
 export async function createSession(event: H3Event, userId: string) {
   const db = useDb();
-  const id = newToken();
-  await db.insert(sessions).values({ id, userId, expiresAt: new Date(Date.now() + TTL) });
-  setCookie(event, COOKIE, id, { httpOnly: true, sameSite: 'lax', secure: !import.meta.dev, path: '/', maxAge: TTL / 1000 });
+  const token = newToken();
+  // the table holds the hash; only the browser holds the token
+  await db.insert(sessions).values({ id: tokenHash(token), userId, expiresAt: new Date(Date.now() + TTL) });
+  setCookie(event, COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: !import.meta.dev, path: '/', maxAge: TTL / 1000 });
 }
 
 export async function destroySession(event: H3Event) {
-  const id = getCookie(event, COOKIE);
-  if (id) await useDb().delete(sessions).where(eq(sessions.id, id));
+  const token = getCookie(event, COOKIE);
+  if (token) await useDb().delete(sessions).where(eq(sessions.id, tokenHash(token)));
   deleteCookie(event, COOKIE, { path: '/' });
 }
 
 export async function currentUser(event: H3Event) {
   if (event.context.user !== undefined) return event.context.user;
-  const id = getCookie(event, COOKIE);
+  const token = getCookie(event, COOKIE);
   let user = null;
-  if (id) {
+  if (token) {
     const [row] = await useDb().select({ u: users }).from(sessions)
       .innerJoin(users, eq(users.id, sessions.userId))
-      .where(and(eq(sessions.id, id), gt(sessions.expiresAt, new Date())));
+      .where(and(eq(sessions.id, tokenHash(token)), gt(sessions.expiresAt, new Date()), isNull(users.deletedAt)));
     user = row?.u ?? null;
   }
   event.context.user = user;

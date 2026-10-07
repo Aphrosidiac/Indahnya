@@ -1,6 +1,10 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, DeleteObjectsCommand, ListObjectsV2Command, CopyObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, DeleteObjectsCommand, ListObjectsV2Command, CopyObjectCommand,
+  CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { Readable } from 'node:stream';
+import { contentDisposition } from './disposition';
 
 /**
  * R2 through the S3 API. Locally this is Garage; the code does not know.
@@ -46,6 +50,18 @@ export const publicUrl = (key: string) => `${cfg().publicBase}/${key}`;
 export const PUT_TTL_SEC = 3 * 3600;
 
 /**
+ * Served copies are cached for an hour, not a year. Hiding, deleting and
+ * purging remove the object, and a long-lived edge or browser copy would
+ * keep it reachable: an hour is the most a hidden photo can outlive its
+ * hide (and Cloudflare's copy goes at once when cdnPurge is configured).
+ */
+export const MEDIA_CACHE = 'public, max-age=3600';
+
+/** Files over this go up in parts, so a dropped connection retries one part, not 100 MB. */
+export const MULTIPART_MIN = 16 * 1024 * 1024;
+export const PART_SIZE = 8 * 1024 * 1024;
+
+/**
  * Originals only, so always the private bucket. Content-Length IS signed:
  * the browser sends the file's exact size, and a PUT of any other size is
  * refused by the store — nobody can turn a 3 MB slot into a 5 GB one.
@@ -61,7 +77,7 @@ export async function presignPut(key: string, contentType: string, bytes: number
 export async function presignGet(key: string, where: Where, opts: { seconds?: number; filename?: string } = {}) {
   return getSignedUrl(s3(), new GetObjectCommand({
     Bucket: bucket(where), Key: key,
-    ...(opts.filename ? { ResponseContentDisposition: `attachment; filename="${opts.filename.replace(/["\\\r\n]/g, '')}"` } : {}),
+    ...(opts.filename ? { ResponseContentDisposition: contentDisposition(opts.filename) } : {}),
   }), { expiresIn: opts.seconds ?? 3600 });
 }
 
@@ -82,7 +98,7 @@ export async function getStream(key: string, where: Where) {
   return r.Body as Readable;
 }
 
-export async function put(key: string, body: Buffer, contentType: string, where: Where, cacheControl = 'public, max-age=31536000, immutable') {
+export async function put(key: string, body: Buffer, contentType: string, where: Where, cacheControl = MEDIA_CACHE) {
   await s3().send(new PutObjectCommand({ Bucket: bucket(where), Key: key, Body: body, ContentType: contentType, CacheControl: cacheControl }));
 }
 
@@ -136,4 +152,66 @@ export async function listAll(prefix: string, where: Where) {
     token = r.IsTruncated ? r.NextContinuationToken : undefined;
   } while (token);
   return keys;
+}
+
+/**
+ * Multipart upload for large originals. Each part URL signs that part's exact
+ * Content-Length, so the same rule as a single PUT holds: nobody sends more
+ * than they declared. The bucket's CORS must expose ETag (the browser hands
+ * each part's ETag back to complete the upload).
+ */
+export async function createMultipart(key: string, contentType: string) {
+  const r = await s3().send(new CreateMultipartUploadCommand({ Bucket: bucket('private'), Key: key, ContentType: contentType }));
+  if (!r.UploadId) throw new Error('no UploadId');
+  return r.UploadId;
+}
+
+export function partPlan(bytes: number) {
+  const parts: { n: number; size: number }[] = [];
+  for (let off = 0, n = 1; off < bytes; off += PART_SIZE, n++) parts.push({ n, size: Math.min(PART_SIZE, bytes - off) });
+  return parts;
+}
+
+export async function presignParts(key: string, uploadId: string, bytes: number) {
+  return Promise.all(partPlan(bytes).map(async p => ({
+    n: p.n, size: p.size,
+    url: await getSignedUrl(s3(), new UploadPartCommand({ Bucket: bucket('private'), Key: key, UploadId: uploadId, PartNumber: p.n, ContentLength: p.size }), {
+      expiresIn: PUT_TTL_SEC, signableHeaders: new Set(['content-length']),
+    }),
+  })));
+}
+
+export async function completeMultipart(key: string, uploadId: string, parts: { n: number; etag: string }[]) {
+  await s3().send(new CompleteMultipartUploadCommand({
+    Bucket: bucket('private'), Key: key, UploadId: uploadId,
+    MultipartUpload: { Parts: [...parts].sort((a, b) => a.n - b.n).map(p => ({ PartNumber: p.n, ETag: p.etag })) },
+  }));
+}
+
+export async function abortMultipart(key: string, uploadId: string) {
+  try { await s3().send(new AbortMultipartUploadCommand({ Bucket: bucket('private'), Key: key, UploadId: uploadId })); }
+  catch { /* already completed or aborted */ }
+}
+
+/**
+ * Drop public URLs from Cloudflare's edge cache at once, when a zone id and a
+ * token with Cache Purge permission are configured. Best effort: with
+ * MEDIA_CACHE the copies expire within the hour anyway. 30 URLs a call is
+ * what every Cloudflare plan accepts.
+ */
+export async function cdnPurge(keys: string[]) {
+  const { cloudflare } = useRuntimeConfig();
+  if (!cloudflare.zoneId || !cloudflare.apiToken || !keys.length) return;
+  const urls = [...new Set(keys)].map(publicUrl);
+  for (let i = 0; i < urls.length; i += 30) {
+    try {
+      const r = await fetch(`https://api.cloudflare.com/client/v4/zones/${cloudflare.zoneId}/purge_cache`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${cloudflare.apiToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ files: urls.slice(i, i + 30) }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!r.ok) console.error('[cdn] purge failed', r.status, (await r.text()).slice(0, 200));
+    } catch (e) { console.error('[cdn] purge failed', (e as Error).message); }
+  }
 }

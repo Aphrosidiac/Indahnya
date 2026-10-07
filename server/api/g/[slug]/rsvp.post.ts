@@ -34,9 +34,9 @@ export default defineEventHandler(async (event) => {
   if (!rsvpOpen(ev)) throw createError({ statusCode: 410, statusMessage: 'RSVP dah ditutup' });
   const b = await readBodyAs(event, Body);
   // per IP first: a client that drops its cookie is a new guest on every request
-  rateLimit(`rsvp:ip:${clientIp(event)}`, 60, 10 * 60_000);
+  await rateLimit(`rsvp:ip:${clientIp(event)}`, 60, 10 * 60_000);
   const g = await ensureGuest(event, ev.id);
-  rateLimit(`rsvp:${g.id}`, 15, 10 * 60_000);
+  await rateLimit(`rsvp:${g.id}`, 15, 10 * 60_000);
   const s = rsvpSettings(ev);
   if (b.attending && b.pax > s.maxPax) throw createError({ statusCode: 400, statusMessage: `Maksimum ${s.maxPax} orang untuk satu RSVP` });
   const meal = b.attending && b.meal && s.meals.includes(b.meal) ? b.meal : null;

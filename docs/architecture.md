@@ -1,6 +1,6 @@
 # Architecture
 
-How Indahnya is put together: one Nuxt process, one Postgres, two buckets.
+How Indahnya is put together: a Nuxt web process, a media worker process, one Postgres, two buckets.
 [PLAN.md](../PLAN.md) holds the decisions and the reasons behind them. This page
 describes the system as it stands in the code.
 
@@ -17,8 +17,8 @@ flowchart LR
   TV[Venue TV /tv/slug]
 
   subgraph VPS["VPS · PM2 + nginx"]
-    N[Nuxt 4 / Nitro<br/>SSR pages + /api]
-    W[In-process worker<br/>sharp · heic-convert · ffmpeg]
+    N[indahnya-web<br/>Nuxt 4 / Nitro, WORKER=0<br/>SSR pages + /api]
+    W[indahnya-worker<br/>same build, WORKER=1<br/>sharp · libheif · ffmpeg]
   end
   PG[(Postgres<br/>Drizzle)]
   PUB[(Public bucket<br/>media.indahnya.my)]
@@ -40,9 +40,13 @@ flowchart LR
   N -- magic links, expiry mail --> SMTP
 ```
 
-- **One process.** Nitro serves the pages and the API. `server/plugins/worker.ts`
-  runs the job loop in the same process. Set `WORKER=0` on any extra web-only
-  instance.
+- **Two processes, one build.** `indahnya-web` (`WORKER=0`) serves the pages
+  and the API and never processes media. `indahnya-worker` runs the job loop
+  in `server/plugins/worker.ts`, so an encode never competes with a guest's
+  request. In dev one process does both. HEIC is decoded in a child process
+  (libheif's CLI, or heic-convert in a throwaway `node`), never on an event
+  loop. Rate limits and job claims live in Postgres, so more web processes
+  are safe.
 - **The app never touches upload bytes.** Guests PUT straight to the private
   bucket through presigned URLs. Content type and exact `Content-Length` are
   signed, so a 3 MB slot can't take 5 GB.
@@ -79,35 +83,50 @@ sequenceDiagram
 
   P->>A: POST /api/g/:slug/uploads {name, type, bytes}
   A->>DB: check caps + window, insert media(status=pending)
-  A-->>P: presigned PUT (type + size signed, 15 min)
-  P->>S: PUT original
-  P->>A: POST /api/g/:slug/uploads/:id/complete
-  A->>S: HEAD (size and type match?)
-  A->>DB: status=uploaded, enqueue process_media
-  W->>DB: claim job (FOR UPDATE SKIP LOCKED)
+  A-->>P: presigned PUT, or one URL per 8 MB part over 16 MB<br/>(type + size signed, 3 h)
+  P->>S: PUT original (or its parts)
+  P->>A: POST /api/g/:slug/uploads/:id/complete {parts?}
+  A->>S: complete multipart, HEAD (size matches?)
+  A->>DB: status=uploaded + enqueue process_media, one transaction
+  W->>DB: claim job in its lane (FOR UPDATE SKIP LOCKED)
   W->>S: read original
-  W->>W: HEIC→JPEG, EXIF time, WebP sizes,<br/>video poster + ffprobe
-  W->>B: write served copies
+  W->>W: HEIC→JPEG (child process), EXIF time,<br/>2400 JPEG + 1200/480 WebP, metadata stripped;<br/>video: ffprobe, poster, 720p H.264, metadata stripped
+  W->>B: write served copies (cache 1 h)
   W->>DB: status=ready
   Note over P,B: Gallery and TV only ever show ready rows
 ```
 
 Processing lives in `server/worker/process-media.ts`. A file that can't be
 decoded fails at once and the guest is told. Bucket, network or database
-errors are retried with backoff, three attempts in all.
+errors (and a tool timeout on a busy box) are retried with backoff, three
+attempts in all. No served copy carries metadata: phones write GPS into
+photos and videos, and the public bucket is public.
+
+In a free (capped) gallery a slot holds its place for 20 minutes
+(`SLOT_HOLD_MIN`), a browser holds at most 10 at a time, and one address at
+most 40 per window. A slot that finishes after its hold gets in only if there
+is still room. The uploader (`app/composables/useUploader.ts`) asks for slots
+ahead of need, sends three files at a time, aborts a transfer stalled for
+45 s, keeps the screen awake, and keeps unsent files in IndexedDB, so a
+killed tab carries on when the page is opened again.
 
 ## Worker jobs
 
 | Job | What it does | Trigger |
 |---|---|---|
-| `process_media` | Turns an uploaded original into served copies | Each completed upload |
-| `purge_event` | Hard-deletes an event's bytes from both buckets | Retention sweep, host delete |
-| `kad_gc` | Removes kad uploads the host never saved | Booked a day after any kad upload |
-| sweep + notify | Retention: warning mails, then purge after the grace month | Hourly, and 15 s after start |
+| `process_media` | Turns an uploaded original into served copies | Each completed upload (lane `photo` or `video`) |
+| `purge_event` | Re-checks under a row lock that the event is due, then hard-deletes both buckets' bytes, guests, RSVPs, wishes and the kad's personal fields; a tail pass runs after the PUT window | Retention sweep, 7 days after a host delete, at once on account deletion (lane `maint`) |
+| `kad_gc` | Removes kad uploads the host never saved | Booked a day after any kad upload (lane `maint`) |
+| sweep + notify | Retention mails (catching up if missed), purge queueing, stale slots, lost jobs | Hourly, and 15 s after start |
+| housekeeping | Closes jobs whose last attempt died, prunes sessions, tokens, done jobs, rate-limit windows | Hourly |
 | sandbox sweep | Clears the landing's "cuba sekarang" uploads | Every 10 minutes |
 
-Jobs are rows in `jobs`, claimed with `SKIP LOCKED`, at most two at a time per
-process.
+Jobs are rows in `jobs`, claimed per lane with `SKIP LOCKED`, lowest priority
+first: `photo` (2 at a time), `video` (1), `maint` (1). A running job stamps
+its lock every minute; a lock quiet for 5 minutes belonged to a dead process
+and the job is taken again, at most 3 attempts in all. On SIGTERM the worker
+stops claiming and waits up to 25 s for running jobs. `/api/health` reports
+the worker's heartbeat and the photo queue's oldest wait.
 
 ## Clocks and plans
 
@@ -116,15 +135,28 @@ the end of the majlis day, with the lead capped. A free gallery made eight
 weeks early still opens on the day. Rules and tests: `server/utils/plans.ts`,
 `tests/plans.test.ts`.
 
-| Plan | Price | Uploads | Upload window | Storage | Co-hosts |
-|---|---|---|---|---|---|
-| `free` (Percuma) | RM0 | 50 | 30 days | 30 days | 0 |
-| `std` (Indahnya) | RM59 | unlimited | 6 months | 12 months | 1 |
-| `full` (Indahnya Lengkap) | RM99 | unlimited | 12 months | 24 months | 5 |
+| Plan | Price | Uploads | Upload window | Storage |
+|---|---|---|---|---|
+| `free` (Percuma) | RM0 | 50 | 30 days | 30 days |
+| `std` (Indahnya) | RM59 | unlimited | 6 months | 12 months |
+| `full` (Indahnya Lengkap) | RM99 | unlimited | 12 months | 24 months |
 
-When storage ends there is a 30-day grace month with warning mails, then a hard
-delete. A renewal is offered in the last 30 days of storage and during the
-grace month. Upgrading from `std` to `full` charges the difference (RM40).
+(`PLANS` also carries co-host counts for when invites are built; they are
+parked and not sold.)
+
+Retention (`server/utils/retention.ts`): when storage ends there is a 30-day
+grace month. Mails go 14 days before, on the day, and a final warning from day
+23; the purge waits until that final warning has been out 7 days. If no
+final warning could ever be sent, the purge happens 45 days after storage
+ended and someone is alerted. A renewal is offered in the last 30 days of
+storage and during the grace month, never once the purge is due or begun.
+Upgrading from `std` to `full` charges the difference (RM40).
+
+A payment buys exactly the offer priced at checkout (`payments.kind`,
+amount, MYR). If that offer is gone when the money lands (a second person
+paid the same upgrade, the gallery was purged), the payment is recorded,
+flagged `needs_refund` and alerted, never reinterpreted
+(`server/utils/payments.ts`).
 
 ## Data model
 
@@ -140,6 +172,7 @@ erDiagram
   events ||--o{ tables : has
   events ||--|| kad : has
   events ||--o{ payments : has
+  events ||--o{ slug_history : "gave up"
   guests ||--o{ media : uploaded
   guests ||--o{ reactions : gave
   media ||--o{ reactions : got
@@ -169,19 +202,31 @@ erDiagram
   }
 ```
 
-A guest is a browser, not a person: the cookie token is the identity. The full
-schema with comments is in `server/db/schema.ts`. Migrations are in
+A guest is a browser, not a person: the cookie token is the identity. Besides
+these: `jobs` (the queue, with lanes), `rate_limits` (unlogged counters),
+`heartbeats` (worker liveness), `login_tokens`. The full schema with comments
+is in `server/db/schema.ts`. Migrations are in
 `server/db/migrations` (Drizzle Kit).
 
 ## Security choices worth knowing
 
-- Sign-in links are spent with a POST from `/masuk`, never a GET, so mail
-  scanners can't burn them. In production a missing `NUXT_SMTP_URL` is an
-  error: links are never written to a log.
+- Sign-in links are spent only when the host taps "Log masuk" on `/masuk`
+  (a JSON POST), never by the GET or on load, so mail scanners can't burn
+  them and no other site can sign a visitor in. Session and sign-in tokens
+  are stored as SHA-256 hashes. In production a missing `NUXT_SMTP_URL` stops
+  the server from starting: links are never written to a log.
 - Redirects after sign-in go through `shared/utils/safe-next.ts` (no
   `//evil.com`).
-- Rate limits on sign-in, uploads, RSVP and ucapan read `X-Forwarded-For` from
-  nginx.
+- Rate limits (sign-in, uploads, RSVP, ucapan, reactions, the sandbox) are
+  counted in Postgres and keyed on `X-Real-IP`, trusted only when the
+  connection comes from loopback (nginx). `X-Forwarded-For` is never read:
+  its first entry is whatever the client typed.
+- A Content-Security-Policy is built at runtime from the config
+  (`server/plugins/csp.ts`); only `/embed` may be framed by other sites.
+- A slug an event gave up is never reusable (`slug_history`) and redirects to
+  the event's current slug, so a printed QR can't be taken over.
+- Served media is cached for an hour, not a year, and purged from
+  Cloudflare's edge on hide/delete when configured.
 - RSVP has no public name search. A phone number can only claim a reply the
   host entered, so knowing someone's number doesn't let you rewrite their RSVP.
 - Seat search returns at most five matches, with name, pax and table only.

@@ -2,9 +2,9 @@
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import {
   LayoutDashboard, Images, MonitorPlay, QrCode, Mail, Users, Armchair, MessageSquareHeart,
-  Settings2, Menu, LogOut, PanelLeft, ChevronsUpDown, Plus, Check,
+  Settings2, Menu, LogOut, PanelLeft, ChevronsUpDown, Plus, Check, UserX,
 } from 'lucide-vue-next';
-import { Logo, Count, useUi, useMedia } from '~/ui';
+import { Logo, Count, Modal, Field, Btn, useUi, useMedia } from '~/ui';
 import { useAuth } from '~/stores/auth';
 import { useEvents } from '~/stores/events';
 
@@ -32,6 +32,19 @@ const menuOpen = ref(false);
 const pickerOpen = ref(false);
 
 watch(() => route.fullPath, () => { ui.navOpen = false; menuOpen.value = false; pickerOpen.value = false; });
+
+/* ── delete the account (PDPA: the right to erasure) ── */
+const deleting = ref(false);
+const deleteText = ref('');
+const deleteBusy = ref(false);
+async function deleteAccount() {
+  deleteBusy.value = true;
+  try {
+    await $fetch('/api/me', { method: 'DELETE', body: { confirm: 'PADAM' } });
+    auth.user = null;
+    location.href = '/';
+  } catch (e) { ui.error('Tak jadi', apiError(e)); deleteBusy.value = false; }
+}
 
 const eventId = computed(() => (route.params.id as string | undefined) ?? null);
 const current = computed(() => events.items.find(e => e.id === eventId.value) ?? null);
@@ -119,7 +132,7 @@ onBeforeUnmount(() => { removeEventListener('pointerdown', onPointer); removeEve
           </span>
           <span class="min-w-0 flex-1" :class="ui.navCollapsed && 'lg:hidden'">
             <span class="block truncate text-[13px] font-medium leading-4 text-ink-900">{{ current?.title ?? 'Pilih majlis' }}</span>
-            <span class="block truncate text-[11px] leading-4 text-ink-500">{{ current ? `indahnya.my/${current.slug}` : `${events.items.length} majlis` }}</span>
+            <span class="block truncate text-[11px] leading-4 text-ink-500">{{ current ? `${shortSite()}/${current.slug}` : `${events.items.length} majlis` }}</span>
           </span>
           <ChevronsUpDown class="size-4 shrink-0 text-ink-400" :class="ui.navCollapsed && 'lg:hidden'" :stroke-width="1.5" aria-hidden="true" />
         </button>
@@ -207,6 +220,12 @@ onBeforeUnmount(() => { removeEventListener('pointerdown', onPointer); removeEve
                   <LogOut class="size-4" :stroke-width="1.5" aria-hidden="true" />
                   Log keluar
                 </button>
+                <button type="button"
+                  class="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-[13px] text-ink-600 transition-colors hover:bg-danger-50 hover:text-danger-600"
+                  @click="menuOpen = false; deleting = true">
+                  <UserX class="size-4" :stroke-width="1.5" aria-hidden="true" />
+                  Padam akaun
+                </button>
               </div>
             </Transition>
           </div>
@@ -219,4 +238,12 @@ onBeforeUnmount(() => { removeEventListener('pointerdown', onPointer); removeEve
       </main>
     </div>
   </div>
+
+  <Modal :open="deleting" title="Padam akaun?" subtitle="Semua majlis milik korang dipadam terus — gambar, video, ucapan, RSVP — dan tak boleh dipulihkan. Download dulu apa yang nak simpan." @close="deleting = false">
+    <Field v-slot="{ id }" label="Taip PADAM untuk sahkan"><input :id="id" v-model="deleteText" type="text" autocomplete="off" autocapitalize="characters" /></Field>
+    <div class="mt-5 flex justify-end gap-2">
+      <Btn variant="secondary" @click="deleting = false">Batal</Btn>
+      <Btn variant="danger" :disabled="deleteText.trim() !== 'PADAM'" :loading="deleteBusy" @click="deleteAccount">Padam akaun</Btn>
+    </div>
+  </Modal>
 </template>

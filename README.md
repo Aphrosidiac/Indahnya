@@ -61,11 +61,12 @@ price in Ringgit. Built by [FF Dev Studio](https://ffdev.studio).
   QR, and a contact bar. Five templates: Garden, Klasik, Moden, Emas, Minimal.
 - **Gambar**: masonry gallery, newest first, with reactions (❤ 🎉 🥲), a
   "Gambar saya" filter and single downloads. Guests can delete their own
-  uploads within 24 hours. Uploads queue offline and retry.
+  uploads within 24 hours. Uploads retry on a bad line, go up in parts when
+  large, and carry on where they stopped if the tab is closed.
 - **Ucapan**: written wishes, or voice notes up to 60 seconds recorded in the
   browser.
 - **RSVP**: hadir or tak hadir, pax, pihak, meal choice and a note. One reply
-  per browser. A phone number lets a guest edit their reply from another phone.
+  per browser. A phone number links a guest to a reply the host took by phone.
 - **Tempat duduk**: type three letters of your name to get your table number.
   Nothing else about anyone leaves the server.
 - **Embed**: couples whose kad lives on Jemputan.me or SayaKahwin can paste a
@@ -101,7 +102,8 @@ reload, and rotating the link blanks old screens.
 
 Plus written and voice ucapan moderation with a "download all" zip, slideshow
 settings, approval mode, plan upgrades through Stripe Checkout (FPX,
-cards, GrabPay), and retention emails before anything is deleted. Every page
+cards, GrabPay), retention emails before anything is deleted, a 7-day undo
+when a majlis is deleted, and account deletion. Every page
 works at phone width. See [all screenshots](docs/screenshots.md).
 
 ## Pricing
@@ -116,7 +118,6 @@ count, never by features.
 | Upload window | 30 days after the majlis | 6 months | 12 months |
 | Storage | 30 days after the majlis | 12 months | 24 months |
 | Kad, RSVP, seating, ucapan, slideshow | ✓ | ✓ | ✓ |
-| Co-hosts | – | 1 | 5 |
 | Custom link `indahnya.my/nama-korang` | – | ✓ | ✓ |
 | No Indahnya badge on the kad | – | – | ✓ |
 
@@ -130,17 +131,18 @@ to Lengkap costs the RM40 difference.
 | App | **Nuxt 4** (Vue 3). SSR for the guest pages and the kad, client-only for the host dashboard |
 | Data | **Postgres + Drizzle**. Schema in `server/db/schema.ts`, migrations in `server/db/migrations` |
 | Media | **S3-compatible, two buckets**: Cloudflare R2 in production, Garage locally. The browser PUTs originals to presigned URLs; the app never touches the bytes |
-| Processing | In-process worker (`server/plugins/worker.ts`): sharp, heic-convert, ffmpeg. Jobs claimed with `SKIP LOCKED` |
+| Processing | Media worker (`server/plugins/worker.ts`), its own PM2 process in production: sharp, libheif in a child process, ffmpeg. Jobs claimed per lane (photo, video, maint) with `SKIP LOCKED` |
 | Payments | **Stripe MY**, one-time Checkout per event, webhook + reconcile |
 | UI | **Tailwind v4** and the design system in `app/ui/` (tokens, primitives, motion rules) |
-| Hosting | Self-hosted VPS: PM2 + nginx + Postgres |
+| Hosting | Self-hosted VPS: PM2 (web + worker) + nginx + Postgres, nightly backups off the box, `/api/health` for uptime checks |
 
 Diagrams of the system, the upload pipeline and the data model are in
 [docs/architecture.md](docs/architecture.md).
 
 ## Quick start
 
-Requirements: Node ≥ 22, Postgres, `ffmpeg`/`ffprobe` on `PATH`, and an
+Requirements: Node ≥ 22, Postgres, `ffmpeg`/`ffprobe` on `PATH` (and ideally
+libheif's `heif-dec` or `heif-convert` for fast HEIC), and an
 S3-compatible store on `:9000` (Garage; see
 [docs/development.md](docs/development.md#local-object-storage-garage)).
 
@@ -159,7 +161,7 @@ to the server log, so copy it from there. Sign in as `demo@indahnya.my` to see
 the sample's dashboard.
 
 ```bash
-npm test                      # unit tests: clocks, prices, redirects, EXIF time, slugs, kad, RSVP
+npm test                      # unit tests: clocks, prices, retention, redirects, EXIF time, slugs, kad, RSVP, filenames, zip parts
 npm run typecheck
 ```
 
@@ -169,8 +171,9 @@ npm run typecheck
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | System and pipeline diagrams, buckets, worker jobs, clocks, data model, security choices |
 | [docs/development.md](docs/development.md) | Local setup, Garage, scripts, conventions, tests |
-| [docs/deployment.md](docs/deployment.md) | Launch checklist, environment reference, R2, Stripe, PM2, nginx, the Pages preview |
+| [docs/deployment.md](docs/deployment.md) | Launch checklist, every env var, R2, Stripe, PM2 (web + worker), nginx, backups, health, rollback, the Pages preview |
 | [docs/api.md](docs/api.md) | Every route handler, grouped by who calls it |
+| [docs/audit-2026-10-05.md](docs/audit-2026-10-05.md) | The production-readiness audit and what was fixed |
 | [docs/screenshots.md](docs/screenshots.md) | Every screen, desktop and phone |
 | [PLAN.md](PLAN.md) | Product decisions, pricing, phase plan, audit log |
 | [brand/README.md](brand/README.md) | The Mekar mark, wordmark, colours, rules |
@@ -213,6 +216,7 @@ docs/            this documentation, images/, geo/
 | C | E-kad: 5 templates, editor with live preview, salam kaut, WhatsApp previews, embed | Built |
 | B | RSVP, seating, written and voice ucapan | Built |
 | Landing | Landing, About, privacy, terms (BM + EN), brand, GEO groundwork | Built |
+| Hardening | Production-readiness audit and fixes ([docs/audit-2026-10-05.md](docs/audit-2026-10-05.md)) | Done |
 | Launch | Domain, R2, Stripe MY, SMTP, VPS | Next |
 
 Everything is verified locally. Nothing is deployed yet apart from a static

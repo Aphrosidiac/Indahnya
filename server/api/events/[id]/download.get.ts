@@ -1,17 +1,24 @@
 import archiver from 'archiver';
 import type { Readable } from 'node:stream';
-import { and, eq, inArray, asc } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import { useDb, media, guests } from '../../../db';
 import { requireEventAccess } from '../../../utils/session';
 import { getStream } from '../../../utils/storage';
-import { downloadName, extOf, servedWhere } from '../../../utils/media';
+import { downloadName, extOf, zipParts } from '../../../utils/media';
+
+const ZIPPED = ['ready', 'hidden', 'failed'];
+import { contentDisposition } from '../../../utils/disposition';
 
 /**
- * Everything, as one zip, streamed from the buckets through the app —
- * nothing is staged on disk. Originals for photos (full quality); the served
- * copy for video, because the original may be HEVC that nothing outside an
- * iPhone plays. Hidden media goes in its own folder, and uploads the worker
- * could not process go in gagal/ as the guest sent them.
+ * Everything, as zips of the ORIGINALS — photos and videos exactly as the
+ * guests sent them (the 720p copy is only for playing in the gallery) —
+ * streamed from the private bucket through the app; nothing is staged on
+ * disk. Hidden media goes in its own folder, and uploads the worker could not
+ * process go in gagal/.
+ *
+ * A big majlis comes in parts of ~2 GB (`?part=1…n`, the count is in the
+ * event's `zip` info): a dropped connection costs one part, not the whole
+ * 20 GB. `X-Accel-Buffering: no` keeps nginx from spooling it to disk.
  *
  * ONE object is open at a time: the next GET starts only when archiver has
  * written the previous entry. Opening every stream up front (append in a
@@ -19,13 +26,18 @@ import { downloadName, extOf, servedWhere } from '../../../utils/media';
  */
 export default defineEventHandler(async (event) => {
   const { ev } = await requireEventAccess(event, getRouterParam(event, 'id')!);
-  const rows = await useDb().select({ m: media, guestName: guests.name }).from(media)
+  const all = await useDb().select({ m: media, guestName: guests.name, bytes: media.bytes }).from(media)
     .leftJoin(guests, eq(guests.id, media.guestId))
-    .where(and(eq(media.eventId, ev.id), inArray(media.status, ['ready', 'hidden', 'failed'])))
-    .orderBy(asc(media.createdAt));
+    .where(eq(media.eventId, ev.id))
+    .orderBy(asc(media.createdAt), asc(media.id));
+  const parts = zipParts(all);
+  const n = Math.max(1, parts.length);
+  const part = Math.min(Math.max(Math.trunc(Number(getQuery(event).part)) || 1, 1), n);
+  const rows = (parts[part - 1] ?? []).filter(r => ZIPPED.includes(r.m.status));
   setHeader(event, 'content-type', 'application/zip');
-  setHeader(event, 'content-disposition', `attachment; filename="indahnya-${ev.slug}.zip"`);
+  setHeader(event, 'content-disposition', contentDisposition(n > 1 ? `indahnya-${ev.slug}-bahagian-${part}-dari-${n}.zip` : `indahnya-${ev.slug}.zip`));
   setHeader(event, 'cache-control', 'no-store');
+  setHeader(event, 'x-accel-buffering', 'no');
   const zip = archiver('zip', { zlib: { level: 0 } });
   const res = event.node.res;
 
@@ -51,11 +63,8 @@ export default defineEventHandler(async (event) => {
   (async () => {
     for (const { m, guestName } of rows) {
       if (aborted) return;
-      // failed uploads: the original, as sent — the guest's photo is never simply lost
-      const [key, where] = m.kind === 'photo' || m.status === 'failed' ? [m.originalKey, 'private' as const]
-        : m.key ? [m.key, servedWhere(m.status)] : [m.originalKey, 'private' as const];
       let stream: Readable;
-      try { stream = await getStream(key, where); } catch { continue; } // a missing object is skipped, not fatal
+      try { stream = await getStream(m.originalKey, 'private'); } catch { continue; } // a missing object is skipped, not fatal
       if (aborted) { stream.destroy(); return; }
       current = stream;
       const folder = m.status === 'hidden' ? 'disembunyikan/' : m.status === 'failed' ? 'gagal/' : '';
@@ -65,7 +74,7 @@ export default defineEventHandler(async (event) => {
         cancelWait = (e) => { zip.off('entry', onEntry); zip.off('error', onError); reject(e); };
         zip.once('entry', onEntry);
         zip.once('error', onError);
-        zip.append(stream, { name: `${folder}${downloadName(m, extOf(key), guestName)}`, date: m.takenAt ?? m.createdAt });
+        zip.append(stream, { name: `${folder}${downloadName(m, extOf(m.originalKey), guestName)}`, date: m.takenAt ?? m.createdAt });
       });
       current = null;
     }

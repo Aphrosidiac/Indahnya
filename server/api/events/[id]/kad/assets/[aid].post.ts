@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import sharp from 'sharp';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { createWriteStream } from 'node:fs';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
@@ -11,10 +9,11 @@ import { requireEventAccess } from '../../../../../utils/session';
 import { head, getBuffer, getStream, put, del, publicUrl } from '../../../../../utils/storage';
 import { kadPrefix, KAD_ASSET_TYPES } from '../../../../../utils/kad';
 import { readBodyAs } from '../../../../../utils/validate';
+import { heicToJpeg } from '../../../../../utils/heic';
+import { runTool, FFMPEG_PRIORITY } from '../../../../../utils/proc';
 
-const run = promisify(execFile);
 /** ffmpeg reads the upload as a plain local file and nothing else (no playlists, no URLs), for at most a minute. */
-const FF = { timeout: 60_000, maxBuffer: 16 * 1024 * 1024 };
+const FF = { timeoutMs: 60_000, nice: FFMPEG_PRIORITY };
 const AUDIO_FORMATS = /^(mp3|mov,mp4,m4a,3gp,3g2,mj2|wav|ogg|aac)$/;
 const inFlight = new Set<string>();
 const Body = z.object({ kind: z.enum(['photo', 'qr', 'music']) });
@@ -48,11 +47,9 @@ async function processAsset(eventId: string, aid: string, kind: 'photo' | 'qr' |
   let key: string;
   try {
     if (kind === 'photo' || kind === 'qr') {
-      let input = await getBuffer(src, 'private');
-      if (/heic|heif/.test(h.ContentType ?? '')) {
-        const { default: convert } = await import('heic-convert');
-        input = Buffer.from(await convert({ buffer: new Uint8Array(input) as never, format: 'JPEG', quality: 0.92 }));
-      }
+      let input: Buffer = await getBuffer(src, 'private');
+      // in a child process, like the guests' photos: never on this process's event loop
+      if (/heic|heif/.test(h.ContentType ?? '')) input = await heicToJpeg(input, { maxPixels: 40_000_000 });
       const img = sharp(input, { failOn: 'none', limitInputPixels: 40_000_000 }).rotate();
       if (kind === 'photo') {
         key = `${base}.webp`;
@@ -66,11 +63,11 @@ async function processAsset(eventId: string, aid: string, kind: 'photo' | 'qr' |
       try {
         const inPath = join(dir, 'in'), outPath = join(dir, 'out.m4a');
         await pipeline(await getStream(src, 'private'), createWriteStream(inPath));
-        const { stdout } = await run('ffprobe', ['-v', 'error', '-protocol_whitelist', 'file', '-show_entries', 'format=duration,format_name', '-of', 'json', inPath], FF);
-        const fmt = (JSON.parse(stdout) as { format?: { duration?: string; format_name?: string } }).format;
+        const { stdout } = await runTool('ffprobe', ['-v', 'error', '-protocol_whitelist', 'file', '-show_entries', 'format=duration,format_name', '-of', 'json', inPath], FF);
+        const fmt = (JSON.parse(stdout.toString()) as { format?: { duration?: string; format_name?: string } }).format;
         const sec = Number(fmt?.duration ?? 0);
         if (!sec || !AUDIO_FORMATS.test(fmt?.format_name ?? '')) throw new Error('Bukan fail lagu');
-        await run('ffmpeg', ['-y', '-protocol_whitelist', 'file', '-i', inPath, '-vn', '-t', '480', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', outPath], FF);
+        await runTool('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-protocol_whitelist', 'file', '-i', inPath, '-vn', '-t', '480', '-c:a', 'aac', '-b:a', '128k', '-map_metadata', '-1', '-movflags', '+faststart', outPath], { ...FF, timeoutMs: 120_000 });
         key = `${base}.m4a`;
         await put(key, await readFile(outPath), 'audio/mp4', 'public');
       } finally { await rm(dir, { recursive: true, force: true }); }

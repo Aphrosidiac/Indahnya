@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Images, CalendarDays, ArrowRight, PartyPopper } from 'lucide-vue-next';
+import { Plus, Images, CalendarDays, ArrowRight, PartyPopper, Undo2, Trash2 } from 'lucide-vue-next';
 import { PageHead, Btn, Card, Chip, EmptyState, Sk, Modal, Field, Select, useUi } from '~/ui';
 import type { SelectOption } from '~/ui';
 import { useEvents } from '~/stores/events';
@@ -11,7 +11,22 @@ const ui = useUi();
 const route = useRoute();
 const router = useRouter();
 
-onMounted(() => { void events.load(true); });
+onMounted(() => { void events.load(true); void loadTrash(); });
+
+/* ── deleted in the last 7 days: still restorable ─────────────────── */
+interface Trashed { id: string; title: string; slug: string; deletedAt: string; purgeAfter: string | null }
+const trash = ref<Trashed[]>([]);
+async function loadTrash() { try { trash.value = await $fetch<Trashed[]>('/api/trash'); } catch { trash.value = []; } }
+const restoring = ref<string | null>(null);
+async function restore(t: Trashed) {
+  restoring.value = t.id;
+  try {
+    await $fetch(`/api/events/${t.id}/restore`, { method: 'POST' });
+    await Promise.all([events.load(true), loadTrash()]);
+    ui.ok('Majlis dipulihkan', 'Link dan QR tetamu jalan semula.');
+  } catch (e) { ui.error('Tak jadi', apiError(e)); }
+  finally { restoring.value = null; }
+}
 
 /* ── the create wizard ─────────────────────────────────────────────── */
 const open = ref(false);
@@ -87,6 +102,18 @@ async function create() {
         </div>
       </NuxtLink>
     </div>
+
+    <Card v-if="trash.length" class="mt-6" title="Baru dipadam" :icon="Trash2" sub="Boleh dipulihkan sampai tarikh ni. Lepas tu semua dipadam terus." flush>
+      <ul class="divide-y divide-line-100">
+        <li v-for="t in trash" :key="t.id" class="flex flex-wrap items-center gap-3 px-5 py-3">
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-[13px] font-medium leading-5 text-ink-900">{{ t.title }}</span>
+            <span class="block truncate text-[12px] leading-4 text-ink-500">Dipadam terus {{ t.purgeAfter ? fmtDate(t.purgeAfter) : 'tak lama lagi' }}</span>
+          </span>
+          <Btn variant="secondary" size="sm" :loading="restoring === t.id" @click="restore(t)"><Undo2 class="size-4" :stroke-width="1.75" aria-hidden="true" />Pulihkan</Btn>
+        </li>
+      </ul>
+    </Card>
   </div>
 
   <Modal :open="open" title="Majlis baru" subtitle="Nama dan tarikh je dulu — yang lain boleh tambah kemudian." @close="open = false">

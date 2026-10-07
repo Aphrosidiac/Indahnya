@@ -9,6 +9,7 @@ Everything you need to run Indahnya on your own machine, change it, and check it
 | Node.js | ≥ 22 | Nuxt 4, `--env-file` |
 | Postgres | 15+ | App data (Drizzle) |
 | ffmpeg + ffprobe | on `PATH` | Video posters, durations, voice ucapan transcode |
+| libheif CLI (`heif-dec` or `heif-convert`) | optional | Fast native HEIC decoding (`brew install libheif`, `apt install libheif-examples`). Without it, heic-convert runs in a child process |
 | S3-compatible store | on `:9000` | Uploads. Garage locally, Cloudflare R2 in production |
 
 ## First run
@@ -68,12 +69,14 @@ dashboard, sign in as `demo@indahnya.my`.
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Dev server on `:3180` (the worker runs inside it) |
+| `npm run dev` | Dev server on `:3180` (the worker runs inside it; production splits them, see [deployment](deployment.md)) |
 | `npm run build` / `npm run preview` | Production build in `.output/` and a local run of it |
-| `npm test` | Vitest: clocks, prices, redirects, EXIF time, slugs, kad, RSVP rules |
+| `npm test` | Vitest: clocks, prices, retention, redirects, EXIF time, slugs, kad, RSVP rules, filenames, zip parts, HEIC sizing |
 | `npm run typecheck` | `vue-tsc` over the app and the server |
 | `npm run db:generate` | New migration from `server/db/schema.ts` |
-| `npm run db:migrate` | Apply migrations |
+| `npm run db:migrate` | Apply migrations (drizzle-kit, dev) |
+| `npm run db:migrate:prod` | Apply migrations with production dependencies only (`scripts/migrate.mjs`) |
+| `scripts/backup-db.sh` | Dump the database (and copy it off the box when `BACKUP_S3_URI` is set) |
 | `node scripts/dev-bucket.mjs` | CORS on the dev buckets |
 | `node --env-file=.env --import tsx scripts/seed-demo.ts` | (Re)seed `/aina-hakim` |
 | `python3 scripts/build-brand.py && node scripts/build-assets.mjs` | Rebuild logo SVGs, favicons, `og.jpg` |
@@ -100,7 +103,15 @@ UI change.
   Btn, PageHead…) before writing new markup. Follow the motion rules in
   [architecture](architecture.md#design-system).
 - **Runtime config.** Read it with `useRuntimeConfig()`, never `process.env`,
-  except `DATABASE_URL` and `WORKER`. See [deployment](deployment.md#environment).
+  except `DATABASE_URL`, `DB_POOL_MAX` and the worker's process-role variables.
+  See [deployment](deployment.md#environment). To smoke-test a production
+  build on a laptop, run `.output/server/index.mjs` with `INDAHNYA_LOCAL_PROD=1`
+  (localhost addresses are then allowed by the startup check).
+- **External tools.** Run ffmpeg, ffprobe and the HEIC decoder through
+  `server/utils/proc.ts` (hard timeout, low priority), and strip metadata
+  (`-map_metadata -1`) from anything served.
+- **Uploads.** CORS on the private bucket must expose `ETag`
+  (`scripts/dev-bucket.mjs` does): large files go up in parts.
 - **Stores** are imported explicitly (`pinia.storesDirs: []`).
 - **Drizzle.** A raw `or(...)` inside `and(...)` needs its own parentheses.
   The sweep once nulled every ready row's keys because of this.
@@ -111,8 +122,10 @@ UI change.
 ## Tests
 
 Unit tests cover the rules a regression would hurt most: plan clocks and
-offers, safe redirects, EXIF time zones, slugs, kad composition and the OG
-renderer, and RSVP deadlines. They need no database and no Nuxt runtime.
+offers, retention and purge timing, safe redirects, EXIF time zones, slugs,
+kad composition and the OG renderer, RSVP deadlines, download filenames, zip
+parts and HEIC size checks. CI (`.github/workflows/ci.yml`) runs typecheck,
+tests and a build on every push; it deploys nothing. They need no database and no Nuxt runtime.
 
 ```bash
 npm test

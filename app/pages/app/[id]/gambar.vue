@@ -83,7 +83,8 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey));
   <Teleport defer to="#page-head">
     <PageHead title="Gambar" :sub="ev ? `${ev.counts.ready} dipaparkan · ${ev.counts.hidden} disembunyikan` : undefined">
       <Btn variant="secondary" size="sm" @click="load(); refresh()"><RefreshCw class="size-4" :stroke-width="1.75" aria-hidden="true" /><span class="max-sm:hidden">Refresh</span></Btn>
-      <Btn v-if="ev && ev.counts.ready + ev.counts.hidden" :href="`/api/events/${ev.id}/download`" download variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />Download semua</Btn>
+      <Btn v-if="ev && ev.counts.ready + ev.counts.hidden && ev.zip.parts <= 1" :href="`/api/events/${ev.id}/download`" download variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />Download semua</Btn>
+      <Btn v-else-if="ev && ev.counts.ready + ev.counts.hidden" :to="`/app/${ev.id}#download`" variant="primary" size="sm"><Download class="size-4" :stroke-width="1.75" aria-hidden="true" />Download ({{ ev.zip.parts }} bahagian)</Btn>
     </PageHead>
   </Teleport>
 

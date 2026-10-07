@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { useDb, media } from '../../../../../db';
 import { eventBySlug } from '../../../../../utils/public';
 import { currentGuest } from '../../../../../utils/guest';
-import { del } from '../../../../../utils/storage';
+import { del, abortMultipart, cdnPurge } from '../../../../../utils/storage';
 import { servedWhere } from '../../../../../utils/media';
 
 /** A guest may take back their own upload inside the event's window (24 h by default). Gone at once, original too. */
@@ -15,10 +15,10 @@ export default defineEventHandler(async (event) => {
   // an unfinished slot (never sent) can always be released — it is nobody's photo yet, and it holds a slot of the cap
   const unsent = m.status === 'pending';
   if (!unsent && Date.now() - m.createdAt.getTime() > ev.settings.guestDeleteHours * 3_600_000) throw createError({ statusCode: 403, statusMessage: 'Tempoh padam dah lepas' });
-  await useDb().update(media).set({ status: 'deleted', key: null, thumbKey: null, posterKey: null }).where(eq(media.id, m.id));
-  await Promise.all([
-    del([m.key, m.thumbKey, m.posterKey].filter((k): k is string => !!k), servedWhere(m.status)),
-    del([m.originalKey], 'private'),
-  ]);
+  await useDb().update(media).set({ status: 'deleted', key: null, midKey: null, thumbKey: null, posterKey: null, uploadId: null }).where(eq(media.id, m.id));
+  const served = [m.key, m.midKey, m.thumbKey, m.posterKey].filter((k): k is string => !!k);
+  if (m.uploadId) await abortMultipart(m.originalKey, m.uploadId);
+  await Promise.all([del(served, servedWhere(m.status)), del([m.originalKey], 'private')]);
+  if (m.status === 'ready') await cdnPurge(served);
   return { ok: true };
 });

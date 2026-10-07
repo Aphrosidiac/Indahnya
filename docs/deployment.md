@@ -1,8 +1,8 @@
-# Deploying Indahnya
+# Deployment
 
 The runbook for one VPS (PM2 + nginx + Postgres), Cloudflare R2 for media,
-and indahnya.my on Cloudflare DNS. Nothing in the repo deploys by itself.
-CI only checks.
+and indahnya.my on Cloudflare DNS. Nothing in the repo deploys by itself;
+CI only checks. **Nothing is deployed yet.**
 
 ## What runs where
 
@@ -20,7 +20,42 @@ Both processes are started from `ecosystem.config.cjs` and read
 `/etc/indahnya/env`. That file follows `.env.example` and is mode 600, owned
 by the app user.
 
-## One-time setup
+## Environment
+
+Runtime config is read **when the server starts**, from `NUXT_*` variables
+only. A bare `STRIPE_SECRET_KEY` is silently ignored, and nothing from the
+build machine is baked into `.output`. `DATABASE_URL` and the process-role
+variables are the bare names. A production server checks the required values
+at start and refuses to run, listing what is missing
+(`server/plugins/00.config-check.ts`).
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | yes | Postgres connection string |
+| `NUXT_PUBLIC_SITE_URL` | yes | `https://indahnya.my`: links, mails, Stripe return, printed QR codes, OG, sitemap |
+| `NUXT_S3_ENDPOINT` | yes | `https://<account>.r2.cloudflarestorage.com` |
+| `NUXT_S3_REGION` | yes | `auto` on R2 |
+| `NUXT_S3_BUCKET` | yes | Public bucket (served copies only) |
+| `NUXT_S3_PRIVATE_BUCKET` | yes | Private bucket (originals, hidden media). Must differ from the public one |
+| `NUXT_S3_ACCESS_KEY_ID` / `NUXT_S3_SECRET_ACCESS_KEY` | yes | R2 token with Object Read & Write on both buckets |
+| `NUXT_S3_PUBLIC_BASE` | yes | `https://media.indahnya.my` |
+| `NUXT_STRIPE_SECRET_KEY` | yes | Secret or restricted key (`sk_live_…` / `rk_live_…`) |
+| `NUXT_STRIPE_WEBHOOK_SECRET` | yes | Signing secret of the webhook endpoint |
+| `NUXT_STRIPE_PRICE_STD` / `NUXT_STRIPE_PRICE_FULL` | no | Price IDs for full-price RM59 / RM99. Without them prices are created inline |
+| `NUXT_SMTP_URL` | yes | `smtps://user:pass@host:465`. Sign-in is by emailed link |
+| `NUXT_SMTP_FROM` | no | Defaults to `Indahnya <hello@indahnya.my>` |
+| `NUXT_PUBLIC_LEGAL_NAME` / `_REG` / `_ADDRESS` | yes | Registered name, SSM number and address, shown on `/privasi` and `/terma` |
+| `NUXT_ALERT_EMAIL` | strongly advised | Where alerts go: refunds needed, jobs given up, mail failures |
+| `NUXT_CLOUDFLARE_ZONE_ID` / `NUXT_CLOUDFLARE_API_TOKEN` | no | Purge hidden/deleted media from the edge at once (token: Zone → Cache Purge) |
+| `NUXT_GOOGLE_CLIENT_ID` / `NUXT_GOOGLE_CLIENT_SECRET` | no | Google sign-in |
+| `DB_POOL_MAX` | no | Postgres connections per process (default 10) |
+| `WORKER` | per process | `0` on the web processes, `1` on the worker (set in `ecosystem.config.cjs`) |
+| `WORKER_PHOTO_CONCURRENCY` / `WORKER_VIDEO_CONCURRENCY` / `FFMPEG_THREADS` | no | Worker lanes (default 2 / 1) and threads per encode (default 2) |
+| `INDAHNYA_LOCAL_PROD` | never in production | Lets a production build run on localhost addresses for a smoke test |
+
+The template is [`.env.example`](../.env.example).
+
+## Checklist (one-time setup)
 
 1. **Packages:**
    - Node 22
@@ -125,3 +160,12 @@ With `NUXT_ALERT_EMAIL` set, these arrive by mail, at most once per 15 minutes p
 - **Purge without a final warning.**
 
 Without `NUXT_ALERT_EMAIL`, they appear only in `pm2 logs` with the prefix `[alert]`.
+
+## Static preview (Cloudflare Pages)
+
+`npm run deploy:pages` builds the committed `HEAD`, runs it once with
+`NUXT_PUBLIC_PREVIEW=true` against local Postgres and Garage, snapshots the
+public pages and the sample majlis, and uploads the result to a Pages project
+(`scripts/pages/`). It's a portfolio preview, not the launch. The preview has
+no server, so sign-up, the dashboard and the TV lead to `/mula`. Pushing to
+git deploys nothing.

@@ -12,7 +12,7 @@
 #   AWS_ENDPOINT_URL=https://<account>.r2.cloudflarestorage.com
 # Give that bucket a lifecycle rule deleting objects after 30 days.
 #
-# Restore (see docs/deploy.md): pg_restore --clean --if-exists -d "$DATABASE_URL" <file>
+# Restore (see docs/deployment.md): pg_restore --clean --if-exists -d "$DATABASE_URL" <file>
 set -euo pipefail
 ENV_FILE="${ENV_FILE:-/etc/indahnya/env}"
 # read only the keys this script uses: the env file is written for Node's --env-file

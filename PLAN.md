@@ -243,7 +243,7 @@ everything in it:
   holds a wake lock, and resumes from IndexedDB after a killed tab.
 - CSP on every page, Inter self-hosted, 1200px lightbox images, a short CDN
   cache with optional Cloudflare purge, `/api/health`, startup config check,
-  deploy files and runbook (`docs/deploy.md`), CI (checks only).
+  deploy files and runbook (`docs/deployment.md`), CI (checks only).
 - Copy: co-hosts are off the price list (the feature is parked), no "most
   popular" before there are customers, privacy notice covers Phase B data.
 

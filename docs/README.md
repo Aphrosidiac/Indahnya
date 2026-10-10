@@ -8,6 +8,7 @@ deeper.
 | [architecture.md](architecture.md) | You need the shape of the system: diagrams, buckets, worker jobs, clocks, data model, security choices |
 | [development.md](development.md) | You're setting up locally, adding a script, or checking a convention |
 | [deployment.md](deployment.md) | You're preparing the launch: checklist, every env var, R2, CHIP, PM2 (web + worker), nginx, backups, health, rollback |
+| [payments-chip.md](payments-chip.md) | You're touching money: CHIP account, checkout, webhook, refunds, testing, going live, runbook |
 | [audit-2026-10-05.md](audit-2026-10-05.md) | The production-readiness audit, its evidence, and what was fixed |
 | [api.md](api.md) | You need a route: method, path, who may call it, what it does |
 | [screenshots.md](screenshots.md) | You want to see a screen without running the app |

@@ -165,7 +165,7 @@ Routing to the address in `FORWARD_TO`.
    the e-wallets, then run `node deploy/chip.mjs`. It checks the key and brand,
    lists the activated methods, creates the account webhook for
    `https://indahnya.my/api/chip/webhook` and writes its public key into
-   `production.env`. See "Payments (CHIP)" below.
+   `production.env`. See [payments-chip.md](payments-chip.md).
 5. **Push the config and go live:**
    ```bash
    deploy/env.sh push
@@ -207,37 +207,11 @@ Restore the database only for data damage, never for a code rollback.
 
 ## Payments (CHIP)
 
-CHIP Collect, one host for test and live (`gate.chip-in.asia/api/v1`); the
-secret key decides the mode. Each checkout is one purchase, payable for one
-hour (`due` + `due_strict`), priced in sen by the server. CHIP hosts the
-payment page and emails the receipt (`send_receipt`).
-
-How a payment lands, whichever comes first (all idempotent on the purchase id):
-
-1. The purchase's own `success_callback` → `/api/chip/webhook`, signed with the
-   company key (`GET /public_key/`, cached).
-2. The account webhook's `purchase.paid` → the same endpoint, signed with the
-   webhook's key (`NUXT_CHIP_WEBHOOK_PUBLIC_KEY`).
-3. The return page (`/app/<id>?paid=1`) calls `/api/events/<id>/reconcile`,
-   which asks CHIP about the event's open purchases.
-
-Things CHIP does differently from other gateways:
-
-- A failed attempt (`error`, `purchase.payment_failure`) is not the end: the
-  buyer can retry on the same page. Only `paid` decides.
-- There is no event when a purchase lapses unpaid: reconcile marks those
-  `expired`. Paying for one offer cancels the event's other open purchases.
-- `payment.refunded` carries the Payment, not the purchase; the app reads the
-  purchase's `refundable_amount` to tell a full refund from a partial one.
-- Every verified delivery is answered 200, ignored ones included: CHIP holds
-  back a purchase's later events until its earlier ones succeed.
-- Callback URLs may not carry a port, so a local test needs a tunnel on 443
-  (`cloudflared tunnel --url http://localhost:3180`), with
-  `NUXT_PUBLIC_SITE_URL` set to the tunnel and `node deploy/chip.mjs --site <tunnel>`.
-
-Test mode: card `4444 3333 2222 1111` (no 3DS) or `5555 5555 5555 4444`
-(3DS), any name, a future expiry, CVC `123`. FPX and e-wallets show a
-simulated payment page.
+CHIP Collect takes the payments; the full story (flow, data model, webhook,
+refunds, testing, runbook) is in [payments-chip.md](payments-chip.md). For a
+deploy you need `NUXT_CHIP_SECRET_KEY` and `NUXT_CHIP_BRAND_ID` in
+`production.env`, then `node deploy/chip.mjs` for the webhook key, then
+`deploy/env.sh push`. Going live: [payments-chip.md §13](payments-chip.md#13-going-live).
 
 ## Restore the database
 

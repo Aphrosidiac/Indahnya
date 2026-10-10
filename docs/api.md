@@ -80,6 +80,8 @@ Who can call what:
 
 ## Host: payments
 
+The full payment design is in [payments-chip.md](payments-chip.md).
+
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/api/events/[id]/checkout` | A CHIP purchase (payable 1 hour) for one of the current offers (upgrade at the difference, or renewal). Records the plan, kind and amount priced; returns CHIP's checkout URL |

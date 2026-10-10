@@ -172,6 +172,7 @@ npm run typecheck
 | [docs/architecture.md](docs/architecture.md) | System and pipeline diagrams, buckets, worker jobs, clocks, data model, security choices |
 | [docs/development.md](docs/development.md) | Local setup, Garage, scripts, conventions, tests |
 | [docs/deployment.md](docs/deployment.md) | Launch checklist, every env var, R2, CHIP, PM2 (web + worker), nginx, backups, health, rollback, the Pages preview |
+| [docs/payments-chip.md](docs/payments-chip.md) | Payments A to Z: CHIP account and fees, checkout, webhook, refunds, testing, going live, runbook |
 | [docs/api.md](docs/api.md) | Every route handler, grouped by who calls it |
 | [docs/audit-2026-10-05.md](docs/audit-2026-10-05.md) | The production-readiness audit and what was fixed |
 | [docs/screenshots.md](docs/screenshots.md) | Every screen, desktop and phone |

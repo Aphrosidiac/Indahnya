@@ -10,7 +10,8 @@
  *   CF_API_TOKEN    bootstrap token on the personal account (see docs/deployment.md
  *                   for its permissions). Used here only; never sent to the server.
  *   CF_ACCOUNT_ID   the personal account
- *   VPS_IP          the server's IPv4 (VPS_IPV6 optional)
+ *   VPS_IP          the server's IPv4 (VPS_IPV6 optional). Until it is set, the
+ *                   records pointing at the server are skipped; the rest runs
  *   FORWARD_TO      the inbox hello@indahnya.my forwards to (verified once by mail)
  *   RESEND_API_KEY  a full-access Resend key, used here only to add the domain and
  *                   create the server's send-only key
@@ -57,7 +58,7 @@ mkdirSync(CONF, { recursive: true, mode: 0o700 });
 const cfg = readEnv(join(CONF, 'cloudflare.env'));
 const PROD = join(CONF, 'production.env');
 const prod = readEnv(PROD);
-for (const k of ['CF_API_TOKEN', 'CF_ACCOUNT_ID', 'VPS_IP']) {
+for (const k of ['CF_API_TOKEN', 'CF_ACCOUNT_ID']) {
   if (!cfg[k]) { console.error(`${k} is missing from ${join(CONF, 'cloudflare.env')} (see docs/deployment.md)`); process.exit(1); }
 }
 const ACCT = cfg.CF_ACCOUNT_ID;
@@ -108,6 +109,7 @@ async function upsertRecord(zoneId, rec, token) {
 
 console.log('== DNS');
 await step('DNS', async () => {
+  if (!cfg.VPS_IP) throw new Error('VPS_IP not set: apex/www records skipped');
   await upsertRecord(ZONE, { type: 'A', name: DOMAIN, content: cfg.VPS_IP, proxied: true });
   if (cfg.VPS_IPV6) await upsertRecord(ZONE, { type: 'AAAA', name: DOMAIN, content: cfg.VPS_IPV6, proxied: true });
   await upsertRecord(ZONE, { type: 'CNAME', name: `www.${DOMAIN}`, content: DOMAIN, proxied: true });
@@ -297,6 +299,7 @@ await step('cache purge token', async () => {
 // ── indahnya.ffdev.studio → 301 (the old name in the plan) ──────────────────
 console.log('== indahnya.ffdev.studio');
 await step('indahnya.ffdev.studio', async () => {
+  if (!cfg.VPS_IP) throw new Error('VPS_IP not set: would point at nothing; skipped');
   const ff = readEnv(join(homedir(), 'Desktop/dev/ffdevstudio/.env'));
   if (!ff.CLOUDFLARE_API_TOKEN) throw new Error('FF token not found (~/Desktop/dev/ffdevstudio/.env); skipped');
   const [z] = await cf('GET', '/zones?name=ffdev.studio', undefined, ff.CLOUDFLARE_API_TOKEN);

@@ -100,7 +100,8 @@ mv "$tmp" "$out" && chmod 644 "$out"
 nginx -t -q 2>/dev/null && systemctl reload nginx || true
 SH
 chmod 755 /usr/local/sbin/indahnya-cf-ips
-/usr/local/sbin/indahnya-cf-ips || true
+[ -f /etc/nginx/cloudflare-ips.conf ] || touch /etc/nginx/cloudflare-ips.conf  # nginx -t needs the file even if the first fetch fails
+/usr/local/sbin/indahnya-cf-ips || echo "WARNING: could not fetch Cloudflare IPs; rerun /usr/local/sbin/indahnya-cf-ips" >&2
 echo '17 4 * * 1 root /usr/local/sbin/indahnya-cf-ips >/dev/null 2>&1' > /etc/cron.d/indahnya-cf-ips
 rm -f /etc/nginx/sites-enabled/default
 # the vhost itself is installed by deploy/deploy.sh from the release (it needs the origin cert first)

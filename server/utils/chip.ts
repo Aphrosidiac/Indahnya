@@ -27,12 +27,10 @@ export interface ChipPurchase {
   refundable_amount?: number;
 }
 
-/** A Payment (what `payment.*` events carry): `related_to` points at its purchase. */
+/** A Payment (what `payment.*` events carry, e.g. a refund): the money is in `payment`, `related_to` points at its purchase. */
 export interface ChipPayment {
   id: string;
-  amount: number;
-  currency: string;
-  payment_type?: string;
+  payment?: { amount: number; currency: string; payment_type?: string } | null;
   related_to?: { type: string; id: string } | null;
 }
 

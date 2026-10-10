@@ -56,11 +56,15 @@ export default defineEventHandler(async (event) => {
       // CHIP calls a purchase `refunded` after a partial refund too: what is left to refund decides
       const s = await getPurchase(purchaseId);
       const full = (s.refundable_amount ?? 0) === 0;
-      const rm = `RM${(pay.amount / 100).toFixed(2)}`;
-      if (full) await db.update(payments).set({ status: 'refunded', needsRefund: false }).where(eq(payments.id, row.id));
-      else await db.update(payments).set({ note: `partially refunded: ${rm}` }).where(eq(payments.id, row.id));
+      const rm = (c: number) => `RM${(c / 100).toFixed(2)}`;
+      // the running total (several partial refunds each send one of these), from what CHIP says is left
+      const paid = s.payment?.amount ?? s.purchase.total;
+      const refunded = paid - (s.refundable_amount ?? 0);
+      const what = full ? `refunded in full (${rm(paid)})` : `${rm(refunded)} of ${rm(paid)} refunded so far (this refund ${rm(pay.payment?.amount ?? 0)})`;
+      if (full) await db.update(payments).set({ status: 'refunded', needsRefund: false, note: what }).where(eq(payments.id, row.id));
+      else await db.update(payments).set({ note: what }).where(eq(payments.id, row.id));
       // the plan is NOT taken back automatically: a refund is a decision someone made, and they decide this too
-      opsAlert('Payment refunded', `CHIP purchase ${purchaseId} for event ${row.eventId}: ${full ? 'refunded in full' : `partly refunded (${rm})`}. The event keeps its plan until someone changes it.`);
+      opsAlert('Payment refunded', `CHIP purchase ${purchaseId} for event ${row.eventId}: ${what}. The event keeps its plan until someone changes it.`);
       break;
     }
     case 'purchase.refund_failure': {
@@ -75,7 +79,7 @@ export default defineEventHandler(async (event) => {
       const [row] = purchaseId !== '?' ? await db.select({ eventId: payments.eventId }).from(payments).where(eq(payments.chipPurchaseId, purchaseId)) : [];
       if (row || purchaseId === '?') {
         opsAlert(type === 'payment.charged_back' ? 'Payment charged back' : 'Chargeback reversed',
-          `CHIP purchase ${purchaseId}${row ? `, event ${row.eventId}` : ''}: RM${(pay.amount / 100).toFixed(2)}. Details in the CHIP portal.`);
+          `CHIP purchase ${purchaseId}${row ? `, event ${row.eventId}` : ''}: RM${((pay.payment?.amount ?? 0) / 100).toFixed(2)}. Details in the CHIP portal.`);
       }
       break;
     }

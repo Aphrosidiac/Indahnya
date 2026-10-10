@@ -41,9 +41,16 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "== packages"
 apt-get update -y
-apt-get install -y curl git unzip xz-utils ca-certificates nginx postgresql postgresql-contrib \
-  ffmpeg libheif-examples libheif-plugin-libde265
-[ $SHARED = 1 ] || apt-get install -y ufw unattended-upgrades fail2ban
+if [ $SHARED = 1 ]; then
+  # never upgrade what the box already has, and never let needrestart bounce
+  # its services (it restarted Postgres and Redis under other apps once)
+  export NEEDRESTART_MODE=l NEEDRESTART_SUSPEND=1
+  apt-get install -y --no-upgrade curl git unzip xz-utils ca-certificates nginx postgresql postgresql-contrib \
+    ffmpeg libheif-examples libheif-plugin-libde265
+else
+  apt-get install -y curl git unzip xz-utils ca-certificates nginx postgresql postgresql-contrib \
+    ffmpeg libheif-examples libheif-plugin-libde265 ufw unattended-upgrades fail2ban
+fi
 
 echo "== Node $NODE_VERSION for Indahnya only ($NODE_DIR)"
 if ! "$NODE_DIR/bin/node" -v 2>/dev/null | grep -q "^v$NODE_VERSION\."; then

@@ -1,8 +1,8 @@
 # Deployment
 
 The runbook for one VPS (PM2 + nginx + Postgres), Cloudflare R2 for media,
-and indahnya.my on Cloudflare DNS. Nothing in the repo deploys by itself;
-CI only checks. **Nothing is deployed yet.**
+and indahnya.my on Cloudflare DNS. Nothing deploys on push; CI only checks.
+`deploy/deploy.sh` is the one way code reaches the server.
 
 ## What runs where
 
@@ -11,7 +11,7 @@ CI only checks. **Nothing is deployed yet.**
 | `indahnya-web` | PM2, cluster, `127.0.0.1:3000` | Site + API. `WORKER=0`. |
 | `indahnya-worker` | PM2, fork, `127.0.0.1:3001` | Photos, videos, purges, mails. Nothing proxies to it. |
 | Postgres 16 | same box | Nightly `scripts/backup-db.sh`, copied off the box. |
-| nginx | same box | `deploy/nginx.conf`: TLS, HSTS, `X-Real-IP`, zip streaming. |
+| nginx | same box | `deploy/nginx.conf`: origin TLS, HSTS, Cloudflare real IP, `X-Real-IP`, zip streaming. |
 | R2 `indahnya-media` | Cloudflare | Public, custom domain `media.indahnya.my`. Served copies only. |
 | R2 `indahnya-private` | Cloudflare | No public access. Originals and hidden media. |
 | R2 `indahnya-backups` | Cloudflare | Database dumps, with a 30-day lifecycle rule. |
@@ -55,86 +55,117 @@ at start and refuses to run, listing what is missing
 
 The template is [`.env.example`](../.env.example).
 
-## Checklist (one-time setup)
+## The deploy system
 
-1. **Packages:**
-   - Node 22
-   - `postgresql-16`
-   - `nginx`
-   - `certbot`
-   - `ffmpeg`
-   - `libheif-examples` and `libheif-plugin-libde265`: HEIC is decoded natively, ~2.5× faster than the bundled fallback, outside Node
-   - `awscli` (for backups)
+Four scripts in `deploy/`, all run from the Mac. Secrets never enter the repo
+(it is public): they live in `~/.config/indahnya/` (mode 600) and on the
+server in `/etc/indahnya/env`.
 
-   The server refuses to start without ffmpeg and ffprobe.
-2. **Database:** create the `indahnya` database and user, and put the URL in `DATABASE_URL`.
-3. **R2:**
-   - Create three buckets: media, private and backups.
-   - Use one API token with Object Read & Write on media and private. Use a separate token for backups.
-   - Put the custom domain `media.indahnya.my` on the media bucket only.
-   - CORS on the private bucket:
-     - origin `https://indahnya.my`
-     - methods `PUT, GET, HEAD`
-     - allowed headers `content-type, content-length`
-     - **exposed header `ETag`**: large uploads go up in parts, and the browser reads each part's ETag
-   - Add a lifecycle rule on the private bucket: abort incomplete multipart uploads after 1 day.
-   - Add a Cloudflare Cache Rule for `media.indahnya.my`: respect origin cache headers. Objects carry `max-age=3600`, so a hidden photo leaves every cache within the hour.
-   - For it to leave at once, set `NUXT_CLOUDFLARE_ZONE_ID` and `NUXT_CLOUDFLARE_API_TOKEN` (permission: Zone → Cache Purge).
-4. **DNS and TLS:**
-   - `indahnya.my` and `www` point at the VPS. If they are proxied through Cloudflare, enable the real-IP lines in `deploy/nginx.conf`.
-   - Run `certbot --nginx -d indahnya.my -d www.indahnya.my`.
-5. **Mail:**
-   - The SMTP provider goes in `NUXT_SMTP_URL`.
-   - Add SPF, DKIM and DMARC records for indahnya.my.
-   - `hello@indahnya.my` needs an inbox: it is the published contact.
-6. **Stripe (MY, live):**
-   - Enable FPX, cards and GrabPay.
-   - Turn on **email receipts** for successful payments (`/terma` promises one).
-   - Add a webhook to `https://indahnya.my/api/stripe/webhook` with these events:
-     - `checkout.session.completed`
-     - `checkout.session.async_payment_succeeded`
-     - `checkout.session.async_payment_failed`
-     - `checkout.session.expired`
-     - `charge.refunded`
-     - `charge.dispute.created`
-7. **Env:** fill `/etc/indahnya/env` from `.env.example`, including:
-   - `NUXT_PUBLIC_LEGAL_*` (registered name, SSM number, address)
-   - `NUXT_ALERT_EMAIL`
-8. **nginx:** install `deploy/nginx.conf`, then run `nginx -t && systemctl reload nginx`.
-9. **PM2:**
-   - `npm i -g pm2`, then `pm2 install pm2-logrotate`: logs rotate, the disk does not fill.
-   - `pm2 start ecosystem.config.cjs && pm2 save && pm2 startup`: the processes come back after a reboot.
-10. **Monitoring:** point an external uptime check at `https://indahnya.my/api/health`. It returns 503 when the database, the worker or the photo queue is unwell.
-11. **Backups:** add the cron line from `scripts/backup-db.sh`. Do **one test restore** into a scratch database before launch.
+| Script | Does |
+|---|---|
+| `deploy/setup-server.sh` | Provisions a fresh Ubuntu 24.04 box, as root, idempotent: Node 22, Postgres 16 (database + generated password), nginx, ffmpeg + native HEIC, AWS CLI, PM2 + logrotate + boot start, 2 GB swap, ufw, fail2ban, unattended upgrades, Cloudflare real-IP list (weekly refresh), nightly backup cron, `/srv/indahnya` layout |
+| `node deploy/cloudflare.mjs` | Sets up Cloudflare through the API, idempotent: DNS, SSL Full (strict), origin certificate, R2 buckets + CORS + lifecycle + `media.indahnya.my`, Email Routing (`hello@` → your inbox), Email Sending, DMARC, `indahnya.ffdev.studio`, and mints three narrow tokens into `production.env` |
+| `deploy/env.sh push \| check` | Merges `~/.config/indahnya/production.env` into `/etc/indahnya/env` (blank values never overwrite), installs the origin certificate, lists missing keys by name |
+| `deploy/deploy.sh [--first \| --rollback \| --status]` | Pushes `main`, builds that commit on the server in `releases/<sha>`, migrates, switches `current`, reloads PM2, health-checks, and switches back automatically if the new release is unhealthy |
+
+### Server layout
+
+```
+/srv/indahnya/repo             clone of the repo; releases are cut from it with git archive
+/srv/indahnya/releases/<sha>   one build per deploy, newest 3 kept
+/srv/indahnya/current          symlink to the live release (PM2 runs this path)
+/srv/indahnya/shared/_nuxt     hashed assets of recent releases (old tabs keep working)
+/srv/indahnya/deploys.log      what went live when
+/etc/indahnya/env              runtime config, 600, owner indahnya
+/etc/ssl/cloudflare/           origin certificate (Cloudflare → box is TLS too)
+/var/backups/indahnya          nightly dumps, 14 days; copies in R2 indahnya-backups, 30 days
+```
+
+### TLS and the edge
+
+Every hostname is proxied by Cloudflare. The visitor gets Cloudflare's edge
+certificate; Cloudflare reaches the box over TLS with a 15-year Cloudflare
+origin certificate, verified (SSL mode Full strict). No certbot, nothing to
+renew. nginx takes the visitor's address from `CF-Connecting-IP`, trusted from
+Cloudflare's published ranges only.
+
+### Mail
+
+Outbound (sign-in links, retention warnings, alerts) goes through Cloudflare
+Email Service over SMTP: `smtps://api_token:<token>@smtp.mx.cloudflare.net:465`,
+from `hello@indahnya.my`, DKIM/SPF on the `cf-bounce` subdomain. Sending to
+arbitrary addresses needs the **Workers Paid** plan on the account (USD 5/month,
+3,000 mails included). Inbound `hello@indahnya.my` is forwarded by Email
+Routing to the address in `FORWARD_TO`.
+
+## First launch
+
+1. **Server.** An Ubuntu 24.04 VPS (2 vCPU / 4 GB is the floor: the worker
+   encodes video). Add an ssh alias `indahnya` (root) to `~/.ssh/config`, then:
+   ```bash
+   ssh indahnya 'bash -s' < deploy/setup-server.sh
+   ```
+2. **Cloudflare bootstrap token.** Personal account → My Profile → API Tokens →
+   Create Token → Custom token. Permissions:
+   - Account · Account API Tokens · Edit (to mint the app's narrow tokens)
+   - Account · Workers R2 Storage · Edit
+   - Account · Email Sending · Edit, Account · Email Routing Addresses · Edit
+   - Zone (indahnya.my) · DNS · Edit, Zone Settings · Edit, SSL and Certificates · Edit, Email Routing Rules · Edit
+   Then write `~/.config/indahnya/cloudflare.env`:
+   ```
+   CF_API_TOKEN=…
+   CF_ACCOUNT_ID=…
+   VPS_IP=…
+   FORWARD_TO=you@example.com
+   ```
+   and run `node deploy/cloudflare.mjs`. It lists anything still open (for
+   example, clicking the verification mail for `FORWARD_TO`). The bootstrap
+   token can be deleted afterwards; the app never uses it.
+3. **The rest of `production.env`** (`~/.config/indahnya/production.env`):
+   `NUXT_STRIPE_SECRET_KEY`, `NUXT_STRIPE_WEBHOOK_SECRET`,
+   `NUXT_PUBLIC_LEGAL_NAME`, `NUXT_PUBLIC_LEGAL_REG`, `NUXT_PUBLIC_LEGAL_ADDRESS`,
+   `NUXT_ALERT_EMAIL`, and optionally `NUXT_GOOGLE_CLIENT_ID` / `_SECRET`.
+4. **Stripe (MY, live):**
+   - Enable FPX, cards and GrabPay. Turn on **email receipts** (`/terma` promises one).
+   - Webhook to `https://indahnya.my/api/stripe/webhook` with `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
+     `checkout.session.expired`, `charge.refunded`, `charge.dispute.created`.
+5. **Push the config and go live:**
+   ```bash
+   deploy/env.sh push
+   deploy/deploy.sh --first
+   ```
+6. **After:** uptime check on `https://indahnya.my/api/health` (the `Uptime`
+   GitHub workflow does it every 10 minutes once the repo variable `UPTIME_URL`
+   is set); one test restore of a backup into a scratch database; Google Search
+   Console + Bing for the domain (docs/geo/owner-todo.md).
 
 ## Each deploy
 
-Build on the box, never on a Mac: sharp's native binary must match Linux.
-
 ```bash
-cd /srv/indahnya
-git fetch && git checkout <tag-or-sha>
-npm ci
-npx nuxt build
-node --env-file=/etc/indahnya/env scripts/migrate.mjs
-pm2 reload ecosystem.config.cjs
-curl -fsS https://indahnya.my/api/health
+deploy/deploy.sh
 ```
 
-- `pm2 reload` replaces processes gracefully:
-  - The web side finishes open requests.
-  - The worker stops claiming new jobs and waits up to 25 s for running ones.
-  - A job cut off mid-way is picked up again by the next worker after 5 minutes.
-- First deploy only: seed the landing's sample gallery with `node --env-file=/etc/indahnya/env --import tsx scripts/seed-demo.ts`.
+It refuses to run off `main`, with uncommitted changes, or behind
+`origin/main`. On the server: `git archive` the commit into
+`releases/<sha>`, `npm ci`, `nuxt build` (the live release keeps serving),
+migrations, nginx config if it changed (`nginx -t` first), switch `current`,
+`pm2 reload`, health check. `pm2 reload` replaces processes gracefully:
+
+- The web side finishes open requests.
+- The worker stops claiming new jobs and waits up to 25 s for running ones.
+- A job cut off mid-way is picked up again by the next worker after 5 minutes.
 
 ## Rollback
 
-Migrations only add things and never drop them, so the previous build runs
-against the new schema. To roll back:
+```bash
+deploy/deploy.sh --rollback
+```
 
-1. `git checkout <previous>`.
-2. `npm ci && npx nuxt build`.
-3. `pm2 reload ecosystem.config.cjs`.
+Switches `current` to the previous release (still built on disk) and reloads;
+no build. Migrations only add things and never drop them, so the previous
+build runs against the new schema. A deploy whose health check fails rolls
+itself back the same way.
 
 Restore the database only for data damage, never for a code rollback.
 

@@ -1,0 +1,21 @@
+name: Uptime
+# An outside check on production: /api/health answers 503 when the database,
+# the worker or the photo queue is unwell. A failed run mails the repo owner
+# (GitHub's own notifications). Off until the repo variable UPTIME_URL is set,
+# e.g. https://indahnya.my/api/health. GitHub may run schedules late; this is
+# a smoke alarm, not a pager.
+on:
+  schedule: [{ cron: '*/10 * * * *' }]
+  workflow_dispatch:
+jobs:
+  health:
+    if: vars.UPTIME_URL != ''
+    runs-on: ubuntu-24.04
+    steps:
+      - name: GET ${{ vars.UPTIME_URL }}
+        run: |
+          for i in 1 2 3; do
+            if curl -fsS -m 15 "${{ vars.UPTIME_URL }}"; then echo; exit 0; fi
+            sleep 20
+          done
+          echo "::error::${{ vars.UPTIME_URL }} failed 3 times"; exit 1

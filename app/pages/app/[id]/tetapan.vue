@@ -24,6 +24,13 @@ function offerLabel(o: { plan: string; kind: string; cents: number }) {
   return `Pilih ${o.plan === 'std' ? 'Indahnya' : 'Lengkap'} — ${fmtRM(o.cents)}`;
 }
 const paying = ref<string | null>(null);
+/* back from CHIP's failure page: say so once, then drop the query so a refresh does not repeat it */
+const route = useRoute();
+onMounted(() => {
+  if (route.query.bayaran !== 'gagal') return;
+  router.replace({ query: {} });
+  ui.error('Bayaran tak lepas', 'Boleh cuba lagi, atau guna cara bayaran lain. Kalau duit dah ditolak, pakej akan aktif sendiri dalam beberapa minit.');
+});
 async function checkout(plan: 'std' | 'full') {
   paying.value = plan;
   try { const r = await $fetch<{ url: string }>(`/api/events/${id.value}/checkout`, { method: 'POST', body: { plan } }); location.href = r.url; }
@@ -105,7 +112,7 @@ async function destroy() {
             <p v-else-if="p.key === 'free' && ev.plan === 'free'" class="mt-5 text-center text-[12px] leading-4 text-ink-500">Pakej semasa</p>
           </Card>
         </div>
-        <p class="mt-4 text-[12px] leading-4 text-ink-500">Bayaran melalui Stripe — FPX, kad, GrabPay. Harga dalam Ringgit Malaysia. Resit dihantar ke email.</p>
+        <p class="mt-4 text-[12px] leading-4 text-ink-500">Bayaran melalui CHIP — FPX, kad atau e-wallet. Harga dalam Ringgit Malaysia. Resit dihantar ke email.</p>
       </template>
 
       <!-- MAJLIS -->

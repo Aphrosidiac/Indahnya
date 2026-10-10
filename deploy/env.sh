@@ -17,9 +17,9 @@ CONF="$HOME/.config/indahnya"
 PROD="$CONF/production.env"
 
 REQUIRED="DATABASE_URL NUXT_PUBLIC_SITE_URL NUXT_S3_ENDPOINT NUXT_S3_REGION NUXT_S3_BUCKET NUXT_S3_PRIVATE_BUCKET
-NUXT_S3_ACCESS_KEY_ID NUXT_S3_SECRET_ACCESS_KEY NUXT_S3_PUBLIC_BASE NUXT_STRIPE_SECRET_KEY NUXT_STRIPE_WEBHOOK_SECRET
+NUXT_S3_ACCESS_KEY_ID NUXT_S3_SECRET_ACCESS_KEY NUXT_S3_PUBLIC_BASE NUXT_CHIP_SECRET_KEY NUXT_CHIP_BRAND_ID
 NUXT_SMTP_URL NUXT_PUBLIC_LEGAL_NAME NUXT_PUBLIC_LEGAL_REG NUXT_PUBLIC_LEGAL_ADDRESS"
-ADVISED="NUXT_ALERT_EMAIL NUXT_CLOUDFLARE_ZONE_ID NUXT_CLOUDFLARE_API_TOKEN AWS_ACCESS_KEY_ID BACKUP_S3_URI NUXT_GOOGLE_CLIENT_ID"
+ADVISED="NUXT_CHIP_WEBHOOK_PUBLIC_KEY NUXT_ALERT_EMAIL NUXT_CLOUDFLARE_ZONE_ID NUXT_CLOUDFLARE_API_TOKEN AWS_ACCESS_KEY_ID BACKUP_S3_URI NUXT_GOOGLE_CLIENT_ID"
 
 check() {
   # shellcheck disable=SC2029
@@ -31,7 +31,6 @@ val() { grep -E "^$1=" $f | tail -1 | cut -d= -f2-; }
 miss=0
 for k in $REQUIRED; do [ -n "$(val $k)" ] || { echo "  ✗ $k (required)"; miss=1; }; done
 for k in $ADVISED;  do [ -n "$(val $k)" ] || echo "  · $k (optional, not set)"; done
-case "$(val NUXT_STRIPE_SECRET_KEY)" in sk_test_*|rk_test_*) echo "  · Stripe is in TEST mode";; esac
 [ -s /etc/ssl/cloudflare/indahnya.my.pem ] || { echo "  ✗ origin certificate not installed"; miss=1; }
 [ $miss = 0 ] && echo "  ✓ every required key is set" || exit 1
 SH

@@ -53,7 +53,7 @@ export default defineNuxtConfig({
   /**
    * Defaults are for local dev only. Every value is overridden at RUNTIME by
    * a NUXT_-prefixed env var named after its path — NUXT_S3_PRIVATE_BUCKET,
-   * NUXT_STRIPE_SECRET_KEY, NUXT_PUBLIC_SITE_URL (see .env.example). Nothing
+   * NUXT_CHIP_SECRET_KEY, NUXT_PUBLIC_SITE_URL (see .env.example). Nothing
    * here reads process.env: that would bake the build machine's secrets into
    * .output and silently ignore the env the server actually starts with.
    * DATABASE_URL is the exception, read directly by server/db and drizzle-kit.
@@ -71,7 +71,12 @@ export default defineNuxtConfig({
       /** Where public reads come from. Dev: the app's /media route; prod: https://media.indahnya.my. */
       publicBase: 'http://localhost:3180/media',
     },
-    stripe: { secretKey: '', webhookSecret: '', priceStd: '', priceFull: '' },
+    /**
+     * CHIP Collect (payments). The secret key decides test or live; the brand is
+     * the shop the purchases belong to; the webhook key verifies the account
+     * webhook's deliveries (deploy/chip.mjs creates the webhook and writes it).
+     */
+    chip: { secretKey: '', brandId: '', webhookPublicKey: '' },
     google: { clientId: '', clientSecret: '' },
     smtp: { url: '', from: 'Indahnya <hello@indahnya.my>' },
     /** Where alerts go: refunds needed, jobs given up, purges without a warning, mail failures. */

@@ -16,7 +16,7 @@ and accepted without discussion — change freely.
 | Build order | A → C → B. Preview deploy after each. |
 | E-kad stance | Both: our own e-kad (compete) **and** an embeddable gallery link/widget couples can paste into a Jemputan.me/SayaKahwin card (complement). |
 | Pricing | Free / RM59 / RM99, one-time per event, no subscription. |
-| Payments | Stripe MY (FPX + cards + GrabPay). |
+| Payments | CHIP Collect (FPX, cards, e-wallets), replacing Stripe 2026-10-10 (Fakhrul). One purchase per checkout, signed callbacks + account webhook + reconcile; docs/deployment.md "Payments (CHIP)". |
 | Host auth | Email magic link + Google. Guests never sign in. |
 | Stack | **Nuxt 4 (Vue 3)** · Postgres + Drizzle · R2 presigned direct uploads · PM2 + nginx on a VPS. Was Next.js; switched 2026-09-20 because the UI must be ANK Ops verbatim and ANK's design system is Vue (`app/ui/`, copied from `ANKPets/packages/ui`). |
 | Hosting | VPS for app + Postgres; R2 (personal CF account, same as ffdev.studio) for media. Box: Fakhrul's pick at launch. Deploy system `deploy/` (2026-10-10): release folders + symlink, PM2 reload, auto-rollback on a failed health check; Cloudflare proxied with an origin certificate (Full strict); mail out through Resend SMTP (send-only key; 2026-10-10, Cloudflare Email Sending dropped), `hello@` in through Email Routing. Live 2026-10-10 on the shared Tencent box (43.134.29.203) in pre-launch mode. *default*, docs/deployment.md. |

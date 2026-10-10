@@ -14,7 +14,7 @@ async function copy() {
 }
 
 /**
- * Back from Stripe: the webhook may not have landed yet, so ask Stripe once
+ * Back from CHIP: the callback may not have landed yet, so ask CHIP once
  * the event is loaded (on a fresh page load it is not, at mount). The query
  * is dropped either way so a refresh does not ask again.
  */

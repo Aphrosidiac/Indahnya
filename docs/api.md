@@ -82,9 +82,9 @@ Who can call what:
 
 | Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/events/[id]/checkout` | A Stripe Checkout Session (lives 1 hour) for one of the current offers (upgrade at the difference, or renewal). Records the plan, kind and amount priced |
-| `POST` | `/api/events/[id]/reconcile` | Asks Stripe about the event's open sessions, for when the success page beats the webhook |
-| `POST` | `/api/stripe/webhook` | Signed Stripe events (6 types, see deployment). Idempotent on the session id. Applies exactly what was priced, or flags `needs_refund` and alerts. Expires the event's other open sessions. Records refunds, alerts on disputes, ignores events from the other mode |
+| `POST` | `/api/events/[id]/checkout` | A CHIP purchase (payable 1 hour) for one of the current offers (upgrade at the difference, or renewal). Records the plan, kind and amount priced; returns CHIP's checkout URL |
+| `POST` | `/api/events/[id]/reconcile` | Asks CHIP about the event's open purchases, for when the return page beats the callback. Marks lapsed ones expired |
+| `POST` | `/api/chip/webhook` | CHIP success callbacks and account webhook events, RSA-signed (`X-Signature`). Idempotent on the purchase id. Applies exactly what was priced, or flags `needs_refund` and alerts. Cancels the event's other open purchases. Records refunds (full or partial), alerts on chargebacks and failed refunds. Purchases that are not ours change nothing |
 
 ## Guest (`/api/g/[slug]`)
 

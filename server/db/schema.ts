@@ -225,7 +225,8 @@ export const payments = pgTable('payments', {
   id: text('id').primaryKey(),
   eventId: text('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   userId: text('user_id').notNull().references(() => users.id),
-  stripeSessionId: text('stripe_session_id').notNull(),
+  /** The CHIP purchase (one per checkout attempt); refunds and events refer to it too. */
+  chipPurchaseId: text('chip_purchase_id').notNull(),
   plan: text('plan').$type<Plan>().notNull(),
   /** What was priced at checkout. The payment buys exactly this, or it is refunded — never reinterpreted. */
   kind: text('kind').$type<'upgrade' | 'renew'>(),
@@ -234,13 +235,13 @@ export const payments = pgTable('payments', {
   /** Paid but nothing was applied (the offer was gone, the event purged, the amount wrong): someone must refund it. */
   needsRefund: boolean('needs_refund').notNull().default(false),
   note: text('note'),
-  stripePaymentIntent: text('stripe_payment_intent'),
+  /** How it was paid, as CHIP reports it: fpx, visa, mastercard, duitnow_qr, razer_tng… */
+  method: text('method'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   paidAt: timestamp('paid_at', { withTimezone: true }),
 }, t => [
-  uniqueIndex('payments_session_uq').on(t.stripeSessionId),
+  uniqueIndex('payments_purchase_uq').on(t.chipPurchaseId),
   index('payments_event_idx').on(t.eventId, t.status),
-  index('payments_intent_idx').on(t.stripePaymentIntent),
 ]);
 
 export type JobKind = 'process_media' | 'purge_event' | 'kad_gc';

@@ -100,7 +100,7 @@ export const LANDING = {
         { name: 'Indahnya Lengkap', price: '99', tag: 'Untuk majlis besar', rows: ['Upload tanpa had', 'Upload terbuka 12 bulan', 'Simpan dua tahun', 'Link sendiri', 'Tanpa badge Indahnya pada kad'], hot: false },
       ],
       choose: 'Pilih',
-      note: 'Bayar melalui Stripe: FPX, kad atau GrabPay. Harga dalam Ringgit, resit ke email.',
+      note: 'Bayar melalui CHIP: FPX, kad atau e-wallet. Harga dalam Ringgit, resit ke email.',
     },
     faq: {
       title: 'Yang orang selalu tanya.',
@@ -213,7 +213,7 @@ export const LANDING = {
         { name: 'Indahnya Lengkap', price: '99', tag: 'For big events', rows: ['Unlimited uploads', 'Uploads open for 12 months', 'Kept for two years', 'Your own link', 'No Indahnya badge on the card'], hot: false },
       ],
       choose: 'Choose',
-      note: 'Paid through Stripe: FPX, card or GrabPay. Prices in Ringgit, receipt by email.',
+      note: 'Paid through CHIP: FPX, card or e-wallet. Prices in Ringgit, receipt by email.',
     },
     faq: {
       title: 'What people ask.',

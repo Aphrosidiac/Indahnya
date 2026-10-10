@@ -31,7 +31,7 @@ function api(request, url) {
   const q = url.searchParams;
   const get = request.method === 'GET' || request.method === 'HEAD';
   if (parts[0] === 'me') return json({ user: null, googleEnabled: false });
-  if (parts[0] === 'cuba' || parts[0] === 'auth' || parts[0] === 'events' || parts[0] === 'tv' || parts[0] === 'stripe') {
+  if (parts[0] === 'cuba' || parts[0] === 'auth' || parts[0] === 'events' || parts[0] === 'tv' || parts[0] === 'stripe' || parts[0] === 'chip') {
     return fail(503, 'Ni versi pratonton. Indahnya belum buka untuk umum.');
   }
   if (parts[0] !== 'g') return fail(404, 'Not found');

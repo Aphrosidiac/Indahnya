@@ -1,5 +1,4 @@
 import { execFileSync } from 'node:child_process';
-import { isLiveKey } from '../utils/stripe';
 
 /**
  * Refuse to start a production server that is missing what it needs, instead
@@ -31,11 +30,11 @@ export default defineNitroPlugin(() => {
   const mediaPath = (() => { try { return new URL(c.s3.publicBase).pathname; } catch { return ''; } })();
   need(isUrl(c.s3.publicBase) && !/^\/media(\/|$)/.test(mediaPath), 'NUXT_S3_PUBLIC_BASE must be the public bucket\'s https domain (the /media route exists only in dev)');
   need(c.smtp.url, 'NUXT_SMTP_URL is not set (sign-in is by emailed link)');
-  need(c.stripe.secretKey && c.stripe.webhookSecret, 'NUXT_STRIPE_SECRET_KEY / NUXT_STRIPE_WEBHOOK_SECRET are not set');
+  need(c.chip.secretKey && c.chip.brandId, 'NUXT_CHIP_SECRET_KEY / NUXT_CHIP_BRAND_ID are not set');
   need(c.public.legal.name && c.public.legal.reg && c.public.legal.address, 'NUXT_PUBLIC_LEGAL_NAME / _REG / _ADDRESS are not set (the legal pages must say who runs the service)');
   if (!c.alertEmail) warn.push('NUXT_ALERT_EMAIL is not set: refunds needed, failed jobs and mail failures will only be logged');
   if (!c.cloudflare.zoneId) warn.push('NUXT_CLOUDFLARE_ZONE_ID is not set: hidden photos leave the CDN when their cache expires (up to an hour), not at once');
-  if (c.stripe.secretKey && !isLiveKey(c.stripe.secretKey)) warn.push('Stripe is in TEST mode');
+  if (!c.chip.webhookPublicKey) warn.push('NUXT_CHIP_WEBHOOK_PUBLIC_KEY is not set: payments still apply (success callbacks use the company key), but refund and chargeback events will be rejected (run deploy/chip.mjs)');
 
   // the worker shells out to these; a web-only process (WORKER=0) still uses them for voice wishes and kad songs
   for (const tool of ['ffmpeg', 'ffprobe']) {

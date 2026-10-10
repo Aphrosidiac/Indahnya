@@ -43,11 +43,11 @@ never pass through the box; the zips are the one exception.
 
 ### Pre-launch mode
 
-Until Stripe and the legal address are settled, the server runs with
+Until CHIP and the legal address are settled, the server runs with
 `NUXT_PUBLIC_PREVIEW=true`: the landing and the sample majlis work, the host
 side leads to `/mula`, and `server/middleware/preview.ts` closes sign-in, the
-TV try upload and the Stripe routes. The startup config check is skipped in
-this mode. To open: set the Stripe and `NUXT_PUBLIC_LEGAL_*` keys in
+TV try upload and the CHIP routes. The startup config check is skipped in
+this mode. To open: set the CHIP and `NUXT_PUBLIC_LEGAL_*` keys in
 `production.env`, change it to `NUXT_PUBLIC_PREVIEW=false` (deleting the
 line would not reach the server: a push never removes keys) and run
 `deploy/env.sh push --reload`.
@@ -55,7 +55,7 @@ line would not reach the server: a push never removes keys) and run
 ## Environment
 
 Runtime config is read **when the server starts**, from `NUXT_*` variables
-only. A bare `STRIPE_SECRET_KEY` is silently ignored, and nothing from the
+only. A bare `CHIP_SECRET_KEY` is silently ignored, and nothing from the
 build machine is baked into `.output`. `DATABASE_URL` and the process-role
 variables are the bare names. A production server checks the required values
 at start and refuses to run, listing what is missing
@@ -64,16 +64,16 @@ at start and refuses to run, listing what is missing
 | Variable | Required | Purpose |
 |---|---|---|
 | `DATABASE_URL` | yes | Postgres connection string |
-| `NUXT_PUBLIC_SITE_URL` | yes | `https://indahnya.my`: links, mails, Stripe return, printed QR codes, OG, sitemap |
+| `NUXT_PUBLIC_SITE_URL` | yes | `https://indahnya.my`: links, mails, CHIP return and callback URLs, printed QR codes, OG, sitemap |
 | `NUXT_S3_ENDPOINT` | yes | `https://<account>.r2.cloudflarestorage.com` |
 | `NUXT_S3_REGION` | yes | `auto` on R2 |
 | `NUXT_S3_BUCKET` | yes | Public bucket (served copies only) |
 | `NUXT_S3_PRIVATE_BUCKET` | yes | Private bucket (originals, hidden media). Must differ from the public one |
 | `NUXT_S3_ACCESS_KEY_ID` / `NUXT_S3_SECRET_ACCESS_KEY` | yes | R2 token with Object Read & Write on both buckets |
 | `NUXT_S3_PUBLIC_BASE` | yes | `https://media.indahnya.my` |
-| `NUXT_STRIPE_SECRET_KEY` | yes | Secret or restricted key (`sk_live_…` / `rk_live_…`) |
-| `NUXT_STRIPE_WEBHOOK_SECRET` | yes | Signing secret of the webhook endpoint |
-| `NUXT_STRIPE_PRICE_STD` / `NUXT_STRIPE_PRICE_FULL` | no | Price IDs for full-price RM59 / RM99. Without them prices are created inline |
+| `NUXT_CHIP_SECRET_KEY` | yes | CHIP Collect secret key. A test key means test mode (purchases carry `is_test`), a live key live mode |
+| `NUXT_CHIP_BRAND_ID` | yes | The Brand the purchases belong to (portal → Developers → Brands) |
+| `NUXT_CHIP_WEBHOOK_PUBLIC_KEY` | advised | The account webhook's public key, written by `deploy/chip.mjs`. Without it refund and chargeback events are rejected; payments still apply |
 | `NUXT_SMTP_URL` | yes | `smtps://user:pass@host:465`. Sign-in is by emailed link |
 | `NUXT_SMTP_FROM` | no | Defaults to `Indahnya <hello@indahnya.my>` |
 | `NUXT_PUBLIC_LEGAL_NAME` / `_REG` / `_ADDRESS` | yes | Registered name, SSM number and address, shown on `/privasi` and `/terma` |
@@ -158,14 +158,14 @@ Routing to the address in `FORWARD_TO`.
    example, clicking the verification mail for `FORWARD_TO`). The bootstrap
    token can be deleted afterwards; the app never uses it.
 3. **The rest of `production.env`** (`~/.config/indahnya/production.env`):
-   `NUXT_STRIPE_SECRET_KEY`, `NUXT_STRIPE_WEBHOOK_SECRET`,
+   `NUXT_CHIP_SECRET_KEY`, `NUXT_CHIP_BRAND_ID`,
    `NUXT_PUBLIC_LEGAL_NAME`, `NUXT_PUBLIC_LEGAL_REG`, `NUXT_PUBLIC_LEGAL_ADDRESS`,
    `NUXT_ALERT_EMAIL`, and optionally `NUXT_GOOGLE_CLIENT_ID` / `_SECRET`.
-4. **Stripe (MY, live):**
-   - Enable FPX, cards and GrabPay. Turn on **email receipts** (`/terma` promises one).
-   - Webhook to `https://indahnya.my/api/stripe/webhook` with `checkout.session.completed`,
-     `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
-     `checkout.session.expired`, `charge.refunded`, `charge.dispute.created`.
+4. **CHIP** (portal.chip-in.asia, under FF Dev Studio): activate FPX, cards and
+   the e-wallets, then run `node deploy/chip.mjs`. It checks the key and brand,
+   lists the activated methods, creates the account webhook for
+   `https://indahnya.my/api/chip/webhook` and writes its public key into
+   `production.env`. See "Payments (CHIP)" below.
 5. **Push the config and go live:**
    ```bash
    deploy/env.sh push
@@ -205,6 +205,40 @@ itself back the same way.
 
 Restore the database only for data damage, never for a code rollback.
 
+## Payments (CHIP)
+
+CHIP Collect, one host for test and live (`gate.chip-in.asia/api/v1`); the
+secret key decides the mode. Each checkout is one purchase, payable for one
+hour (`due` + `due_strict`), priced in sen by the server. CHIP hosts the
+payment page and emails the receipt (`send_receipt`).
+
+How a payment lands, whichever comes first (all idempotent on the purchase id):
+
+1. The purchase's own `success_callback` → `/api/chip/webhook`, signed with the
+   company key (`GET /public_key/`, cached).
+2. The account webhook's `purchase.paid` → the same endpoint, signed with the
+   webhook's key (`NUXT_CHIP_WEBHOOK_PUBLIC_KEY`).
+3. The return page (`/app/<id>?paid=1`) calls `/api/events/<id>/reconcile`,
+   which asks CHIP about the event's open purchases.
+
+Things CHIP does differently from other gateways:
+
+- A failed attempt (`error`, `purchase.payment_failure`) is not the end: the
+  buyer can retry on the same page. Only `paid` decides.
+- There is no event when a purchase lapses unpaid: reconcile marks those
+  `expired`. Paying for one offer cancels the event's other open purchases.
+- `payment.refunded` carries the Payment, not the purchase; the app reads the
+  purchase's `refundable_amount` to tell a full refund from a partial one.
+- Every verified delivery is answered 200, ignored ones included: CHIP holds
+  back a purchase's later events until its earlier ones succeed.
+- Callback URLs may not carry a port, so a local test needs a tunnel on 443
+  (`cloudflared tunnel --url http://localhost:3180`), with
+  `NUXT_PUBLIC_SITE_URL` set to the tunnel and `node deploy/chip.mjs --site <tunnel>`.
+
+Test mode: card `4444 3333 2222 1111` (no 3DS) or `5555 5555 5555 4444`
+(3DS), any name, a future expiry, CVC `123`. FPX and e-wallets show a
+simulated payment page.
+
 ## Restore the database
 
 ```bash
@@ -220,8 +254,8 @@ Run the restore with the worker stopped, then start it.
 
 With `NUXT_ALERT_EMAIL` set, these arrive by mail, at most once per 15 minutes per subject:
 
-- **Payment needs a refund:** the payment was recorded, flagged `needs_refund`, and nothing was applied. Refund it in Stripe; the `charge.refunded` webhook then marks it refunded.
-- **Payment refunded / Payment disputed:** the event keeps its plan until someone decides otherwise.
+- **Payment needs a refund:** the payment was recorded, flagged `needs_refund`, and nothing was applied. Refund it in the CHIP portal; the `payment.refunded` webhook then marks it refunded (a partial refund is noted, the payment stays paid).
+- **Payment refunded / Payment charged back / Refund failed:** the event keeps its plan until someone decides otherwise.
 - **Worker gave up / Worker abandoned jobs:** a photo, purge or clean-up failed three times or crashed its process.
 - **Retention mail failed:** the purge waits until the final warning has been out for 7 days, with a hard stop 45 days after storage ends (alerted).
 - **Purge without a final warning.**

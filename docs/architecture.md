@@ -23,7 +23,7 @@ flowchart LR
   PG[(Postgres<br/>Drizzle)]
   PUB[(Public bucket<br/>media.indahnya.my)]
   PRIV[(Private bucket<br/>originals + hidden)]
-  ST[Stripe MY]
+  ST[CHIP]
   SMTP[SMTP]
 
   G1 -- pages, API --> N
@@ -36,7 +36,7 @@ flowchart LR
   W --> PG
   W -- read originals --> PRIV
   W -- write copies --> PUB
-  N -- Checkout + webhook --> ST
+  N -- purchases + callbacks --> ST
   N -- magic links, expiry mail --> SMTP
 ```
 

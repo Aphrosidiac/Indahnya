@@ -9,7 +9,7 @@ export function slugify(s: string) {
 /** Paths the app owns (pages, routes, public folders); a majlis can never take one. */
 export const RESERVED = new Set([
   'app', 'api', 'masuk', 'keluar', 'tv', 'harga', 'contoh', 'blog', 'admin', 'g', 'e', 'assets', '_nuxt',
-  'privasi', 'terma', 'tentang', 'bantuan', 'login', 'logout', 'static', 'media', 'embed', 'auth', 'stripe',
+  'privasi', 'terma', 'tentang', 'bantuan', 'login', 'logout', 'static', 'media', 'embed', 'auth', 'stripe', 'chip',
   'mula', 'landing', 'cuba', 'about', 'privacy', 'terms', 'help', 'health', 'sitemap', 'robots', 'favicon',
 ]);
 

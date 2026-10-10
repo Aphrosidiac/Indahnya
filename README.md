@@ -15,7 +15,7 @@
   <img alt="Vue 3" src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white">
   <img alt="Postgres + Drizzle" src="https://img.shields.io/badge/Postgres-Drizzle-4169E1?logo=postgresql&logoColor=white">
   <img alt="Tailwind v4" src="https://img.shields.io/badge/Tailwind-v4-38BDF8?logo=tailwindcss&logoColor=white">
-  <img alt="Stripe MY" src="https://img.shields.io/badge/Stripe-MY-635BFF?logo=stripe&logoColor=white">
+  <img alt="CHIP" src="https://img.shields.io/badge/CHIP-payments-1A56DB">
   <img alt="Status: pre-launch" src="https://img.shields.io/badge/status-pre--launch-7dd56f">
 </p>
 
@@ -101,8 +101,8 @@ reload, and rotating the link blanks old screens.
 </table>
 
 Plus written and voice ucapan moderation with a "download all" zip, slideshow
-settings, approval mode, plan upgrades through Stripe Checkout (FPX,
-cards, GrabPay), retention emails before anything is deleted, a 7-day undo
+settings, approval mode, plan upgrades through CHIP (FPX,
+cards, e-wallets), retention emails before anything is deleted, a 7-day undo
 when a majlis is deleted, and account deletion. Every page
 works at phone width. See [all screenshots](docs/screenshots.md).
 
@@ -132,7 +132,7 @@ to Lengkap costs the RM40 difference.
 | Data | **Postgres + Drizzle**. Schema in `server/db/schema.ts`, migrations in `server/db/migrations` |
 | Media | **S3-compatible, two buckets**: Cloudflare R2 in production, Garage locally. The browser PUTs originals to presigned URLs; the app never touches the bytes |
 | Processing | Media worker (`server/plugins/worker.ts`), its own PM2 process in production: sharp, libheif in a child process, ffmpeg. Jobs claimed per lane (photo, video, maint) with `SKIP LOCKED` |
-| Payments | **Stripe MY**, one-time Checkout per event, webhook + reconcile |
+| Payments | **CHIP** (Malaysia), one purchase per checkout, signed callbacks + webhook + reconcile |
 | UI | **Tailwind v4** and the design system in `app/ui/` (tokens, primitives, motion rules) |
 | Hosting | Self-hosted VPS: PM2 (web + worker) + nginx + Postgres, nightly backups off the box, `/api/health` for uptime checks |
 
@@ -171,7 +171,7 @@ npm run typecheck
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | System and pipeline diagrams, buckets, worker jobs, clocks, data model, security choices |
 | [docs/development.md](docs/development.md) | Local setup, Garage, scripts, conventions, tests |
-| [docs/deployment.md](docs/deployment.md) | Launch checklist, every env var, R2, Stripe, PM2 (web + worker), nginx, backups, health, rollback, the Pages preview |
+| [docs/deployment.md](docs/deployment.md) | Launch checklist, every env var, R2, CHIP, PM2 (web + worker), nginx, backups, health, rollback, the Pages preview |
 | [docs/api.md](docs/api.md) | Every route handler, grouped by who calls it |
 | [docs/audit-2026-10-05.md](docs/audit-2026-10-05.md) | The production-readiness audit and what was fixed |
 | [docs/screenshots.md](docs/screenshots.md) | Every screen, desktop and phone |
@@ -195,7 +195,7 @@ app/
     contoh/      the landing's live demos
   composables/   useUploader, useGuestEvent, useT (BM/EN strings), …
 server/
-  api/           route handlers: auth, events (host), g/[slug] (guest), tv, stripe
+  api/           route handlers: auth, events (host), g/[slug] (guest), tv, chip
   worker/        media processing, purge and retention sweep, expiry mail, kad GC
   utils/         storage (two buckets), sessions, guests, plans and clocks, RSVP,
                  kad OG renderer, validation, rate limits, slugs
@@ -212,15 +212,15 @@ docs/            this documentation, images/, geo/
 
 | Phase | Scope | State |
 |---|---|---|
-| A | Auth, wizard, uploads, gallery, moderation, zip, slideshow, QR, Stripe, retention | Built, audited |
+| A | Auth, wizard, uploads, gallery, moderation, zip, slideshow, QR, payments (CHIP), retention | Built, audited |
 | C | E-kad: 5 templates, editor with live preview, salam kaut, WhatsApp previews, embed | Built |
 | B | RSVP, seating, written and voice ucapan | Built |
 | Landing | Landing, About, privacy, terms (BM + EN), brand, GEO groundwork | Built |
 | Hardening | Production-readiness audit and fixes ([docs/audit-2026-10-05.md](docs/audit-2026-10-05.md)) | Done |
-| Launch | Domain, R2, mail (Resend), VPS: live at indahnya.my in pre-launch mode. Stripe MY + legal address | Stripe next |
+| Launch | Domain, R2, mail (Resend), VPS: live at indahnya.my in pre-launch mode. CHIP + legal address | CHIP next |
 
 indahnya.my runs on the production stack (2026-10-10) in pre-launch mode: the
-landing and the sample majlis are live, sign-up opens once Stripe is set up
+landing and the sample majlis are live, sign-up opens once CHIP is set up
 ([docs/deployment.md](docs/deployment.md#pre-launch-mode)). Later: Chinese, face search ("cari gambar saya"), WhatsApp reminders,
 disposable-camera mode, and a partner API for e-kad platforms.
 

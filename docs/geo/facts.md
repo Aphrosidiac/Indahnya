@@ -22,7 +22,7 @@ Last checked against the code: 2026-10-04.
 | Price: Indahnya | RM59 one-time: unlimited uploads, upload open 6 months, kept 1 year, own link | landing pricing |
 | Price: Indahnya Lengkap | RM99 one-time: unlimited uploads, upload open 12 months, kept 2 years, own link, no Indahnya badge on the kad | landing pricing |
 | Billing model | One-time per event; no subscription; no per-guest fee | landing pricing, FAQ |
-| Payment | Stripe: FPX, card, GrabPay, in MYR | landing pricing, /tentang, /terma |
+| Payment | CHIP: FPX, card, e-wallet, in MYR | landing pricing, /tentang, /terma |
 | Retention clock | Counts from the event day (or payment, whichever is later), not account creation | FAQ, /terma |
 | Privacy | Couple pages noindex; EXIF/GPS stripped from shown copies; originals private; approval mode | /tentang, /privasi |
 | Law | PDPA 2010 notice in BM and EN | /privasi |

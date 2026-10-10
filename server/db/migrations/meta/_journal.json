@@ -50,6 +50,13 @@
       "when": 1791189496768,
       "tag": "0006_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791628269224,
+      "tag": "0007_chip",
+      "breakpoints": true
     }
   ]
 }

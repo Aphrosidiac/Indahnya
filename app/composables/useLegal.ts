@@ -28,7 +28,7 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Tetamu — RSVP: nama, hadir atau tak, bilangan orang, pihak, pilihan makanan, nota, dan nombor telefon (pilihan sendiri). Tuan majlis juga boleh masukkan RSVP yang diterima melalui telefon.',
         'Tetamu — ucapan: ucapan bertulis, dan ucapan suara (rakaman suara tetamu sampai 60 saat).',
         'Tetamu tak perlu akaun atau email. Semua maklumat tetamu adalah pilihan — tak isi pun boleh tengok galeri dan upload gambar.',
-        'Bayaran: status bayaran dan jumlah. Butiran kad, FPX dan GrabPay diproses terus oleh Stripe — kami tak nampak dan tak simpan.',
+        'Bayaran: status bayaran, jumlah dan cara bayar (contohnya FPX atau kad). Butiran kad, akaun bank dan e-wallet diproses terus oleh CHIP — kami tak nampak dan tak simpan.',
         'Teknikal: alamat IP (untuk keselamatan dan had cubaan), dan cookie yang perlu untuk sistem jalan — satu untuk log masuk tuan majlis, satu untuk kenal browser tetamu supaya "Gambar saya", RSVP dan padam gambar sendiri boleh berfungsi. Tak ada cookie iklan, analitik atau tracking pihak ketiga.',
       ] },
       { h: 'Maklumat dalam gambar dan video', p: [
@@ -45,10 +45,10 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Cari tempat duduk: kalau tuan majlis buka ciri ni, sesiapa yang ada link boleh taip sekurang-kurangnya 3 huruf nama dan nampak nama tetamu yang sepadan, bilangan orang dan nombor meja (paling banyak 5 nama sekali cari). Maklumat RSVP lain tak dipaparkan kepada tetamu.',
         'Gambar dan ucapan suara yang disembunyikan oleh tuan majlis, atau yang menunggu kelulusan, dipindahkan keluar dari akses awam. Link lama ke fail tu berhenti berfungsi (salinan cache dalam browser atau rangkaian mungkin kekal sehingga satu jam).',
         'Tuan majlis nampak semua gambar, RSVP (termasuk nombor telefon) dan ucapan majlis mereka, termasuk nama tetamu.',
-        'Pembekal yang bantu kami jalankan Indahnya: Cloudflare (simpanan dan penghantaran gambar), penyedia server kami, Stripe (bayaran), penyedia email, dan Google (kalau korang pilih log masuk dengan Google). Mereka proses data hanya untuk tujuan tu.',
+        'Pembekal yang bantu kami jalankan Indahnya: Cloudflare (simpanan dan penghantaran gambar), penyedia server kami, CHIP (bayaran), penyedia email, dan Google (kalau korang pilih log masuk dengan Google). Mereka proses data hanya untuk tujuan tu.',
       ] },
       { h: 'Pemindahan ke luar Malaysia', p: [
-        'Sesetengah pembekal di atas simpan atau proses data di luar Malaysia — contohnya pusat data Cloudflare di rantau Asia Pasifik, dan Stripe serta Google di Amerika Syarikat dan Eropah. Kami pilih pembekal yang ada kontrak dan polisi jaga data, paling kurang sama macam yang undang-undang Malaysia minta.',
+        'Sesetengah pembekal di atas simpan atau proses data di luar Malaysia — contohnya pusat data Cloudflare di rantau Asia Pasifik, dan Google di Amerika Syarikat dan Eropah. Kami pilih pembekal yang ada kontrak dan polisi jaga data, paling kurang sama macam yang undang-undang Malaysia minta.',
       ] },
       { h: 'Berapa lama kami simpan', ul: [
         'Gambar, video dan ucapan disimpan ikut pakej: Percuma 30 hari selepas majlis, Indahnya 1 tahun, Indahnya Lengkap 2 tahun. Kami email tuan majlis 14 hari sebelum tamat, pada hari ia tamat, dan sekali lagi sekurang-kurangnya 7 hari sebelum dipadam.',
@@ -85,7 +85,7 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Guests — RSVP: name, attending or not, number of people, side, meal choice, a note, and a phone number (optional). Hosts can also enter replies they received by phone.',
         'Guests — wishes: written wishes, and voice wishes (a recording of the guest\'s voice, up to 60 seconds).',
         'Guests need no account or email. Everything a guest gives is optional — they can view the gallery and upload without giving anything.',
-        'Payments: payment status and amount. Card, FPX and GrabPay details are handled by Stripe directly — we never see or store them.',
+        'Payments: payment status, amount and method (for example FPX or card). Card, bank account and e-wallet details are handled by CHIP directly — we never see or store them.',
         'Technical: IP address (for security and rate limits), and the cookies the service needs to work — one keeps a host signed in, one recognises a guest\'s browser so "My photos", RSVP and deleting your own photo work. No advertising, analytics or third-party tracking cookies.',
       ] },
       { h: 'Information inside photos and videos', p: [
@@ -102,10 +102,10 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Seat search: if the host turns it on, anyone with the link can type at least 3 letters of a name and see the matching guests\' names, party size and table number (at most 5 names per search). No other RSVP details are shown to guests.',
         'Photos and voice wishes the host hides, or that are awaiting approval, are moved out of public access. Old links to them stop working (a cached copy in a browser or network may last up to an hour).',
         'Hosts see every photo, RSVP (including phone numbers) and wish of their event, including guests\' names.',
-        'Providers that help us run Indahnya: Cloudflare (photo storage and delivery), our server host, Stripe (payments), our email provider, and Google (if you choose Google sign-in). They process data only for those purposes.',
+        'Providers that help us run Indahnya: Cloudflare (photo storage and delivery), our server host, CHIP (payments), our email provider, and Google (if you choose Google sign-in). They process data only for those purposes.',
       ] },
       { h: 'Transfers outside Malaysia', p: [
-        'Some of the providers above store or process data outside Malaysia — for example Cloudflare data centres in the Asia-Pacific region, and Stripe and Google in the United States and Europe. We only use providers bound by contracts and data protection policies at least equivalent to the protection under Malaysian law.',
+        'Some of the providers above store or process data outside Malaysia — for example Cloudflare data centres in the Asia-Pacific region, and Google in the United States and Europe. We only use providers bound by contracts and data protection policies at least equivalent to the protection under Malaysian law.',
       ] },
       { h: 'How long we keep it', ul: [
         'Photos, videos and wishes are kept according to the plan: Free for 30 days after the event, Indahnya for 1 year, Indahnya Lengkap for 2 years. We email the host 14 days before it ends, on the day it ends, and again at least 7 days before deletion.',
@@ -144,7 +144,7 @@ export const TERMS: Record<'ms' | 'en', LegalDoc> = {
         'Pakej Percuma, Indahnya (RM59) dan Indahnya Lengkap (RM99) adalah bayaran sekali untuk satu majlis. Tiada langganan, tiada caj automatik.',
         'Tempoh upload dan simpanan dikira dari tarikh majlis atau tarikh bayar, yang mana lebih lewat.',
         'Naik taraf dari Indahnya ke Indahnya Lengkap hanya caj bezanya. Lanjutan simpanan dibuka dalam 30 hari terakhir tempoh simpanan dan dalam 30 hari selepas ia tamat.',
-        'Bayaran diproses oleh Stripe dalam Ringgit Malaysia. Resit dihantar ke email.',
+        'Bayaran diproses oleh CHIP (Chip In Sdn. Bhd.) dalam Ringgit Malaysia. Resit dihantar ke email.',
         'Kalau galeri gagal berfungsi pada hari majlis disebabkan masalah di pihak kami, hubungi kami dalam 14 hari selepas majlis untuk bayaran balik penuh.',
       ] },
       { h: 'Kandungan yang diupload', ul: [
@@ -173,7 +173,7 @@ export const TERMS: Record<'ms' | 'en', LegalDoc> = {
         'Free, Indahnya (RM59) and Indahnya Lengkap (RM99) are one-time payments for one event. No subscription, no automatic charges.',
         'Upload and storage windows run from the event date or the payment date, whichever is later.',
         'Upgrading from Indahnya to Indahnya Lengkap charges only the difference. Extending storage opens in the last 30 days of storage and for 30 days after it ends.',
-        'Payments are processed by Stripe in Malaysian Ringgit. A receipt is emailed to you.',
+        'Payments are processed by CHIP (Chip In Sdn. Bhd.) in Malaysian Ringgit. A receipt is emailed to you.',
         'If the gallery fails to work on the day of the event because of a problem on our side, contact us within 14 days of the event for a full refund.',
       ] },
       { h: 'Uploaded content', ul: [

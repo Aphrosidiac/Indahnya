@@ -217,10 +217,11 @@ docs/            this documentation, images/, geo/
 | B | RSVP, seating, written and voice ucapan | Built |
 | Landing | Landing, About, privacy, terms (BM + EN), brand, GEO groundwork | Built |
 | Hardening | Production-readiness audit and fixes ([docs/audit-2026-10-05.md](docs/audit-2026-10-05.md)) | Done |
-| Launch | Domain, R2, Stripe MY, SMTP, VPS | Next |
+| Launch | Domain, R2, mail (Resend), VPS: live at indahnya.my in pre-launch mode. Stripe MY + legal address | Stripe next |
 
-Everything is verified locally. Nothing is deployed yet apart from a static
-preview. Later: Chinese, face search ("cari gambar saya"), WhatsApp reminders,
+indahnya.my runs on the production stack (2026-10-10) in pre-launch mode: the
+landing and the sample majlis are live, sign-up opens once Stripe is set up
+([docs/deployment.md](docs/deployment.md#pre-launch-mode)). Later: Chinese, face search ("cari gambar saya"), WhatsApp reminders,
 disposable-camera mode, and a partner API for e-kad platforms.
 
 ## Licence

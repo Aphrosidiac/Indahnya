@@ -19,7 +19,7 @@ and accepted without discussion — change freely.
 | Payments | Stripe MY (FPX + cards + GrabPay). |
 | Host auth | Email magic link + Google. Guests never sign in. |
 | Stack | **Nuxt 4 (Vue 3)** · Postgres + Drizzle · R2 presigned direct uploads · PM2 + nginx on a VPS. Was Next.js; switched 2026-09-20 because the UI must be ANK Ops verbatim and ANK's design system is Vue (`app/ui/`, copied from `ANKPets/packages/ui`). |
-| Hosting | VPS for app + Postgres; R2 (personal CF account, same as ffdev.studio) for media. Box: Fakhrul's pick at launch. Deploy system `deploy/` (2026-10-10): release folders + symlink, PM2 reload, auto-rollback on a failed health check; Cloudflare proxied with an origin certificate (Full strict); mail out through Resend SMTP (send-only key; 2026-10-10, Cloudflare Email Sending dropped), `hello@` in through Email Routing. *default*, docs/deployment.md. |
+| Hosting | VPS for app + Postgres; R2 (personal CF account, same as ffdev.studio) for media. Box: Fakhrul's pick at launch. Deploy system `deploy/` (2026-10-10): release folders + symlink, PM2 reload, auto-rollback on a failed health check; Cloudflare proxied with an origin certificate (Full strict); mail out through Resend SMTP (send-only key; 2026-10-10, Cloudflare Email Sending dropped), `hello@` in through Email Routing. Live 2026-10-10 on the shared Tencent box (43.134.29.203) in pre-launch mode. *default*, docs/deployment.md. |
 | Languages | BM (colloquial MY register, English trade words) + EN in v1. CN later. |
 | Event types | kahwin front door; aqiqah / birthday / corporate / graduation as types with copy tweaks only. |
 | Media | video ≤60 s and ≤100 MB/clip; photos stored at original res; HEIC → JPEG server-side; client resizes for preview only. |

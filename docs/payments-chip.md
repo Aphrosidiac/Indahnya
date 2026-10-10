@@ -519,6 +519,12 @@ Things that bite:
   (`bc930060-…`, for `https://indahnya.my/api/chip/webhook`) and the release
   are in place; `node deploy/chip.mjs` lists the methods once CHIP activates
   them. Until then a live checkout would open a page with nothing to pay with.
+  Activation is per method, in the portal under **Settings → Payment
+  Methods** (each shows Request → Pending → active). Requested on 2026-10-10
+  (all Pending, "our support team will contact you"): FPX, local cards,
+  international cards, e-wallets, ShopeePay, DuitNow QR, Google Pay. Not
+  requested: Atome, SPayLater (5.3% / pay-later), POS terminal, stablecoin.
+  The company itself (Settings → Details: registration, settlement bank) is set up.
 - The test key is kept in `~/.config/indahnya/chip-test.env` for §14.
 
 ## 18. Files

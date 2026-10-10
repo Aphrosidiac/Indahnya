@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# The server half of deploy/deploy.sh; runs as root ON THE SERVER, fed over ssh
+# The server half of deploy/deploy.sh; runs as root ON THE SERVER (sudo), fed over ssh
 # with MODE (deploy | --first | rollback | status) and SHA. Not meant to be run by hand.
 set -euo pipefail
 APP=indahnya
@@ -8,16 +8,17 @@ BASE=/srv/indahnya
 ENV_FILE=/etc/indahnya/env
 LOG=$BASE/deploys.log
 KEEP=3
+PORT=3250  # indahnya-web (ecosystem.config.cjs)
 as_app() { sudo -u $APP -H bash -lc "$1"; }
 current() { readlink -f $BASE/current 2>/dev/null || true; }
 
 health() {
   # the worker reports its heartbeat a few seconds after it starts
   for _ in $(seq 1 30); do
-    if out=$(curl -fsS -m 5 http://127.0.0.1:3000/api/health 2>/dev/null); then echo "  ✓ health: $out"; return 0; fi
+    if out=$(curl -fsS -m 5 http://127.0.0.1:$PORT/api/health 2>/dev/null); then echo "  ✓ health: $out"; return 0; fi
     sleep 2
   done
-  echo "  ✗ health check failed:"; curl -sS -m 5 http://127.0.0.1:3000/api/health || true; echo
+  echo "  ✗ health check failed:"; curl -sS -m 5 http://127.0.0.1:$PORT/api/health || true; echo
   return 1
 }
 
@@ -48,7 +49,7 @@ status)
   echo "live: $(current)"; [ -f "$(current)/REVISION" ] && echo "rev:  $(cat "$(current)/REVISION")"
   tail -5 $LOG 2>/dev/null | sed 's/^/  /'
   as_app "pm2 ls"
-  curl -sS -m 5 http://127.0.0.1:3000/api/health; echo
+  curl -sS -m 5 http://127.0.0.1:$PORT/api/health; echo
   ;;
 
 rollback)
@@ -73,8 +74,10 @@ deploy|--first)
   else
     echo "== building ${SHA:0:12} in $R"
     rm -rf "$R"; as_app "mkdir -p $R && git -C $BASE/repo archive $SHA | tar -x -C $R"
-    as_app "cd $R && npm ci --no-audit --no-fund --loglevel=error"
-    as_app "cd $R && NODE_OPTIONS=--max-old-space-size=2048 npx nuxt build >build.log 2>&1" || { tail -40 "$R/build.log"; exit 1; }
+    # the build runs at the lowest CPU and disk priority: the live release (and,
+    # on a shared box, everyone else's apps) keep the machine while it works
+    as_app "cd $R && nice -n 19 ionice -c3 npm ci --no-audit --no-fund --loglevel=error"
+    as_app "cd $R && NODE_OPTIONS=--max-old-space-size=1536 nice -n 19 ionice -c3 npx nuxt build >build.log 2>&1" || { tail -40 "$R/build.log"; exit 1; }
     as_app "echo $SHA > $R/REVISION"
   fi
   # hashed assets of every release stay reachable for tabs opened before this deploy

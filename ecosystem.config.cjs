@@ -15,6 +15,11 @@
  * kill_timeout covers the 25 s the worker waits for running jobs and Nitro's
  * graceful shutdown of open requests (zips, voice wishes).
  *
+ * Sized for a SHARED box (2 vCPU / 4 GB, with other apps on it; 3000 is
+ * taken there, hence 3250/3251): one photo and one video at a time, ffmpeg on
+ * one thread, and memory restarts well inside the box. On a box of its own,
+ * raise the concurrencies, FFMPEG_THREADS and the memory limits.
+ *
  *   pm2 start ecosystem.config.cjs && pm2 save
  *   pm2 reload ecosystem.config.cjs      # after a deploy (deploy/deploy.sh does both)
  */
@@ -34,7 +39,7 @@ const common = {
   cwd,
   node_args: '--env-file=/etc/indahnya/env',
   kill_timeout: 35_000,
-  max_memory_restart: '1500M',
+  max_memory_restart: '700M',
   time: true,
 };
 
@@ -45,7 +50,7 @@ module.exports = {
       name: 'indahnya-web',
       exec_mode: 'cluster',
       instances: 1,
-      env: { NODE_ENV: 'production', HOST: '127.0.0.1', PORT: '3000', WORKER: '0' },
+      env: { NODE_ENV: 'production', HOST: '127.0.0.1', PORT: '3250', WORKER: '0' },
     },
     {
       ...common,
@@ -53,8 +58,8 @@ module.exports = {
       exec_mode: 'fork',
       instances: 1,
       // encodes hold big buffers; restart before the box swaps, never mid-wedding by surprise
-      max_memory_restart: '2500M',
-      env: { NODE_ENV: 'production', HOST: '127.0.0.1', PORT: '3001', WORKER: '1', WORKER_PHOTO_CONCURRENCY: '2', WORKER_VIDEO_CONCURRENCY: '1', FFMPEG_THREADS: '2' },
+      max_memory_restart: '1200M',
+      env: { NODE_ENV: 'production', HOST: '127.0.0.1', PORT: '3251', WORKER: '1', WORKER_PHOTO_CONCURRENCY: '1', WORKER_VIDEO_CONCURRENCY: '1', FFMPEG_THREADS: '1' },
     },
   ],
 };

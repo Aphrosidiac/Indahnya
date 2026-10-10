@@ -8,8 +8,8 @@ and indahnya.my on Cloudflare DNS. Nothing deploys on push; CI only checks.
 
 | Piece | Where | Notes |
 |---|---|---|
-| `indahnya-web` | PM2, cluster, `127.0.0.1:3000` | Site + API. `WORKER=0`. |
-| `indahnya-worker` | PM2, fork, `127.0.0.1:3001` | Photos, videos, purges, mails. Nothing proxies to it. |
+| `indahnya-web` | PM2, cluster, `127.0.0.1:3250` | Site + API. `WORKER=0`. |
+| `indahnya-worker` | PM2, fork, `127.0.0.1:3251` | Photos, videos, purges, mails. Nothing proxies to it. |
 | Postgres 16 | same box | Nightly `scripts/backup-db.sh`, copied off the box. |
 | nginx | same box | `deploy/nginx.conf`: origin TLS, HSTS, Cloudflare real IP, `X-Real-IP`, zip streaming. |
 | R2 `indahnya-media` | Cloudflare | Public, custom domain `media.indahnya.my`. Served copies only. |
@@ -19,6 +19,38 @@ and indahnya.my on Cloudflare DNS. Nothing deploys on push; CI only checks.
 Both processes are started from `ecosystem.config.cjs` and read
 `/etc/indahnya/env`. That file follows `.env.example` and is mode 600, owned
 by the app user.
+
+### The box today
+
+`43.134.29.203` (Tencent, Ubuntu 24.04, 2 vCPU / 4 GB), shared with other
+apps: provisioned with `setup-server.sh --shared`. Indahnya has its own user,
+Node 22 (`/opt/node22`), PM2 daemon (`pm2-indahnya.service`, CPU weight 50,
+memory capped at 2 GB), database, nginx site and ports; nothing global on the
+box was changed. The ssh alias is `indahnya` (user `ubuntu`, passwordless sudo).
+
+### Cloudflare does the heavy lifting
+
+| On Cloudflare | On the VPS |
+|---|---|
+| DNS, TLS, DDoS/WAF, caching of `/_nuxt/` chunks, fonts and images | Server-rendered pages and the API (small requests) |
+| Every photo and video, stored in R2 | Postgres (events, guests, RSVPs, wishes) |
+| Guests' uploads, straight from the phone to R2 (presigned) | The worker: thumbnails, HEIC to JPEG, video encodes |
+| Delivery of media: `media.indahnya.my`, signed R2 links for private files | Zip downloads, streamed from R2 through the app |
+| `hello@` inbound (Email Routing) | Nightly database dump, copied to R2 |
+
+Outbound mail is Resend. The large bytes (uploads, gallery views, videos)
+never pass through the box; the zips are the one exception.
+
+### Pre-launch mode
+
+Until Stripe and the legal address are settled, the server runs with
+`NUXT_PUBLIC_PREVIEW=true`: the landing and the sample majlis work, the host
+side leads to `/mula`, and `server/middleware/preview.ts` closes sign-in, the
+TV try upload and the Stripe routes. The startup config check is skipped in
+this mode. To open: set the Stripe and `NUXT_PUBLIC_LEGAL_*` keys in
+`production.env`, change it to `NUXT_PUBLIC_PREVIEW=false` (deleting the
+line would not reach the server: a push never removes keys) and run
+`deploy/env.sh push --reload`.
 
 ## Environment
 
@@ -105,8 +137,9 @@ Routing to the address in `FORWARD_TO`.
 1. **Server.** An Ubuntu 24.04 VPS (2 vCPU / 4 GB is the floor: the worker
    encodes video). Add an ssh alias `indahnya` (root) to `~/.ssh/config`, then:
    ```bash
-   ssh indahnya 'bash -s' < deploy/setup-server.sh
+   ssh indahnya 'sudo bash -s' < deploy/setup-server.sh
    ```
+   On a box that already runs other apps, add `-- --shared` after `bash -s`.
 2. **Cloudflare bootstrap token.** Personal account → My Profile → API Tokens →
    Create Token → Custom token. Permissions:
    - Account · Account API Tokens · Edit (to mint the app's narrow tokens)

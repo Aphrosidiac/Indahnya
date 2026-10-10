@@ -13,13 +13,15 @@
 # ever add, so the old build runs on the new schema). If the new release fails
 # its health check, the previous one is switched back in automatically.
 #
-# INDAHNYA_HOST (default: indahnya) is the ssh alias of the server, as root.
+# INDAHNYA_HOST (default: indahnya) is the ssh alias of the server: root, or a
+# user with passwordless sudo.
 set -euo pipefail
 HOST="${INDAHNYA_HOST:-indahnya}"
 SITE="https://indahnya.my"
 cd "$(dirname "$0")/.."
 
-remote() { ssh "$HOST" "MODE='$1' SHA='${2:-}' bash -s" < deploy/remote.sh; }
+# sudo -n: works the same for an ssh login as root and as a sudoer (a shared box)
+remote() { ssh "$HOST" "sudo -n MODE='$1' SHA='${2:-}' bash -s" < deploy/remote.sh; }
 
 case "${1:-}" in
   --status) remote status; exit ;;

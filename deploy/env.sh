@@ -9,7 +9,8 @@
 #                                   origin certificate; --reload restarts the app
 #   deploy/env.sh check             list required keys that are missing or blank (names only)
 #
-# INDAHNYA_HOST (default: indahnya) is the ssh alias of the server, logging in as root.
+# INDAHNYA_HOST (default: indahnya) is the ssh alias of the server: root, or a
+# user with passwordless sudo.
 set -euo pipefail
 HOST="${INDAHNYA_HOST:-indahnya}"
 CONF="$HOME/.config/indahnya"
@@ -22,7 +23,7 @@ ADVISED="NUXT_ALERT_EMAIL NUXT_CLOUDFLARE_ZONE_ID NUXT_CLOUDFLARE_API_TOKEN AWS_
 
 check() {
   # shellcheck disable=SC2029
-  ssh "$HOST" "REQUIRED='$REQUIRED' ADVISED='$ADVISED' bash -s" <<'SH'
+  ssh "$HOST" "sudo -n REQUIRED='$REQUIRED' ADVISED='$ADVISED' bash -s" <<'SH'
 set -euo pipefail
 f=/etc/indahnya/env
 [ -f $f ] || { echo "no $f: run deploy/setup-server.sh first"; exit 1; }
@@ -39,15 +40,21 @@ SH
 push() {
   [ -f "$PROD" ] || { echo "no $PROD (node deploy/cloudflare.mjs writes it; see docs/deployment.md)" >&2; exit 1; }
   chmod 600 "$PROD"
-  scp -q "$PROD" "$HOST:/root/.indahnya-env.incoming"
+  # into a private folder in the login's home, then moved into place as root
+  local stage; stage=$(ssh "$HOST" 'umask 077; mktemp -d "$HOME/.indahnya-push.XXXXXX"')
+  scp -q "$PROD" "$HOST:$stage/env"
   if [ -s "$CONF/origin.pem" ] && [ -s "$CONF/origin.key" ]; then
-    scp -q "$CONF/origin.pem" "$HOST:/etc/ssl/cloudflare/indahnya.my.pem"
-    scp -q "$CONF/origin.key" "$HOST:/etc/ssl/cloudflare/indahnya.my.key"
+    scp -q "$CONF/origin.pem" "$HOST:$stage/origin.pem"
+    scp -q "$CONF/origin.key" "$HOST:$stage/origin.key"
   fi
-  ssh "$HOST" bash -s <<'SH'
+  ssh "$HOST" "sudo -n STAGE='$stage' bash -s" <<'SH'
 set -euo pipefail
-in=/root/.indahnya-env.incoming; f=/etc/indahnya/env
-trap 'shred -u $in 2>/dev/null || rm -f $in' EXIT
+in=$STAGE/env; f=/etc/indahnya/env
+trap 'shred -u $STAGE/* 2>/dev/null; rm -rf "$STAGE"' EXIT
+if [ -s $STAGE/origin.key ]; then
+  install -o root -g root -m 644 $STAGE/origin.pem /etc/ssl/cloudflare/indahnya.my.pem
+  install -o root -g root -m 600 $STAGE/origin.key /etc/ssl/cloudflare/indahnya.my.key
+fi
 touch $f
 # merge: incoming non-blank values win; every other line of the server file stays
 awk -F= '
@@ -57,14 +64,11 @@ awk -F= '
   END { for (i=1; i<=n; i++) { k=order[i]; if (!(k in done)) { print k "=" nv[k]; done[k]=1 } } }
 ' $in $f > $f.new
 mv $f.new $f && chown indahnya:indahnya $f && chmod 600 $f
-if [ -f /etc/ssl/cloudflare/indahnya.my.key ]; then
-  chown root:root /etc/ssl/cloudflare/indahnya.my.* && chmod 600 /etc/ssl/cloudflare/indahnya.my.key && chmod 644 /etc/ssl/cloudflare/indahnya.my.pem
-fi
 echo "  ✓ merged $(grep -cE '^[A-Z0-9_]+=.' $in) keys into $f"
 SH
   check || true
   if [ "${1:-}" = "--reload" ]; then
-    ssh "$HOST" "sudo -u indahnya -H bash -lc 'cd /srv/indahnya/current && pm2 reload ecosystem.config.cjs --update-env'" && echo "  ✓ reloaded"
+    ssh "$HOST" "sudo -n -u indahnya -H bash -lc 'cd /srv/indahnya/current && pm2 reload ecosystem.config.cjs --update-env'" && echo "  ✓ reloaded"
   fi
 }
 

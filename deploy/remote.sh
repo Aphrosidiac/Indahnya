@@ -101,7 +101,7 @@ deploy|--first)
   fi
   echo "$(date -u +%FT%TZ) deploy ${SHA:0:12}" >> $LOG
   # keep the newest $KEEP releases (the live one is always among them)
-  ls -1dt $BASE/releases/*/ | sed 's:/$::' | tail -n +$((KEEP + 1)) | grep -vx "$R" | xargs -r rm -rf
+  ls -1dt $BASE/releases/*/ | sed 's:/$::' | tail -n +$((KEEP + 1)) | { grep -vx "$R" || true; } | xargs -r rm -rf  # nothing to prune is fine
   # assets no release has referenced for a month
   find $BASE/shared/_nuxt -type f -mtime +30 -delete
   echo "  ✓ live: ${SHA:0:12}"

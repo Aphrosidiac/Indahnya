@@ -160,9 +160,12 @@ if ! systemctl is-active -q pm2-$APP; then app_pm2 kill >/dev/null 2>&1 || true;
 systemctl enable -q pm2-$APP && systemctl start pm2-$APP
 app_pm2 describe pm2-logrotate >/dev/null 2>&1 || app_pm2 install pm2-logrotate >/dev/null
 
-echo "== nightly backup (03:15 MYT is 19:15 UTC)"
+echo "== nightly backup at 03:15 Malaysia time"
+# cron runs on the box's clock: UTC on most VPSs, UTC+8 on some (Tencent)
+off=$(date +%z); off_h=$((10#${off:1:2})); [ "${off:0:1}" = - ] && off_h=$((-off_h))
+hour=$(( ( (3 - 8 + off_h) % 24 + 24 ) % 24 ))
 # cron's PATH has no /usr/local/bin, where the AWS CLI lives
-printf 'PATH=/usr/local/bin:/usr/bin:/bin\n15 19 * * * %s %s/current/scripts/backup-db.sh >> /var/log/indahnya-backup.log 2>&1\n' $APP $HOME_DIR > /etc/cron.d/indahnya-backup
+printf 'PATH=/usr/local/bin:/usr/bin:/bin\n15 %s * * * %s %s/current/scripts/backup-db.sh >> /var/log/indahnya-backup.log 2>&1\n' $hour $APP $HOME_DIR > /etc/cron.d/indahnya-backup
 
 echo
 echo "Provisioned$([ $SHARED = 1 ] && echo ' (shared box)'). Versions: node $(node -v) for indahnya, $(psql --version | cut -d' ' -f1,3), $(nginx -v 2>&1 | cut -d/ -f2), ffmpeg $(ffmpeg -version | head -1 | cut -d' ' -f3)"

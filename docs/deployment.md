@@ -64,7 +64,7 @@ server in `/etc/indahnya/env`.
 | Script | Does |
 |---|---|
 | `deploy/setup-server.sh` | Provisions a fresh Ubuntu 24.04 box, as root, idempotent: Node 22, Postgres 16 (database + generated password), nginx, ffmpeg + native HEIC, AWS CLI, PM2 + logrotate + boot start, 2 GB swap, ufw, fail2ban, unattended upgrades, Cloudflare real-IP list (weekly refresh), nightly backup cron, `/srv/indahnya` layout |
-| `node deploy/cloudflare.mjs` | Sets up Cloudflare through the API, idempotent: DNS, SSL Full (strict), origin certificate, R2 buckets + CORS + lifecycle + `media.indahnya.my`, Email Routing (`hello@` → your inbox), Email Sending, DMARC, `indahnya.ffdev.studio`, and mints three narrow tokens into `production.env` |
+| `node deploy/cloudflare.mjs` | Sets up Cloudflare through the API, idempotent: DNS, SSL Full (strict), origin certificate, R2 buckets + CORS + lifecycle + `media.indahnya.my`, Email Routing (`hello@` → your inbox), indahnya.my on Resend + its DKIM/SPF records, DMARC, `indahnya.ffdev.studio`, and writes the server's credentials (three narrow Cloudflare tokens, one send-only Resend key) into `production.env` |
 | `deploy/env.sh push \| check` | Merges `~/.config/indahnya/production.env` into `/etc/indahnya/env` (blank values never overwrite), installs the origin certificate, lists missing keys by name |
 | `deploy/deploy.sh [--first \| --rollback \| --status]` | Pushes `main`, builds that commit on the server in `releases/<sha>`, migrates, switches `current`, reloads PM2, health-checks, and switches back automatically if the new release is unhealthy |
 
@@ -91,11 +91,13 @@ Cloudflare's published ranges only.
 
 ### Mail
 
-Outbound (sign-in links, retention warnings, alerts) goes through Cloudflare
-Email Service over SMTP: `smtps://api_token:<token>@smtp.mx.cloudflare.net:465`,
-from `hello@indahnya.my`, DKIM/SPF on the `cf-bounce` subdomain. Sending to
-arbitrary addresses needs the **Workers Paid** plan on the account (USD 5/month,
-3,000 mails included). Inbound `hello@indahnya.my` is forwarded by Email
+Outbound (sign-in links, retention warnings, alerts) goes through Resend over
+SMTP: `smtps://resend:<key>@smtp.resend.com:465`, from `hello@indahnya.my`,
+region Tokyo. DKIM is on `resend._domainkey`, the bounce MX and SPF on
+`send.indahnya.my`, so nothing collides with Email Routing's records at the
+apex. The server's key is send-only and limited to indahnya.my. Resend's free
+plan is 3,000 mails a month and **100 a day**; move to Pro before a launch day
+could pass that. Inbound `hello@indahnya.my` is forwarded by Cloudflare Email
 Routing to the address in `FORWARD_TO`.
 
 ## First launch
@@ -108,8 +110,8 @@ Routing to the address in `FORWARD_TO`.
 2. **Cloudflare bootstrap token.** Personal account → My Profile → API Tokens →
    Create Token → Custom token. Permissions:
    - Account · Account API Tokens · Edit (to mint the app's narrow tokens)
-   - Account · Workers R2 Storage · Edit
-   - Account · Email Sending · Edit, Account · Email Routing Addresses · Edit
+   - Account · Workers R2 Storage · Edit (enable R2 on the account first)
+   - Account · Email Routing Addresses · Edit
    - Zone (indahnya.my) · DNS · Edit, Zone Settings · Edit, SSL and Certificates · Edit, Email Routing Rules · Edit
    Then write `~/.config/indahnya/cloudflare.env`:
    ```
@@ -117,6 +119,7 @@ Routing to the address in `FORWARD_TO`.
    CF_ACCOUNT_ID=…
    VPS_IP=…
    FORWARD_TO=you@example.com
+   RESEND_API_KEY=re_…   # Resend → API Keys → Full access; used by the script only
    ```
    and run `node deploy/cloudflare.mjs`. It lists anything still open (for
    example, clicking the verification mail for `FORWARD_TO`). The bootstrap

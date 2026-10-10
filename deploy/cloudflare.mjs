@@ -12,6 +12,8 @@
  *   CF_ACCOUNT_ID   the personal account
  *   VPS_IP          the server's IPv4 (VPS_IPV6 optional)
  *   FORWARD_TO      the inbox hello@indahnya.my forwards to (verified once by mail)
+ *   RESEND_API_KEY  a full-access Resend key, used here only to add the domain and
+ *                   create the server's send-only key
  *
  * Writes the credentials it mints into ~/.config/indahnya/production.env (mode
  * 600), which deploy/env.sh push merges into the server's /etc/indahnya/env,
@@ -20,9 +22,10 @@
  * What it does: DNS (apex + www to the VPS, proxied; indahnya.ffdev.studio when
  * the FF token is around), SSL Full (strict), three R2 buckets with CORS and
  * lifecycle rules, media.indahnya.my on the public bucket, an origin
- * certificate, Email Routing (hello@ → FORWARD_TO), Email Sending for
- * indahnya.my, and three narrow tokens: R2 objects (media + private), R2
- * backups, and mail + cache purge.
+ * certificate, Email Routing (hello@ → FORWARD_TO), the indahnya.my domain on
+ * Resend with its DKIM/SPF records and DMARC, and the server's credentials:
+ * R2 objects (media + private), R2 backups, cache purge (Cloudflare tokens)
+ * and a send-only Resend key.
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -204,19 +207,43 @@ await step('Email Routing', async () => {
   ok(`${want} → ${cfg.FORWARD_TO}${a.verified ? '' : ' (waiting for verification)'}`);
 });
 
-console.log('== Email Sending (outbound sign-in links, receipts, alerts)');
-await step('Email Sending', async () => {
-  const subs = await cf('GET', `/zones/${ZONE}/email/sending/subdomains`);
-  let sub = subs.find((s) => s.name === DOMAIN);
-  if (!sub) sub = await cf('POST', `/zones/${ZONE}/email/sending/subdomains`, { name: DOMAIN });
-  // make sure every record it asks for exists (the dashboard adds them; the API may not)
-  const dns = await cf('GET', `/zones/${ZONE}/email/sending/subdomains/${sub.id}/dns`).catch(() => []);
-  for (const r of Array.isArray(dns) ? dns : dns.records || []) {
-    if (!r?.type || !r?.name || !r?.content) continue;
-    await upsertRecord(ZONE, { type: r.type, name: r.name, content: r.content, ...(r.priority !== undefined ? { priority: r.priority } : {}) });
+console.log('== Resend (outbound sign-in links, receipts, alerts)');
+async function resend(method, path, body) {
+  const res = await fetch(`https://api.resend.com${path}`, {
+    method, headers: { Authorization: `Bearer ${cfg.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Resend ${method} ${path}: ${res.status} ${json.message || json.name || ''}`);
+  return json;
+}
+await step('Resend domain', async () => {
+  if (!cfg.RESEND_API_KEY) throw new Error('RESEND_API_KEY not set (a full-access key; see docs/deployment.md); skipped');
+  let d = (await resend('GET', '/domains')).data.find((x) => x.name === DOMAIN);
+  // Tokyo is Resend's nearest region to Malaysia
+  if (!d) d = await resend('POST', '/domains', { name: DOMAIN, region: 'ap-northeast-1' });
+  d = await resend('GET', `/domains/${d.id}`);
+  // DKIM on resend._domainkey, bounce MX + SPF on send.: nothing collides with Email Routing's apex MX/SPF
+  for (const r of d.records || []) {
+    const name = r.name === DOMAIN || r.name.endsWith(`.${DOMAIN}`) ? r.name : `${r.name}.${DOMAIN}`;
+    await upsertRecord(ZONE, { type: r.type, name, content: r.value, ...(r.type === 'MX' ? { priority: Number(r.priority ?? 10) } : {}) });
   }
-  ok(`sending enabled for ${sub.name}${sub.enabled === false ? ' (pending)' : ''}`);
-  // DMARC: report-only first; tighten once a few weeks of mail have gone out clean
+  if (d.status !== 'verified') {
+    await resend('POST', `/domains/${d.id}/verify`);
+    todo.push(`Resend is verifying ${DOMAIN} (DNS is in place; usually minutes). Re-run to confirm`);
+  }
+  ok(`${DOMAIN} on Resend: ${d.status}`);
+  if (prod.NUXT_SMTP_URL?.includes('smtp.resend.com') && !ROTATE) return ok('NUXT_SMTP_URL already in production.env');
+  // the server gets a key that can only send, and only as indahnya.my
+  const name = 'indahnya-app';
+  const old = (await resend('GET', '/api-keys')).data.filter((k) => k.name === name);
+  const k = await resend('POST', '/api-keys', { name, permission: 'sending_access', domain_id: d.id });
+  for (const o of old) await resend('DELETE', `/api-keys/${o.id}`);
+  writeEnv(PROD, { NUXT_SMTP_URL: `smtps://resend:${encodeURIComponent(k.token)}@smtp.resend.com:465`, NUXT_SMTP_FROM: `Indahnya <hello@${DOMAIN}>` });
+  ok('created send-only key indahnya-app → NUXT_SMTP_URL');
+});
+await step('DMARC', async () => {
+  // report-only first; tighten once a few weeks of mail have gone out clean
   const dmarc = await cf('GET', `/zones/${ZONE}/dns_records?type=TXT&name=_dmarc.${DOMAIN}`);
   if (!dmarc.length) await upsertRecord(ZONE, { type: 'TXT', name: `_dmarc.${DOMAIN}`, content: `v=DMARC1; p=none; rua=mailto:hello@${DOMAIN}` });
   else ok(`DMARC present: ${dmarc[0].content}`);
@@ -228,7 +255,7 @@ let groups;
 const group = async (re) => {
   groups ??= await cf('GET', `/accounts/${ACCT}/tokens/permission_groups`);
   const g = groups.find((x) => re.test(x.name));
-  if (!g) throw new Error(`no permission group matching ${re} (have: ${groups.map((x) => x.name).filter((n) => /R2|Email|Cache/i.test(n)).join(', ')})`);
+  if (!g) throw new Error(`no permission group matching ${re} (have: ${groups.map((x) => x.name).filter((n) => /R2|Cache/i.test(n)).join(', ')})`);
   return { id: g.id };
 };
 const bucketRes = (b) => `com.cloudflare.edge.r2.bucket.${ACCT}_default_${b}`;
@@ -258,18 +285,13 @@ await step('R2 token (backups)', async () => {
   writeEnv(PROD, { AWS_ENDPOINT_URL: R2_ENDPOINT, AWS_ACCESS_KEY_ID: p.id, AWS_SECRET_ACCESS_KEY: p.secret, AWS_DEFAULT_REGION: 'auto', BACKUP_S3_URI: `s3://${BUCKETS.backups}` });
   ok('minted indahnya-backup-r2 → AWS_* (scripts/backup-db.sh)');
 });
-await step('mail + cache purge token', async () => {
-  if (prod.NUXT_SMTP_URL && prod.NUXT_CLOUDFLARE_API_TOKEN && !ROTATE) return ok('NUXT_SMTP_URL + NUXT_CLOUDFLARE_* already in production.env');
-  const t = await mint('indahnya-app-mail-purge', [
-    { effect: 'allow', permission_groups: [await group(/^Email Sending (Write|Edit)$/)], resources: { [`com.cloudflare.api.account.${ACCT}`]: '*' } },
+await step('cache purge token', async () => {
+  if (prod.NUXT_CLOUDFLARE_API_TOKEN && !ROTATE) return ok('NUXT_CLOUDFLARE_* already in production.env');
+  const t = await mint('indahnya-app-purge', [
     { effect: 'allow', permission_groups: [await group(/^Cache Purge$/)], resources: { [`com.cloudflare.api.account.zone.${ZONE}`]: '*' } },
   ]);
-  writeEnv(PROD, {
-    NUXT_SMTP_URL: `smtps://api_token:${encodeURIComponent(t.value)}@smtp.mx.cloudflare.net:465`,
-    NUXT_SMTP_FROM: `Indahnya <hello@${DOMAIN}>`,
-    NUXT_CLOUDFLARE_ZONE_ID: ZONE, NUXT_CLOUDFLARE_API_TOKEN: t.value,
-  });
-  ok('minted indahnya-app-mail-purge → NUXT_SMTP_URL (Cloudflare SMTP) + NUXT_CLOUDFLARE_*');
+  writeEnv(PROD, { NUXT_CLOUDFLARE_ZONE_ID: ZONE, NUXT_CLOUDFLARE_API_TOKEN: t.value });
+  ok('minted indahnya-app-purge → NUXT_CLOUDFLARE_*');
 });
 
 // ── indahnya.ffdev.studio → 301 (the old name in the plan) ──────────────────

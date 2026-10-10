@@ -513,6 +513,13 @@ Things that bite:
 - **No refund or dispute UI.** Both live in the CHIP portal.
 - **Stale `open` rows** stay `open` until a reconcile; harmless (see §8).
 - **Live mode is untested** with real money until the first launch payment (§13 step 5).
+- **Live methods were not active yet** on 2026-10-10: with the live key,
+  `GET /payment_methods/` returned an empty list at any amount (CHIP's
+  onboarding was still open). The live key, the live webhook
+  (`bc930060-…`, for `https://indahnya.my/api/chip/webhook`) and the release
+  are in place; `node deploy/chip.mjs` lists the methods once CHIP activates
+  them. Until then a live checkout would open a page with nothing to pay with.
+- The test key is kept in `~/.config/indahnya/chip-test.env` for §14.
 
 ## 18. Files
 

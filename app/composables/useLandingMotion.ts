@@ -16,7 +16,11 @@ const state = {
   gsap: null as Gsap | null,
   ST: null as ST | null,
   lenis: null as Lenis | null,
+  /** The ticker callback that drives Lenis; removed on teardown (see there). */
+  tick: null as ((t: number) => void) | null,
   ready: null as Promise<{ gsap: Gsap; ST: ST }> | null,
+  /** Bumped on teardown, so a boot still awaiting its imports cannot start Lenis on the next page. */
+  gen: 0,
 };
 
 export const prefersReduced = () => import.meta.client && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -26,15 +30,18 @@ export function useLandingMotion() {
 
   async function boot() {
     reduced.value = prefersReduced();
+    const gen = state.gen;
     state.ready ??= (async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([import('gsap'), import('gsap/ScrollTrigger')]);
       gsap.registerPlugin(ScrollTrigger);
       state.gsap = gsap; state.ST = ScrollTrigger;
       if (!prefersReduced()) {
         const { default: LenisCtor } = await import('lenis');
+        if (gen !== state.gen) return { gsap, ST: ScrollTrigger }; // the landing was left while this loaded
         const lenis = new LenisCtor({ lerp: 0.11, wheelMultiplier: 1, anchors: false });
         lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add(t => lenis.raf(t * 1000));
+        state.tick = t => lenis.raf(t * 1000);
+        gsap.ticker.add(state.tick);
         gsap.ticker.lagSmoothing(0);
         state.lenis = lenis;
       }
@@ -43,10 +50,19 @@ export function useLandingMotion() {
     return state.ready;
   }
 
+  /*
+   * Leaving the landing. Lenis must stop AND lose its ticker: destroy() alone
+   * leaves a scroll that is still gliding (the reader clicked a nav link
+   * mid-scroll) running on the ticker, and it finishes that glide on the next
+   * page, landing /harga at its footer.
+   */
   function teardown() {
+    state.gen++;
     state.ST?.getAll().forEach(t => t.kill());
+    if (state.tick) state.gsap?.ticker.remove(state.tick);
+    state.lenis?.stop();
     state.lenis?.destroy();
-    state.lenis = null; state.ready = null;
+    state.lenis = null; state.tick = null; state.ready = null;
   }
 
   function scrollTo(target: string | HTMLElement | number, offset = -72) {

@@ -10,6 +10,7 @@ import type { LandingCopy } from '~/composables/useLanding';
  *
  * On the landing the section links scroll (Lenis, via `go`); on any other
  * page (`home: false`, e.g. /tentang) they are links back to that section.
+ * Harga and Tentang are pages of their own.
  */
 const props = withDefaults(defineProps<{ L: LandingCopy; other: string; dim?: boolean; home?: boolean }>(), { dim: false, home: true });
 const emit = defineEmits<{ go: [target: string] }>();
@@ -38,7 +39,7 @@ const en = computed(() => props.L.nav.lang === 'BM'); // the switch names the ot
 const links = computed(() => ([
   { id: '#cara', label: props.L.nav.how },
   { id: '#kad', label: props.L.nav.kad },
-  { id: '#harga', label: props.L.nav.pricing },
+  { id: '', page: '/harga', label: props.L.nav.pricing },
   { id: '#soalan', label: props.L.nav.faq },
   { id: '', page: '/tentang', label: props.L.nav.about },
 ] as { id: string; page?: string; label: string }[]).map(l => ({

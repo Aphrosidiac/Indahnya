@@ -6,14 +6,22 @@ import type { LandingCopy } from '~/composables/useLanding';
  * One payment per event. Three columns, the middle one in ink; each card's
  * top is a lace edge (the scallop of a printed kad). Every plan starts the
  * same way, free, so there is one button under the three, not three.
+ *
+ * On the landing it is a section that points on to /harga; on /harga
+ * (`page`) it is the page's opening, with the h1.
  */
-defineProps<{ L: LandingCopy }>();
+const props = withDefaults(defineProps<{ L: LandingCopy; page?: boolean; eyebrow?: string }>(), { page: false, eyebrow: '' });
+const en = computed(() => props.L.nav.lang === 'BM'); // the switch names the other language
 </script>
 
 <template>
-  <section id="harga" class="l-wrap scroll-mt-24 py-20 md:py-28">
+  <section :id="page ? undefined : 'harga'" class="l-wrap scroll-mt-24" :class="page ? 'pb-16 pt-32 md:pb-24 md:pt-40' : 'py-20 md:py-28'">
     <div class="max-w-[720px]">
-      <h2 class="l-h2">{{ L.pricing.title }}</h2>
+      <template v-if="page">
+        <p class="text-[14px] font-semibold uppercase tracking-[.12em] text-[#27622a]">{{ eyebrow }}</p>
+        <h1 class="l-display mt-4 text-[clamp(44px,6.4vw,96px)]">{{ L.pricing.title }}</h1>
+      </template>
+      <h2 v-else class="l-h2">{{ L.pricing.title }}</h2>
       <p class="l-lead mt-6">{{ L.pricing.body }}</p>
     </div>
 
@@ -37,7 +45,10 @@ defineProps<{ L: LandingCopy }>();
 
     <div class="mt-14 flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
       <p class="max-w-[52ch] text-[15px] leading-[1.55] text-[#55524f]">{{ L.pricing.note }}</p>
-      <NuxtLink to="/app?new=1" class="l-btn l-btn-go shrink-0">{{ L.cta }}<ArrowRight class="size-[18px]" :stroke-width="2" aria-hidden="true" /></NuxtLink>
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
+        <NuxtLink v-if="!page" :to="{ path: '/harga', query: en ? { lang: 'en' } : undefined }" class="l-btn l-btn-line">{{ L.pricing.compare }}</NuxtLink>
+        <NuxtLink to="/app?new=1" class="l-btn l-btn-go">{{ L.cta }}<ArrowRight class="size-[18px]" :stroke-width="2" aria-hidden="true" /></NuxtLink>
+      </div>
     </div>
   </section>
 </template>

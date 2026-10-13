@@ -7,6 +7,7 @@ export default defineEventHandler((event) => {
   // `mod`: the date the page's visible "Dikemas kini" line carries (never the build time); none where the page shows none
   const pages: { loc: string; mod?: string }[] = [
     { loc: '/' },
+    { loc: '/harga', mod: '2026-10-13' },
     { loc: '/tentang', mod: '2026-10-04' },
     { loc: '/privasi', mod: '2026-09-24' },
     { loc: '/terma', mod: '2026-09-24' },

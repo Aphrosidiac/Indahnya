@@ -65,6 +65,7 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
         <p class="text-[15px] text-[#55524f]">{{ L.footer.tagline }}</p>
         <!-- on a phone each link is a full 44px row to tap -->
         <nav class="flex flex-wrap items-center gap-x-6 text-[15px] text-[#55524f] md:gap-y-2 [&>a]:max-md:inline-flex [&>a]:max-md:min-h-11 [&>a]:max-md:items-center" aria-label="Footer">
+          <NuxtLink :to="lang === 'en' ? '/harga?lang=en' : '/harga'" class="hover:text-[#1a1a1a]">{{ L.nav.pricing }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/tentang?lang=en' : '/tentang'" class="hover:text-[#1a1a1a]">{{ L.footer.about }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="hover:text-[#1a1a1a]">{{ L.footer.links.privacy }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="hover:text-[#1a1a1a]">{{ L.footer.links.terms }}</NuxtLink>

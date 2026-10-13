@@ -59,9 +59,23 @@ function demoStep() {
     demo = setTimeout(demoStep, 2600);
   }, 900);
 }
+/*
+ * The card is laid out at a real phone's width and scaled down to the mockup's
+ * screen. Laid out at the screen's own size (~220px on a phone) it is narrower
+ * than any phone a guest holds, and the cover button breaks onto two lines.
+ */
+const PHONE_W = 390;
+const screen = ref<HTMLElement>();
+const fit = reactive({ s: 1, h: 0 });
+let ro: ResizeObserver | undefined;
 let io: IntersectionObserver | undefined;
 onMounted(() => {
   addEventListener('message', onMessage);
+  ro = new ResizeObserver(([e]) => {
+    const r = e?.contentRect; if (!r?.width) return;
+    fit.s = r.width / PHONE_W; fit.h = r.height / fit.s;
+  });
+  if (screen.value) ro.observe(screen.value);
   if (prefersReduced() || !matchMedia('(pointer: fine)').matches) return;
   io = new IntersectionObserver(([e]) => {
     if (e?.isIntersecting && !stopped) { clearTimeout(demo); demo = setTimeout(demoStep, 1200); }
@@ -69,7 +83,7 @@ onMounted(() => {
   }, { threshold: 0.45 });
   if (root.value) io.observe(root.value);
 });
-onBeforeUnmount(() => { removeEventListener('message', onMessage); io?.disconnect(); clearTimeout(demo); clearTimeout(typing); });
+onBeforeUnmount(() => { removeEventListener('message', onMessage); io?.disconnect(); ro?.disconnect(); clearTimeout(demo); clearTimeout(typing); });
 
 const swatch = (t: KadTemplate) => ({ background: `linear-gradient(135deg, ${KAD_THEMES[t].bg} 0 50%, ${KAD_THEMES[t].accent} 50% 100%)` });
 </script>
@@ -115,9 +129,9 @@ const swatch = (t: KadTemplate) => ({ background: `linear-gradient(135deg, ${KAD
         <div class="stage relative flex justify-center overflow-hidden rounded-[28px] px-4 py-12 md:py-14" :style="{ background: theme.band }">
           <svg class="lace pointer-events-none absolute inset-x-0 top-0 h-3 w-full" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="lace" width="24" height="12" patternUnits="userSpaceOnUse"><path d="M0 0 H24 V2 Q18 12 12 2 Q6 12 0 2 Z" :fill="theme.bg" /></pattern></defs><rect width="100%" height="12" fill="url(#lace)" /></svg>
           <div class="l-phone relative aspect-[9/19.5] h-[min(680px,74vh)] max-w-full">
-            <div class="l-phone-screen" :style="{ background: theme.bg }">
+            <div ref="screen" class="l-phone-screen" :style="{ background: theme.bg }">
               <!-- a picture of the card, not a second page to get lost in: no scroll, no taps, no focus; the chips and names still re-dress it -->
-              <iframe ref="frame" src="/contoh/kad?cover=1" title="Kad jemputan contoh" loading="lazy" inert scrolling="no" class="pointer-events-none block size-full border-0" />
+              <iframe ref="frame" src="/contoh/kad?cover=1" title="Kad jemputan contoh" loading="lazy" inert scrolling="no" class="pointer-events-none block origin-top-left border-0" :style="fit.h ? { width: `${PHONE_W}px`, height: `${fit.h}px`, transform: `scale(${fit.s})` } : { width: '100%', height: '100%' }" />
               <!-- iOS chrome over the card: the status bar and the home bar, in the template's ink -->
               <div class="status pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between" :style="{ color: theme.ink }" aria-hidden="true">
                 <span class="time">9:41</span>

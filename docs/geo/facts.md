@@ -26,7 +26,9 @@ Last checked against the code: 2026-10-04.
 | Retention clock | Counts from the event day (or payment, whichever is later), not account creation | FAQ, /terma |
 | Privacy | Couple pages noindex; EXIF/GPS stripped from shown copies; originals private; approval mode | /tentang, /privasi |
 | Law | PDPA 2010 notice in BM and EN | /privasi |
-| Operator | FF Dev Studio, Malaysia (ffdev.studio) | footer, /tentang, /privasi, /terma |
+| Operator | FF DEV STUDIO (SSM 202603234793), No 15982 B, Kampung Selamat, Sungai Tong, 21500 Setiu, Terengganu, Malaysia (ffdev.studio); `shared/company.ts` | every footer, JSON-LD, /tentang, /privasi, /terma |
+| Refunds | Event-day promise (full refund, ask within 14 days of the event) and a refund where a charge could not be applied; refunds made by hand via CHIP | /bayaran-balik, /terma, /harga |
+| Delivery | Digital service, nothing shipped; access active when CHIP confirms the payment | /penghantaran |
 | Contact | hello@ffdev.studio · WhatsApp +60 13-907 8719 | /tentang and JSON-LD; WhatsApp link in landing footer. /privasi and /terma still say hello@indahnya.my (owner to decide) |
 
 ## Not published (owner decisions, see owner-todo.md)

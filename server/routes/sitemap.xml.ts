@@ -11,6 +11,8 @@ export default defineEventHandler((event) => {
     { loc: '/tentang', mod: '2026-10-04' },
     { loc: '/privasi', mod: '2026-09-24' },
     { loc: '/terma', mod: '2026-09-24' },
+    { loc: '/bayaran-balik', mod: '2026-10-14' },
+    { loc: '/penghantaran', mod: '2026-10-14' },
   ];
   // each language is its own URL, listed with the full reciprocal set
   const alts = (loc: string) => `    <xhtml:link rel="alternate" hreflang="ms-MY" href="${site}${loc}"/>

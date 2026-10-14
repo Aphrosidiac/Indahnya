@@ -119,7 +119,7 @@ export const LANDING = {
       ],
     },
     final: { title: 'Majlis korang, siap dalam dua minit.', body: 'Percuma untuk mula. QR siap sebelum korang habis baca ayat ni.' },
-    footer: { about: 'Tentang', credit: 'Gambar contoh dari majlis sebenar, oleh', on: 'di Unsplash', and: 'dan', disclaimer: 'Orang dalam gambar tak ada kaitan dengan Indahnya dan bukan pelanggan kami, dan nama dalam contoh (Aina & Hakim, tetamu, ucapan) semua rekaan.', takedown: 'Ni gambar korang dan nak kami buang? Hubungi kami.', by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', contact: 'Hubungi' } },
+    footer: { about: 'Tentang', credit: 'Gambar contoh dari majlis sebenar, oleh', on: 'di Unsplash', and: 'dan', disclaimer: 'Orang dalam gambar tak ada kaitan dengan Indahnya dan bukan pelanggan kami, dan nama dalam contoh (Aina & Hakim, tetamu, ucapan) semua rekaan.', takedown: 'Ni gambar korang dan nak kami buang? Hubungi kami.', by: 'Dibuat oleh', tagline: 'Galeri gambar majlis dengan QR, untuk Malaysia.', links: { privacy: 'Privasi', terms: 'Terma', refund: 'Bayaran balik', delivery: 'Penghantaran', contact: 'Hubungi' } },
   },
   en: {
     nav: { how: 'How it works', kad: 'Invitation', pricing: 'Pricing', faq: 'FAQ', about: 'About', login: 'Sign in', lang: 'BM', menu: 'Menu', close: 'Close' },
@@ -233,7 +233,7 @@ export const LANDING = {
       ],
     },
     final: { title: 'Your event, ready in two minutes.', body: 'Free to start. The QR is ready before you finish reading this.' },
-    footer: { about: 'About', credit: 'Sample photos from real majlis, by', on: 'on Unsplash', and: 'and', disclaimer: 'The people in them have no connection to Indahnya and are not our customers, and the names in the demos (Aina & Hakim, the guests, the wishes) are made up.', takedown: 'Is one of these your photo and you would like it taken down? Contact us.', by: 'Made by', tagline: 'QR photo galleries for events, made for Malaysia.', links: { privacy: 'Privacy', terms: 'Terms', contact: 'Contact' } },
+    footer: { about: 'About', credit: 'Sample photos from real majlis, by', on: 'on Unsplash', and: 'and', disclaimer: 'The people in them have no connection to Indahnya and are not our customers, and the names in the demos (Aina & Hakim, the guests, the wishes) are made up.', takedown: 'Is one of these your photo and you would like it taken down? Contact us.', by: 'Made by', tagline: 'QR photo galleries for events, made for Malaysia.', links: { privacy: 'Privacy', terms: 'Terms', refund: 'Refunds', delivery: 'Delivery', contact: 'Contact' } },
   },
 } as const;
 

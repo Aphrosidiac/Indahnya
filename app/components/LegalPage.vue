@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Logo } from '~/ui';
 import type { LegalDoc } from '~/composables/useLegal';
+import { COMPANY } from '~~/shared/company';
 
 /**
  * The privacy notice and the terms share one plain reading page: the
@@ -33,8 +34,12 @@ useSeoMeta({
   ogTitle: title, ogDescription: () => d.value.intro, ogUrl: url, ogType: 'website', ogSiteName: 'Indahnya',
   ogLocale: () => (lang.value === 'en' ? 'en_MY' : 'ms_MY'), ogImage: `${site}/og.jpg`, ogImageWidth: 1200, ogImageHeight: 630, twitterCard: 'summary_large_image',
 });
-const legal = useRuntimeConfig().public.legal;
-const LINKS = [{ path: '/tentang', ms: 'Tentang', en: 'About' }, { path: '/privasi', ms: 'Privasi', en: 'Privacy' }, { path: '/terma', ms: 'Terma', en: 'Terms' }];
+const cfg = useRuntimeConfig().public.legal;
+const legal = { name: cfg.name || COMPANY.name, reg: cfg.reg || COMPANY.reg, address: cfg.address || COMPANY.address };
+const LINKS = [
+  { path: '/tentang', ms: 'Tentang', en: 'About' }, { path: '/privasi', ms: 'Privasi', en: 'Privacy' }, { path: '/terma', ms: 'Terma', en: 'Terms' },
+  { path: '/bayaran-balik', ms: 'Bayaran balik', en: 'Refunds' }, { path: '/penghantaran', ms: 'Penghantaran', en: 'Delivery' },
+];
 </script>
 
 <template>
@@ -57,10 +62,13 @@ const LINKS = [{ path: '/tentang', ms: 'Tentang', en: 'About' }, { path: '/priva
         </ul>
         <p v-for="x in s.p ?? []" :key="x" class="mt-3 text-[15px] leading-[1.65] text-ink-700">{{ x }}</p>
       </section>
-      <p class="mt-14 border-t border-line-100 pt-6 text-[13px] text-ink-500">
-        <NuxtLink to="/" class="inline-block py-2.5 hover:text-ink-900">indahnya.my</NuxtLink> · FF Dev Studio
-        <template v-for="l in LINKS.filter(x => x.path !== path)" :key="l.path"> · <NuxtLink :to="lang === 'en' ? { path: l.path, query: { lang: 'en' } } : l.path" class="inline-block py-2.5 hover:text-ink-900">{{ l[lang] }}</NuxtLink></template>
-      </p>
+      <footer class="mt-14 border-t border-line-100 pt-6 text-[13px] text-ink-500">
+        <p>
+          <NuxtLink to="/" class="inline-block py-2.5 hover:text-ink-900">indahnya.my</NuxtLink>
+          <template v-for="l in LINKS.filter(x => x.path !== path)" :key="l.path"> · <NuxtLink :to="lang === 'en' ? { path: l.path, query: { lang: 'en' } } : l.path" class="inline-block py-2.5 hover:text-ink-900">{{ l[lang] }}</NuxtLink></template>
+        </p>
+        <CompanyInfo class="mt-2" />
+      </footer>
     </main>
   </div>
 </template>

@@ -327,6 +327,13 @@ minutes per subject; logged when no address is set):
   aktif sendiri dalam beberapa minit."
 - **Receipt**: emailed by CHIP to the host's address.
 
+The refund rules a buyer can read are on `/bayaran-balik` (refunds and
+cancellation) and `/penghantaran` (digital delivery, when access starts), both
+linked from every footer next to the company name, SSM number, address, email
+and phone (`shared/company.ts`). They say only what the code and `/terma` do:
+the 14-day event-day promise, and a refund for a charge that could not be
+applied (§6); change them together.
+
 Public copy names CHIP: the landing pricing note, `/tentang`, `/terma`
 ("Bayaran diproses oleh CHIP (Chip In Sdn. Bhd.) dalam Ringgit Malaysia"),
 `/privasi` (CHIP among the providers; card, bank and e-wallet details never

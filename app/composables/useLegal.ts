@@ -7,6 +7,8 @@
  * Plain paragraphs only: each section is a heading and a list of paragraphs
  * or bullet lists. No HTML is rendered from these strings.
  */
+import { COMPANY } from '~~/shared/company';
+
 export interface LegalSection { h: string; p?: string[]; ul?: string[] }
 export interface LegalDoc { title: string; updated: string; intro: string; sections: LegalSection[]; other: string }
 
@@ -188,6 +190,161 @@ export const TERMS: Record<'ms' | 'en', LegalDoc> = {
       { h: 'Limit of liability', p: ['As far as the law allows, our liability for any claim about an event is limited to what you paid for that event. Nothing in these terms limits your rights as a consumer under the Consumer Protection Act 1999.'] },
       { h: 'Law', p: ['These terms are governed by the laws of Malaysia. If we change them, we update the date above; material changes are announced by email.'] },
       { h: 'Contact us', p: [`${CONTACT_EN} If the BM and English versions differ, the BM version prevails.`] },
+    ],
+    other: 'Baca dalam BM',
+  },
+};
+
+/*
+ * The two payment-review pages: refunds and cancellation, delivery and returns.
+ * Every rule here is one the service already keeps — the 14-day event-day
+ * promise is the one in TERMS and /harga; the "paid but not applied" refund is
+ * the `needsRefund` path in server/utils/payments.ts; "one hour" is the
+ * checkout's `due` in checkout.post.ts; refunds are made by hand in the CHIP
+ * portal (docs/payments-chip.md §9). Change those and these pages together.
+ */
+const UPDATED_PAY_MS = 'Dikemas kini 14 Oktober 2026';
+const UPDATED_PAY_EN = 'Updated 14 October 2026';
+const CONTACT_PAY_MS = `Email ${COMPANY.email} atau WhatsApp ${COMPANY.phone}.`;
+const CONTACT_PAY_EN = `Email ${COMPANY.email} or WhatsApp ${COMPANY.phone}.`;
+
+export const REFUND: Record<'ms' | 'en', LegalDoc> = {
+  ms: {
+    title: 'Bayaran Balik dan Pembatalan',
+    updated: UPDATED_PAY_MS,
+    intro: 'Halaman ni terangkan bila korang boleh dapat bayaran balik (refund) untuk Indahnya (indahnya.my), macam mana nak minta, dan apa jadi kalau korang batalkan bayaran. Ia melengkapkan Terma Perkhidmatan kami.',
+    sections: [
+      { h: 'Apa yang korang bayar', ul: [
+        'Pakej Indahnya (RM59) dan Indahnya Lengkap (RM99), naik taraf dari Indahnya ke Indahnya Lengkap (bayar beza je), dan lanjutan simpanan. Semuanya bayaran sekali untuk satu majlis, dalam Ringgit Malaysia.',
+        'Tiada subscription dan tiada caj automatik. Kami tak simpan butiran kad atau akaun bank korang — bayaran diproses oleh CHIP.',
+        'Pakej Percuma tak ada bayaran, jadi tak ada apa nak dibalikkan.',
+      ] },
+      { h: 'Bila korang dapat bayaran balik', ul: [
+        'Jaminan hari majlis: kalau galeri gagal berfungsi pada hari majlis disebabkan masalah di pihak kami, hubungi kami dalam 14 hari selepas majlis untuk bayaran balik penuh. Ni sama macam yang ada dalam Terma Perkhidmatan.',
+        'Bayaran dah ditolak tapi pakej tak dapat diaktifkan: contohnya korang bayar dua kali untuk upgrade yang sama, majlis dipadam sebelum bayaran masuk, atau jumlah yang diterima tak sama dengan harga pakej. Hubungi kami dan kami bayar balik bayaran tu.',
+      ] },
+      { h: 'Kalau bayaran gagal atau tak siap', ul: [
+        'Kalau bayaran gagal, atau korang tutup halaman CHIP sebelum bayar, tak ada apa yang perlu dibalikkan. Checkout boleh dibayar dalam satu jam sahaja; lepas tu ia tamat sendiri dan korang boleh mula checkout baru.',
+        'Kalau duit dah ditolak tapi pakej masih tak aktif, tunggu beberapa minit. Kalau masih tak aktif, hubungi kami dengan resit CHIP (lihat Penghantaran).',
+      ] },
+      { h: 'Pembatalan', ul: [
+        'Tak ada subscription atau caj berulang, jadi tak ada langganan yang perlu dibatalkan. Korang bayar bila korang pilih, dan itu je.',
+        'Checkout yang belum dibayar boleh ditinggalkan; ia tamat sendiri dalam satu jam.',
+        'Memadam majlis atau akaun dari dashboard tak secara automatik membalikkan bayaran yang dah dibuat. Kalau ada soalan pasal bayaran, hubungi kami dulu sebelum padam.',
+        'Untuk sebab lain (contohnya tersalah pilih pakej), hubungi kami dan kami semak kes korang. Kami tak janji bayaran balik di luar dua kes di atas.',
+      ] },
+      { h: 'Macam mana nak minta', p: [
+        `${CONTACT_PAY_MS} Beritahu kami email akaun korang, link majlis (indahnya.my/nama-majlis), tarikh dan jumlah bayaran, dan sebab korang minta. Resit CHIP yang dihantar ke email korang akan membantu.`,
+      ] },
+      { h: 'Macam mana bayaran balik dibuat', p: [
+        'Bayaran balik dibuat melalui CHIP, kepada cara bayaran yang korang guna masa bayar (kad, akaun bank atau e-wallet), dalam Ringgit Malaysia. Bayaran balik kad mungkin ambil masa sebelum CHIP selesaikan, dan bila duit sampai ke akaun korang bergantung pada bank atau penerbit kad korang.',
+      ] },
+      { h: 'Hubungi kami', p: [`${CONTACT_PAY_MS} Jika ada percanggahan antara versi BM dan English, versi BM terpakai.`] },
+    ],
+    other: 'Read in English',
+  },
+  en: {
+    title: 'Refunds and Cancellation',
+    updated: UPDATED_PAY_EN,
+    intro: 'This page explains when you can get a refund for Indahnya (indahnya.my), how to ask for one, and what happens if you cancel a payment. It complements our Terms of Service.',
+    sections: [
+      { h: 'What you pay for', ul: [
+        'The Indahnya (RM59) and Indahnya Lengkap (RM99) plans, an upgrade from Indahnya to Indahnya Lengkap (you pay only the difference), and a storage extension. Each is a one-time payment for one event, in Malaysian Ringgit.',
+        'No subscription and no automatic charges. We do not store your card or bank details — payments are processed by CHIP.',
+        'The Free plan has no payment, so there is nothing to refund.',
+      ] },
+      { h: 'When you get a refund', ul: [
+        'The event-day promise: if the gallery fails to work on the day of your event because of a problem on our side, contact us within 14 days of the event for a full refund. This is the same promise as in the Terms of Service.',
+        'You were charged but the plan could not be activated: for example you paid twice for the same upgrade, the event was deleted before the payment landed, or the amount received did not match the plan\'s price. Contact us and we refund that payment.',
+      ] },
+      { h: 'If a payment fails or is not completed', ul: [
+        'If a payment fails, or you close the CHIP page before paying, there is nothing to refund. A checkout can be paid for one hour only; after that it expires by itself and you can start a new one.',
+        'If money was taken but the plan is still not active, wait a few minutes. If it is still not active, contact us with the CHIP receipt (see Delivery).',
+      ] },
+      { h: 'Cancellation', ul: [
+        'There is no subscription or recurring charge, so there is nothing to cancel month to month. You pay when you choose to, and that is all.',
+        'A checkout you have not paid can simply be left; it expires by itself within an hour.',
+        'Deleting an event or your account from the dashboard does not automatically reverse a payment already made. If you have a question about a payment, contact us before you delete.',
+        'For any other reason (for example you picked the wrong plan), contact us and we will look at your case. We do not promise a refund beyond the two cases above.',
+      ] },
+      { h: 'How to ask', p: [
+        `${CONTACT_PAY_EN} Tell us your account email, the event link (indahnya.my/your-event), the date and amount of the payment, and why you are asking. The CHIP receipt emailed to you will help.`,
+      ] },
+      { h: 'How a refund is made', p: [
+        'Refunds are made through CHIP, back to the payment method you used (card, bank account or e-wallet), in Malaysian Ringgit. A card refund may take a while to be completed at CHIP, and when the money reaches your account depends on your bank or card issuer.',
+      ] },
+      { h: 'Contact us', p: [`${CONTACT_PAY_EN} If the BM and English versions differ, the BM version prevails.`] },
+    ],
+    other: 'Baca dalam BM',
+  },
+};
+
+export const DELIVERY: Record<'ms' | 'en', LegalDoc> = {
+  ms: {
+    title: 'Penghantaran dan Pemulangan',
+    updated: UPDATED_PAY_MS,
+    intro: 'Indahnya ialah perkhidmatan digital yang disampaikan secara online. Tak ada barang fizikal yang dihantar ke alamat korang, jadi tak ada kos penghantaran, kurier atau tarikh sampai. Halaman ni terangkan apa yang korang dapat dan bila akses diberi selepas bayar.',
+    sections: [
+      { h: 'Apa yang korang dapat', ul: [
+        'Akses kepada perkhidmatan dalam akaun korang di indahnya.my: galeri, link dan QR majlis, slideshow, e-kad jemputan, RSVP dan dashboard. Semuanya dalam browser, tak perlu install app.',
+        'Kami tak print atau pos apa-apa. QR yang korang dapat siap print, dan korang print sendiri.',
+      ] },
+      { h: 'Bila akses diberi', ul: [
+        'Pakej Percuma: aktif sebaik majlis dibuat. Tiada bayaran.',
+        'Pakej berbayar, naik taraf dan lanjutan: aktif automatik sebaik CHIP sahkan bayaran. Korang dibawa balik ke dashboard dan nampak pakej dah aktif. Tak perlu tunggu kelulusan kami.',
+        'Kadang-kadang bank ambil masa untuk sahkan bayaran (contohnya FPX). Bila tu berlaku, pakej aktif sendiri dalam beberapa minit.',
+        'CHIP hantar resit ke email korang.',
+      ] },
+      { h: 'Tempoh akses', p: [
+        'Tempoh upload dan simpanan ikut pakej (lihat halaman Harga dan Terma Perkhidmatan). Kiraan bermula dari tarikh majlis atau tarikh bayar, yang mana lebih lewat.',
+      ] },
+      { h: 'Kalau pakej tak aktif selepas bayar', p: [
+        `Kalau duit dah ditolak tapi pakej masih tak aktif selepas beberapa minit, ${CONTACT_PAY_MS} Hantar resit CHIP dan link majlis. Kami semak dengan CHIP dan aktifkan pakej korang, atau bayar balik kalau ia tak boleh diaktifkan (lihat Bayaran Balik dan Pembatalan).`,
+      ] },
+      { h: 'Kos penghantaran', p: [
+        'Tiada. Harga yang korang nampak, dalam Ringgit Malaysia, ialah yang korang bayar.',
+      ] },
+      { h: 'Pemulangan', p: [
+        'Sebab perkhidmatan ni digital dan tak ada barang fizikal, tak ada barang untuk dipulangkan atau dipos balik. Kalau ada masalah dengan bayaran atau perkhidmatan, lihat Bayaran Balik dan Pembatalan.',
+      ] },
+      { h: 'Apa yang korang perlukan', p: [
+        'Sambungan internet dan browser biasa di phone atau komputer. Tetamu tak perlu app atau akaun.',
+      ] },
+      { h: 'Hubungi kami', p: [`${CONTACT_PAY_MS} Jika ada percanggahan antara versi BM dan English, versi BM terpakai.`] },
+    ],
+    other: 'Read in English',
+  },
+  en: {
+    title: 'Delivery and Returns',
+    updated: UPDATED_PAY_EN,
+    intro: 'Indahnya is a digital service delivered online. Nothing physical is shipped to you, so there is no shipping cost, courier or delivery date. This page explains what you get and when access is given after you pay.',
+    sections: [
+      { h: 'What you get', ul: [
+        'Access to the service in your account at indahnya.my: the gallery, the event link and QR, the slideshow, the e-invitation, RSVP and the dashboard. All of it runs in the browser, with no app to install.',
+        'We do not print or post anything. The QR you get is print-ready, and you print it yourself.',
+      ] },
+      { h: 'When access is given', ul: [
+        'Free plan: active as soon as the event is created. No payment.',
+        'Paid plans, upgrades and extensions: activated automatically as soon as CHIP confirms the payment. You are taken back to the dashboard and see that the plan is active. You do not wait for our approval.',
+        'Sometimes the bank takes a while to confirm a payment (FPX, for example). When that happens, the plan activates by itself within a few minutes.',
+        'CHIP emails the receipt to you.',
+      ] },
+      { h: 'How long access lasts', p: [
+        'The upload and storage windows depend on the plan (see the Pricing page and the Terms of Service). They run from the event date or the payment date, whichever is later.',
+      ] },
+      { h: 'If the plan is not active after you pay', p: [
+        `If money was taken but the plan is still not active after a few minutes, ${CONTACT_PAY_EN} Send the CHIP receipt and the event link. We check with CHIP and activate your plan, or refund you if it cannot be activated (see Refunds and Cancellation).`,
+      ] },
+      { h: 'Shipping cost', p: [
+        'None. The price you see, in Malaysian Ringgit, is what you pay.',
+      ] },
+      { h: 'Returns', p: [
+        'Because the service is digital and nothing physical is sent, there is nothing to return or post back. If something goes wrong with a payment or the service, see Refunds and Cancellation.',
+      ] },
+      { h: 'What you need', p: [
+        'An internet connection and an ordinary browser on a phone or computer. Guests need no app or account.',
+      ] },
+      { h: 'Contact us', p: [`${CONTACT_PAY_EN} If the BM and English versions differ, the BM version prevails.`] },
     ],
     other: 'Baca dalam BM',
   },

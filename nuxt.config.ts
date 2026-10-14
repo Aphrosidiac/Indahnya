@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import { createRequire } from 'node:module';
+import { COMPANY } from './shared/company';
 
 const require = createRequire(import.meta.url);
 
@@ -86,11 +87,12 @@ export default defineNuxtConfig({
     public: {
       siteUrl: 'http://localhost:3180',
       /**
-       * Who runs the service, shown on /privasi and /terma (the e-commerce
-       * regulations want the registered name, number and address). Required
-       * in production: the server refuses to start without them.
+       * Who runs the service, shown on /privasi and /terma and in every footer
+       * (the e-commerce regulations want the registered name, number and
+       * address). Defaults are shared/company.ts; required in production: the
+       * server refuses to start without them.
        */
-      legal: { name: '', reg: '', address: '' },
+      legal: { name: COMPANY.name, reg: COMPANY.reg, address: COMPANY.address },
       /**
        * The static preview on Cloudflare Pages (scripts/pages/): no server, so
        * the host side is closed (/mula) and the TV try stays in the browser.

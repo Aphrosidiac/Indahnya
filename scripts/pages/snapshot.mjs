@@ -28,7 +28,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const dist = join(out, 'dist');
 const SLUG = 'aina-hakim';
 
-const PAGES = ['/', '/tentang', '/privasi', '/terma', '/mula', '/contoh/kad', '/masuk', '/app',
+const PAGES = ['/', '/tentang', '/privasi', '/terma', '/bayaran-balik', '/penghantaran', '/mula', '/contoh/kad', '/masuk', '/app',
   `/${SLUG}`, `/${SLUG}/gambar`, `/${SLUG}/ucapan`, `/${SLUG}/rsvp`, `/${SLUG}/tempat`];
 
 const texts = [];

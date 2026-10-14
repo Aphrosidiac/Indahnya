@@ -100,7 +100,7 @@ async function submit() {
         <p class="mt-4 text-[13px] leading-[18px] text-ink-500">Tak sampai? Tengok folder spam, atau <button type="button" class="font-medium text-ink-900 underline-offset-2 hover:underline" @click="sent = false">hantar semula</button>.</p>
       </div>
 
-      <p class="mt-6 text-center text-[12px] leading-4 text-ink-400">Indahnya · by FF Dev Studio</p>
+      <CompanyInfo class="mt-6 text-center text-[12px] text-ink-400" />
     </div>
   </div>
 </template>

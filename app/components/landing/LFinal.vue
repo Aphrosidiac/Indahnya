@@ -69,12 +69,15 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
           <NuxtLink :to="lang === 'en' ? '/tentang?lang=en' : '/tentang'" class="hover:text-[#1a1a1a]">{{ L.footer.about }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="hover:text-[#1a1a1a]">{{ L.footer.links.privacy }}</NuxtLink>
           <NuxtLink :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="hover:text-[#1a1a1a]">{{ L.footer.links.terms }}</NuxtLink>
+          <NuxtLink :to="lang === 'en' ? '/bayaran-balik?lang=en' : '/bayaran-balik'" class="hover:text-[#1a1a1a]">{{ L.footer.links.refund }}</NuxtLink>
+          <NuxtLink :to="lang === 'en' ? '/penghantaran?lang=en' : '/penghantaran'" class="hover:text-[#1a1a1a]">{{ L.footer.links.delivery }}</NuxtLink>
           <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="hover:text-[#1a1a1a]">{{ L.footer.links.contact }}</a>
           <NuxtLink :to="other" class="hover:text-[#1a1a1a]">{{ L.nav.lang === 'EN' ? 'English' : 'Bahasa Melayu' }}</NuxtLink>
           <span>{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-semibold text-[#1a1a1a] hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">FF Dev Studio</a></span>
         </nav>
       </div>
-      <p class="mt-6 max-w-[880px] text-[13px] leading-[1.6] text-[#75716d]">
+      <CompanyInfo class="mt-6 max-w-[880px] text-[14px] text-[#55524f]" />
+      <p class="mt-4 max-w-[880px] text-[13px] leading-[1.6] text-[#75716d]">
         {{ L.footer.credit }}
         <template v-for="(c, i) in credits" :key="c.user"><a :href="`https://unsplash.com/@${c.user}?utm_source=indahnya&utm_medium=referral`" target="_blank" rel="noopener" class="underline decoration-[#1a1a1a]/20 underline-offset-2 hover:text-[#1a1a1a]">{{ c.by }}</a>{{ i < credits.length - 2 ? ', ' : i === credits.length - 2 ? ` ${L.footer.and} ` : ' ' }}</template>{{ L.footer.on }}.
         {{ L.footer.disclaimer }}

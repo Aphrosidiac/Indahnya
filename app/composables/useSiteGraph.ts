@@ -1,3 +1,5 @@
+import { COMPANY } from '~~/shared/company';
+
 /**
  * The site-wide entities every public page's JSON-LD points at, by @id: the
  * operator (FF Dev Studio), the website, and the product. One definition, so
@@ -12,9 +14,13 @@ export function siteGraph(site: string, lang: 'ms' | 'en') {
     {
       '@type': 'Organization', '@id': id('org'), name: 'FF Dev Studio', url: 'https://ffdev.studio',
       description: en ? 'A small software studio in Malaysia. Builds and runs Indahnya.' : 'Studio perisian kecil di Malaysia. Bina dan jalankan Indahnya.',
-      address: { '@type': 'PostalAddress', addressCountry: 'MY' },
+      legalName: COMPANY.name,
+      address: {
+        '@type': 'PostalAddress', streetAddress: 'No 15982 B, Kampung Selamat, Sungai Tong', postalCode: '21500', addressLocality: 'Setiu', addressRegion: 'Terengganu', addressCountry: 'MY',
+      },
+      telephone: COMPANY.phoneHref,
       contactPoint: {
-        '@type': 'ContactPoint', contactType: 'customer support', email: 'hello@ffdev.studio', url: 'https://wa.me/60139078719',
+        '@type': 'ContactPoint', contactType: 'customer support', email: COMPANY.email, telephone: COMPANY.phoneHref, url: 'https://wa.me/60139078719',
         areaServed: 'MY', availableLanguage: ['ms', 'en'],
       },
     },

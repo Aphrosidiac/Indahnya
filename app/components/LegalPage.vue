@@ -32,7 +32,8 @@ const LINKS = [
   <div class="min-h-screen bg-surface-50 text-ink-800">
     <header class="mx-auto flex h-16 w-full max-w-[760px] items-center justify-between px-5">
       <NuxtLink :to="linkIn('/', lang)" :aria-label="lang === 'en' ? 'Indahnya home' : 'Indahnya, laman utama'"><Logo :size="22" /></NuxtLink>
-      <NuxtLink :to="linkIn(path, lang === 'en' ? 'ms' : 'en')" class="rounded-sm px-2.5 py-2 text-[13px] font-medium text-ink-600 hover:bg-sand hover:text-ink-900">{{ d.other }}</NuxtLink>
+      <!-- a plain link: the twin is an alias of this route, so a NuxtLink said aria-current="page" -->
+      <a :href="linkIn(path, lang === 'en' ? 'ms' : 'en')" :hreflang="lang === 'en' ? 'ms-MY' : 'en-MY'" class="rounded-sm px-2.5 py-2 text-[13px] font-medium text-ink-600 hover:bg-sand hover:text-ink-900">{{ d.other }}</a>
     </header>
     <main class="mx-auto w-full max-w-[760px] px-5 pb-20 pt-6">
       <h1 class="text-[32px] font-semibold leading-[1.15] tracking-[-0.025em] text-ink-900">{{ d.title }}</h1>

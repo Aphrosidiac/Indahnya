@@ -60,6 +60,7 @@
     "chrome-launcher": "^1.2.2",
     "drizzle-kit": "^0.31",
     "lighthouse": "^12.6.1",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4",
     "typescript": "~5.9",

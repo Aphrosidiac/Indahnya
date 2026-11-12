@@ -7,7 +7,19 @@ const require = createRequire(import.meta.url);
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-01',
   devtools: { enabled: false },
-  modules: ['@pinia/nuxt'],
+  modules: [
+    '@pinia/nuxt',
+    /**
+     * The client build's CSS, bundled into the server as `assets:client-css`, so server/plugins/inline-css.ts can
+     * inline the stylesheets Nuxt still links. Production only: the folder exists while `nuxt build` runs.
+     */
+    (_o, nuxt) => {
+      if (nuxt.options.dev) return;
+      nuxt.hook('nitro:config', (c) => {
+        (c.serverAssets ||= []).push({ baseName: 'client-css', dir: `${nuxt.options.buildDir}/dist/client/_nuxt`, pattern: '*.css' });
+      });
+    },
+  ],
   /**
    * Stores are imported explicitly. Auto-importing app/stores made unimport
    * misread the defineStore options and register a global named `actions`.

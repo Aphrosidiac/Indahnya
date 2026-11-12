@@ -41,6 +41,22 @@ Every sitemap URL, fetched from a production build (`nuxt build` + `node .output
 Mobile and desktop: Performance, Accessibility, Best Practices and SEO each **100**; Performance is the median of
 three runs. The LCP element never fades in from opacity 0; the landing's vine and Lenis must not cost the score.
 
+How the pages meet it (13 Nov 2026; mobile went from 60–92 to 96–100). Keep these when changing the landing:
+
+- **Measure over HTTP/2.** The gate's local proxy speaks HTTP/2 like Cloudflare. Over HTTP/1.1 Lighthouse charged
+  every font and script a new connection's handshake and mobile read 10–15 points low.
+- **No stylesheet blocks the paint.** `features.inlineStyles` inlines component CSS. `server/plugins/inline-css.ts`
+  turns the stylesheets Nuxt still links (shared chunks: landing.css, @fontsource faces) into inline rules.
+- **Paint first, hydrate after.** On sitemap pages `server/plugins/paint-first.ts` starts the JavaScript once the
+  browser reports its first contentful paint, so ~150 KB of scripts no longer share the line with the HTML and fonts.
+- **Core fonts.** `scripts/subset-fonts.mjs` cuts Inter and Bricolage to the characters the pages use (half the
+  bytes). The full faces stay declared for anything else. Re-run it if copy gains a new character (é, →).
+- **Nothing heavy that the first screen does not show.** Hidden or blurred images are lazy and small (the hero feed,
+  LDewan's glow). The kad previews are `content-visibility: auto`, so their ~100 KB of kad fonts wait until they
+  are near the screen.
+- **Diagnose with** `node scripts/seo-gate.mjs --no-build --form=mobile --save-lhr --only=/harga`, then read
+  `scripts/seo-gate/lhr/*.json`: what finished before the observed first paint is what the score charges for.
+
 ## Gate C: what a reviewer reads (by hand, every new or changed page)
 
 1. **Answer first.** The first 40–60 words answer the page's question and name Indahnya with its category.

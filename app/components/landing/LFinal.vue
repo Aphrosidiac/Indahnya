@@ -94,7 +94,8 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
         <nav class="flex flex-wrap items-center gap-x-6 text-[15px] text-[#55524f] md:gap-y-2 [&>a]:max-md:inline-flex [&>a]:max-md:min-h-11 [&>a]:max-md:items-center" aria-label="Footer">
           <NuxtLink v-for="f in footerLinks" :key="f.to" :to="f.to" class="hover:text-[#1a1a1a]">{{ f.label }}</NuxtLink>
           <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="hover:text-[#1a1a1a]">{{ L.footer.links.contact }}</a>
-          <NuxtLink :to="other" class="hover:text-[#1a1a1a]">{{ L.nav.lang === 'EN' ? 'English' : 'Bahasa Melayu' }}</NuxtLink>
+          <!-- a plain link, as in LNav: the twin is an alias of this route, so a NuxtLink said aria-current="page" -->
+          <a :href="other" :hreflang="L.nav.lang === 'EN' ? 'en-MY' : 'ms-MY'" class="hover:text-[#1a1a1a]">{{ L.nav.lang === 'EN' ? 'English' : 'Bahasa Melayu' }}</a>
           <span>{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-semibold text-[#1a1a1a] hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">FF Dev Studio</a></span>
         </nav>
       </div>

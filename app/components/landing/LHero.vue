@@ -464,10 +464,11 @@ onBeforeUnmount(() => {
             <NuxtLink to="/app?new=1" class="l-btn l-btn-go max-sm:!px-5 max-sm:!text-[15px]">{{ L.cta }}<ArrowRight class="size-[18px] max-[399px]:hidden" :stroke-width="2" aria-hidden="true" /></NuxtLink>
             <NuxtLink to="/aina-hakim" class="l-btn l-btn-line max-sm:!px-5 max-sm:!text-[15px]">{{ L.sample }}</NuxtLink>
           </div>
+          <!-- lazy thumbnails: the feed is hidden on a phone, and a hidden lazy image is never fetched (~300 KB saved) -->
           <TransitionGroup tag="ul" name="feed" data-words class="feed relative mt-10 hidden w-[340px] min-[900px]:block [@media(max-height:680px)]:!hidden" aria-hidden="true">
             <li v-for="(f, k) in feed" :key="f.key" class="feed-item flex items-center gap-3 rounded-[18px] bg-[#fdfcfb] p-2.5 pr-4" :style="{ '--k': k }">
               <span class="flex w-[86px] shrink-0 -space-x-3">
-                <img v-for="id in f.ids.slice(0, 3)" :key="id" :src="photo(id)" v-bind="photoSize(id)" alt="" class="size-10 rounded-[10px] border-2 border-[#fdfcfb] object-cover" />
+                <img v-for="id in f.ids.slice(0, 3)" :key="id" :src="photo(id)" v-bind="photoSize(id)" alt="" loading="lazy" decoding="async" class="size-10 rounded-[10px] border-2 border-[#fdfcfb] object-cover" />
               </span>
               <span class="min-w-0 flex-1 text-[14px] leading-[18px]">
                 <span class="block truncate"><b class="font-semibold text-[#1a1a1a]">{{ f.name }}</b> <span class="text-[#55524f]">{{ feedLine(f.ids.length) }}</span></span>
@@ -513,17 +514,21 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: no-preference) {
   .hero-in { animation: hero-in 1.1s var(--l-ease) backwards; animation-delay: calc(var(--d) * 90ms + 120ms); }
   .hero-line:not(.is-open) .hero-in { animation-name: hero-rise; }
+  /* the LCP candidates (the ringed line and the lead) never start at opacity 0: a fade from 0 holds the LCP until
+     the animation runs, after hydration, which cost the mobile score ~10 s (docs/seo/ACCEPTANCE.md, Gate B) */
+  .hero-line.is-open .hero-in, .l-lead.hero-in { animation-name: hero-slide; }
   .hero-polaroid { animation: hero-drop 1.2s var(--l-ease) backwards, hero-bob 6s ease-in-out infinite alternate; animation-delay: calc(var(--i) * 110ms + 380ms), calc(var(--i) * -900ms); }
   .live-dot { animation: live 1.6s ease-in-out infinite; }
 }
 .qr-ring path { stroke-dasharray: 1; stroke-dashoffset: 0; }
-/* the ringed line cannot clip (the ring leaves the line box), so it fades up instead of rising */
+/* the ringed line cannot clip (the ring leaves the line box), so it slides up instead of rising */
 .hero-line.is-open { overflow: visible; }
 @media (prefers-reduced-motion: no-preference) {
   .qr-ring path { animation: ring 1s cubic-bezier(.65, 0, .35, 1) 1.1s backwards; }
 }
 @keyframes ring { from { stroke-dashoffset: 1; } }
 @keyframes hero-in { from { opacity: 0; transform: translateY(18px); } }
+@keyframes hero-slide { from { transform: translateY(18px); } }
 @keyframes hero-rise { from { transform: translateY(105%); } }
 @keyframes hero-drop { from { opacity: 0; transform: rotate(calc(var(--r) * 2.2)) translateY(40px) scale(.9); } }
 @keyframes hero-bob { to { translate: 0 -7px; } }

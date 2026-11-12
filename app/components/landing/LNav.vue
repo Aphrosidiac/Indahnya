@@ -64,7 +64,8 @@ watch(sheet, v => document.documentElement.classList.toggle('l-lock', v));
         <NuxtLink v-for="l in links" :key="l.label" :to="l.to" class="nav-link" :class="l.here && 'is-here'" :aria-current="l.here ? 'page' : undefined" @click="go(l, $event)">{{ l.label }}</NuxtLink>
       </nav>
       <div class="flex items-center gap-1">
-        <NuxtLink :to="other" class="nav-link !px-3" :aria-label="L.nav.lang === 'EN' ? 'English' : 'Bahasa Melayu'">{{ L.nav.lang }}</NuxtLink>
+        <!-- a plain link: the two languages are aliases of one route, so a NuxtLink here was "exact active" and said aria-current="page" -->
+        <a :href="other" class="nav-link !px-3" :hreflang="L.nav.lang === 'EN' ? 'en-MY' : 'ms-MY'" :aria-label="L.nav.lang === 'EN' ? 'EN: English' : 'BM: Bahasa Melayu'">{{ L.nav.lang }}</a>
         <NuxtLink to="/masuk" class="nav-link max-sm:!hidden">{{ L.nav.login }}</NuxtLink>
         <NuxtLink to="/app?new=1" class="l-btn l-btn-go l-btn-sm ml-1 hidden sm:inline-flex">{{ L.cta }}</NuxtLink>
         <button type="button" class="nav-link !size-11 !p-0 lg:!hidden" :aria-expanded="sheet" :aria-label="sheet ? L.nav.close : L.nav.menu" @click="sheet = !sheet">

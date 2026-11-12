@@ -9,6 +9,8 @@
 //   node scripts/seo-gate.mjs --no-lh             static checks only
 //   node scripts/seo-gate.mjs --only=/harga,/e-kad   Lighthouse on these paths only
 //   node scripts/seo-gate.mjs --url=http://127.0.0.1:3250   check a server that is already running (no build/start)
+//   node scripts/seo-gate.mjs --form=mobile       Lighthouse in one form factor only
+//   node scripts/seo-gate.mjs --save-lhr          keep each Lighthouse result in scripts/seo-gate/lhr/ (for diagnosis)
 //
 // Exit 0 only when there are zero failures. Report: scripts/seo-gate/report.md and report.json (git-ignored).
 // Needs openssl (self-signed cert for the HTTPS proxy), Chrome, and the local Postgres in .env (the sample majlis).
@@ -16,7 +18,7 @@ import { execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
-import https from 'node:https';
+import http2 from 'node:http2';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import * as cheerio from 'cheerio';
@@ -284,10 +286,14 @@ for (const [p, n] of inbound) if (n === 0 && p !== '/') fail(p, 'S-orphan', 'no 
 // ---------- Lighthouse ----------
 const lh = [];
 if (!flag('--no-lh')) {
-  // https://indahnya.my → the local server, compressed and cached the way Cloudflare + nginx serve it
+  // https://indahnya.my → the local server, over HTTP/2, compressed and cached the way Cloudflare + nginx serve it.
+  // HTTP/2 matters: Lighthouse models the connections it saw, and over HTTP/1.1 it charged every font and script a
+  // new connection's handshake that production (Cloudflare, HTTP/2 and 3) never pays.
+  const HOP = new Set(['connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'proxy-connection', 'content-length']);
   const proxy = (req, res) => {
-    const up = http.request(BASE + req.url, { method: req.method, headers: { ...req.headers, host: 'indahnya.my', 'accept-encoding': 'identity', 'x-forwarded-proto': 'https' } }, (ur) => {
-      const h = { ...ur.headers }; delete h['content-length']; delete h['transfer-encoding'];
+    const fwd = Object.fromEntries(Object.entries(req.headers).filter(([k]) => !k.startsWith(':') && !HOP.has(k)));
+    const up = http.request(BASE + req.url, { method: req.method, headers: { ...fwd, host: 'indahnya.my', 'accept-encoding': 'identity', 'x-forwarded-proto': 'https' } }, (ur) => {
+      const h = Object.fromEntries(Object.entries(ur.headers).filter(([k]) => !HOP.has(k)));
       if (/^\/_nuxt\//.test(req.url)) h['cache-control'] = 'public, max-age=31536000, immutable';
       const type = h['content-type'] ?? '';
       const chunks = []; ur.on('data', (c) => chunks.push(c)); ur.on('end', () => {
@@ -304,7 +310,7 @@ if (!flag('--no-lh')) {
     execSync(`openssl req -x509 -newkey rsa:2048 -nodes -days 30 -subj /CN=indahnya.my -addext subjectAltName=DNS:indahnya.my -keyout ${key} -out ${cert}`, { stdio: 'ignore' });
     fs.writeFileSync(spkiFile, execSync(`openssl x509 -in ${cert} -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64`).toString().trim());
   }
-  const server = https.createServer({ key: fs.readFileSync(key), cert: fs.readFileSync(cert) }, proxy);
+  const server = http2.createSecureServer({ key: fs.readFileSync(key), cert: fs.readFileSync(cert), allowHTTP1: true }, proxy);
   const plain = http.createServer((req, res) => { res.writeHead(301, { location: 'https://indahnya.my' + req.url }); res.end(); });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   await new Promise((r) => plain.listen(0, '127.0.0.1', r));
@@ -315,7 +321,7 @@ if (!flag('--no-lh')) {
   const desktop = (await import('lighthouse/core/config/desktop-config.js')).default;
   const run = (url, ff) => lighthouse(url, { port: chrome.port, output: 'json', logLevel: 'error', onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'] }, ff === 'desktop' ? desktop : undefined);
   for (const p of [...sitemap.keys()].filter((x) => !only || only.includes(x))) {
-    for (const ff of ['mobile', 'desktop']) {
+    for (const ff of ['mobile', 'desktop'].filter((f) => !opt('form') || opt('form') === f)) {
       const url = `https://indahnya.my${p}`;
       let r;
       try { r = await run(url, ff); } catch (e) { fail(p, 'L-run', `${ff}: lighthouse error ${e.message}`); continue; }
@@ -325,6 +331,7 @@ if (!flag('--no-lh')) {
         runs.sort((a, b) => a.lhr.categories.performance.score - b.lhr.categories.performance.score);
         r = runs[Math.floor(runs.length / 2)];
       }
+      if (flag('--save-lhr')) { fs.mkdirSync(path.join(HERE, 'lhr'), { recursive: true }); fs.writeFileSync(path.join(HERE, 'lhr', `${p.replace(/\//g, '_') || '_'}-${ff}.json`), JSON.stringify(r.lhr)); }
       const row = { p, ff };
       for (const [k, v] of Object.entries(r.lhr.categories)) {
         row[k] = Math.round(v.score * 100);

@@ -18,8 +18,12 @@ onMounted(async () => {
   if (prefersReduced()) return;
   const { gsap, ST } = await useLandingMotion().boot();
   const ws = [...para.value!.querySelectorAll<HTMLElement>('.w')];
+  // The words dim only as the sentence comes up from below the screen, not at load: dimmed text below the fold
+  // failed colour contrast in Lighthouse (docs/seo/ACCEPTANCE.md, Gate B), and the change happens off screen.
+  const dim = { opacity: 0.16, filter: 'blur(5px)' };
+  triggers.push(ST.create({ trigger: para.value!, start: 'top bottom', end: 'max', once: true, onEnter: () => gsap.set(ws, dim) }));
   const tl = gsap.timeline({ scrollTrigger: { trigger: para.value!, start: 'top 78%', end: 'bottom 42%', scrub: true } });
-  tl.fromTo(ws, { opacity: 0.16, filter: 'blur(5px)' }, { opacity: 1, filter: 'blur(0px)', stagger: 0.12, ease: 'none', duration: 0.5 });
+  tl.fromTo(ws, dim, { opacity: 1, filter: 'blur(0px)', stagger: 0.12, ease: 'none', duration: 0.5, immediateRender: false });
   triggers.push(tl.scrollTrigger!);
   root.value!.querySelectorAll<HTMLElement>('.no').forEach((el, i) => {
     triggers.push(ST.create({ trigger: el, start: 'top 82%', once: true, onEnter: () => setTimeout(() => el.classList.add('is-struck'), i * 90) }));

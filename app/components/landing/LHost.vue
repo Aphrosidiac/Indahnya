@@ -119,7 +119,7 @@ const pending = ['g18', 'g03', 'g11'];
               <div v-else class="fan relative mx-auto h-[380px] max-w-[580px] md:h-[440px]">
                 <div v-for="(t, k) in L.host.print" :key="t" class="fan-card absolute bottom-8 left-1/2" :style="{ '--k': k, width: ['40%', '44%', '50%'][k] }">
                   <QrStand
-                    class="overflow-hidden rounded-[10px] shadow-[0_30px_50px_-28px_rgba(60,48,36,.55)]"
+                    class="overflow-hidden rounded-[10px] shadow-[0_30px_50px_-28px_rgba(60,48,36,.55)] [content-visibility:auto]"
                     :url="url" link="indahnya.my/aina-hakim" :template="(['garden', 'emas', 'klasik'] as const)[k]" :format="k === 2 ? 'landscape' : 'portrait'"
                     :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" hashtag="#AinaHakim" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
                   />

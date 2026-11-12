@@ -34,8 +34,9 @@ const reduced = ref(false);
 const phone = ref(false);
 
 /* ── the slideshow ── */
-interface Slide { key: string; src: string; name: string; fresh?: boolean }
-const SAMPLE: Slide[] = ['g21', 'g07', 'g04', 'g11', 'g14', 'g02', 'g18', 'g09', 'g15', 'g01', 'g22', 'g10'].map((id, i) => ({ key: id, src: photo(id, 'l'), name: GUEST_NAMES[(i * 7) % GUEST_NAMES.length]! }));
+/** `glow` is the small copy for the blurred light behind the screen (70px blur: 560px is plenty, 1600px was 267 KB). */
+interface Slide { key: string; src: string; glow?: string; name: string; fresh?: boolean }
+const SAMPLE: Slide[] = ['g21', 'g07', 'g04', 'g11', 'g14', 'g02', 'g18', 'g09', 'g15', 'g01', 'g22', 'g10'].map((id, i) => ({ key: id, src: photo(id, 'l'), glow: photo(id, 's'), name: GUEST_NAMES[(i * 7) % GUEST_NAMES.length]! }));
 const slides = ref<Slide[]>([SAMPLE[0]!]);
 let next = 1;
 const current = computed(() => slides.value[slides.value.length - 1]!);
@@ -198,7 +199,7 @@ const tint = (n: string) => TINTS[[...n].reduce((a, c) => a + c.charCodeAt(0), 0
           <!-- the room catches the screen's light: the slide itself, blown up and blurred behind it -->
           <div class="ambient pointer-events-none absolute -inset-[8%] -z-10" aria-hidden="true">
             <TransitionGroup name="glow">
-              <img v-for="s in slides" :key="s.key" :src="s.src" width="1600" height="900" alt="" class="absolute inset-0 size-full object-cover" />
+              <img v-for="s in slides" :key="s.key" :src="s.glow ?? s.src" width="560" height="315" alt="" loading="lazy" class="absolute inset-0 size-full object-cover" />
             </TransitionGroup>
           </div>
           <div class="tv relative aspect-video w-full overflow-hidden rounded-[14px] bg-black">

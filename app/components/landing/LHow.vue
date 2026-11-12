@@ -79,17 +79,18 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
           </div>
 
           <div class="stage relative mt-6 flex h-[min(78vh,640px)] w-full items-center justify-center overflow-hidden rounded-[28px] lg:mt-0 lg:h-[min(82vh,720px)]" :class="['bg-[#ebe8e5]', 'bg-[#e6f3e1]', 'bg-[#1b1f1c]'][i]">
-            <!-- 1 · the QR on the table, through the phone's camera -->
+            <!-- 1 · the QR on the table, through the phone's camera. The stands are content-visibility:auto (here and
+                 in LHost): laid out only near the screen, so their kad fonts (~100 KB) are not fetched with the first paint -->
             <template v-if="i === 0">
               <QrStand
-                class="table-card absolute left-[7%] top-[12%] w-[36%] max-w-[240px] overflow-hidden rounded-[10px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.5)] max-sm:!hidden"
+                class="table-card absolute left-[7%] top-[12%] w-[36%] max-w-[240px] overflow-hidden rounded-[10px] shadow-[0_30px_60px_-30px_rgba(60,48,36,.5)] max-sm:!hidden [content-visibility:auto]"
                 :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" hashtag="#AinaHakim" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
               />
               <div class="l-phone relative z-10 aspect-[9/19] h-[88%] sm:ml-[30%]">
                 <div class="l-phone-screen bg-[#0b0b0b]">
                   <img :src="photo('g10')" v-bind="photoSize('g10')" alt="" class="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-[6px]" />
                   <QrStand
-                    class="absolute left-1/2 top-[42%] w-[64%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] overflow-hidden rounded-[6px]"
+                    class="absolute left-1/2 top-[42%] w-[64%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] overflow-hidden rounded-[6px] [content-visibility:auto]"
                     :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
                   />
                   <div class="finder absolute left-1/2 top-[42%] aspect-[1/1.414] w-[74%]" aria-hidden="true"><i /><i /><i /><i /></div>
@@ -163,7 +164,8 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
 </template>
 
 <style scoped>
-.step-title { color: #a8a39e; transition: color .5s var(--l-ease); }
+/* the waiting steps stay readable: #8c8782 is 3.2:1 on the ground (large text needs 3:1; #a8a39e was 2.3) */
+.step-title { color: #8c8782; transition: color .5s var(--l-ease); }
 .step.is-on .step-title { color: #1a1a1a; }
 .step-body { grid-template-rows: 0fr; transition: grid-template-rows .6s var(--l-ease); }
 .step.is-on .step-body { grid-template-rows: 1fr; }

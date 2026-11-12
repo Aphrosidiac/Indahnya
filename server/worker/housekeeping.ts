@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull, isNotNull, lt, gte, or } from 'drizzle-orm';
 import { useDb, jobs, media, sessions, loginTokens, heartbeats } from '../db';
 import { pruneRateLimits } from '../utils/rate';
 import { opsAlert } from '../utils/alert';
+import { pruneTraffic } from '../utils/traffic/ingest';
 
 export const MAX_ATTEMPTS = 3;
 /** A running job refreshes its lock every minute; one silent for this long died with its process. */
@@ -27,7 +28,7 @@ export async function closeAbandonedJobs() {
   opsAlert('Worker abandoned jobs', dead.map(d => `${d.kind} ${d.ref}`).join('\n'));
 }
 
-/** Rows nothing reads any more: finished jobs, expired sessions, spent or dead sign-in links, finished rate-limit windows. */
+/** Rows nothing reads any more: finished jobs, expired sessions, spent or dead sign-in links, finished rate-limit windows, analytics older than 120 days. */
 export async function pruneHousekeeping() {
   const db = useDb();
   const now = Date.now();
@@ -36,6 +37,7 @@ export async function pruneHousekeeping() {
   await db.delete(loginTokens).where(lt(loginTokens.expiresAt, new Date(now - 86_400_000)));
   await db.delete(heartbeats).where(lt(heartbeats.at, new Date(now - 7 * 86_400_000)));
   await pruneRateLimits();
+  await pruneTraffic(db);
 }
 
 /** Temp dirs left by a process that died mid-encode. Only ours, only old ones. */

@@ -136,6 +136,29 @@ echo '17 4 * * 1 root /usr/local/sbin/indahnya-cf-ips >/dev/null 2>&1' > /etc/cr
 [ $SHARED = 1 ] || rm -f /etc/nginx/sites-enabled/default
 # the vhost itself is installed by deploy/deploy.sh from the release (it needs the origin cert first)
 
+echo "== analytics log (docs/ANALYTICS.md)"
+# nginx writes one JSON line per request here (deploy/nginx.conf, format indahnya_json); the app user reads it.
+# root:indahnya 0750 / 0640, and its own logrotate rule, because nginx's would recreate it 0640 www-data:adm
+# (unreadable to the app). Only Indahnya's directory and rule are touched. deploy/remote.sh does the same on each deploy.
+install -d -m 0750 -o root -g $APP /var/log/indahnya
+[ -e /var/log/indahnya/traffic.log ] || install -m 0640 -o root -g $APP /dev/null /var/log/indahnya/traffic.log
+chown root:$APP /var/log/indahnya/traffic.log && chmod 0640 /var/log/indahnya/traffic.log
+cat > /etc/logrotate.d/indahnya-traffic <<LOGROTATE
+/var/log/indahnya/traffic.log {
+  daily
+  rotate 14
+  missingok
+  notifempty
+  compress
+  delaycompress
+  create 0640 root $APP
+  sharedscripts
+  postrotate
+    [ ! -s /run/nginx.pid ] || kill -USR1 "\$(cat /run/nginx.pid)"
+  endscript
+}
+LOGROTATE
+
 if [ $SHARED = 0 ]; then
   echo "== firewall"
   ufw allow OpenSSH >/dev/null; ufw allow 'Nginx Full' >/dev/null; ufw --force enable >/dev/null

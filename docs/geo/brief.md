@@ -1,5 +1,8 @@
 # GEO / AEO brief: Indahnya (2026-10-04)
 
+> **Superseded for facts (12 Nov 2026):** the current fact set is `docs/seo/research/indahnya-truth.md`, and the
+> plan is `docs/seo/strike-plan.md`. This file is kept as the 4 Oct GEO record.
+
 Inferred from the repo, PLAN.md and the project state; Fakhrul ran `/geo-aeo`
 with no further brief.
 

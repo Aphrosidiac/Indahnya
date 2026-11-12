@@ -1,4 +1,5 @@
 import { createSession, findOrCreateUser } from '../../../utils/session';
+import { afterSignIn } from '../../../utils/traffic/auth';
 
 export default defineEventHandler(async (event) => {
   const { google, public: pub } = useRuntimeConfig();
@@ -30,5 +31,6 @@ export default defineEventHandler(async (event) => {
   if (!payload.email_verified || payload.aud !== google.clientId || !issOk) return sendRedirect(event, '/masuk?error=google');
   const user = await findOrCreateUser(payload.email, payload.name, payload.sub);
   await createSession(event, user.id);
+  await afterSignIn(event, user);
   return sendRedirect(event, safeNext(saved.next));
 });

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check, EyeOff, Download, FileArchive, Copy, MonitorPlay } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
-import { PHOTOS, photo } from '~/composables/useLanding';
+import { PHOTOS, photo, photoSize } from '~/composables/useLanding';
 import { useLandingMotion, prefersReduced } from '~/composables/useLandingMotion';
 import QrStand from '~/components/print/QrStand.vue';
 
@@ -73,7 +73,7 @@ const pending = ['g18', 'g03', 'g11'];
               <!-- approval -->
               <div v-if="i === 0" class="grid grid-cols-3 gap-3">
                 <div v-for="(id, k) in pending" :key="id" class="appr rounded-[18px] bg-[#f6f4f3] p-2" :class="['is-ok', 'is-hidden', ''][k]" :style="{ '--k': k }">
-                  <div class="relative aspect-[4/5] overflow-hidden rounded-[12px] bg-[#ebe8e5]"><img :src="photo(id)" alt="" class="appr-img size-full object-cover" loading="lazy" /></div>
+                  <div class="relative aspect-[4/5] overflow-hidden rounded-[12px] bg-[#ebe8e5]"><img :src="photo(id)" v-bind="photoSize(id)" alt="" class="appr-img size-full object-cover" loading="lazy" /></div>
                   <div class="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2"><!-- a third of a phone is too narrow for both side by side -->
                     <span class="appr-yes inline-flex h-8 items-center justify-center gap-1 rounded-full bg-white text-[12px] font-semibold"><Check class="size-3.5" :stroke-width="2.5" />{{ L.host.approve }}</span>
                     <span class="appr-no inline-flex h-8 items-center justify-center gap-1 rounded-full bg-white text-[12px] font-semibold"><EyeOff class="size-3.5" :stroke-width="2" />{{ L.host.hide }}</span>
@@ -84,7 +84,7 @@ const pending = ['g18', 'g03', 'g11'];
               <!-- the zip -->
               <div v-else-if="i === 1" class="mx-auto max-w-[520px]">
                 <div class="relative h-[200px]">
-                  <img v-for="(id, k) in ['g10', 'g04', 'g21', 'g11', 'g02', 'g14']" :key="id" :src="photo(id)" alt="" class="zip-fly absolute left-1/2 top-1/2 w-[120px] rounded-[10px] shadow-lg" loading="lazy" :style="{ '--k': k, '--x': `${(k - 2.5) * 70}px`, '--r': `${(k - 2.5) * 6}deg` }" />
+                  <img v-for="(id, k) in ['g10', 'g04', 'g21', 'g11', 'g02', 'g14']" :key="id" :src="photo(id)" v-bind="photoSize(id)" alt="" class="zip-fly absolute left-1/2 top-1/2 w-[120px] rounded-[10px] shadow-lg" loading="lazy" :style="{ '--k': k, '--x': `${(k - 2.5) * 70}px`, '--r': `${(k - 2.5) * 6}deg` }" />
                 </div>
                 <div class="relative rounded-[20px] bg-white p-4 shadow-[0_20px_40px_-24px_rgba(39,98,42,.4)]">
                   <div class="flex items-center gap-3">
@@ -100,10 +100,10 @@ const pending = ['g18', 'g03', 'g11'];
               <div v-else-if="i === 2" class="mx-auto max-w-[620px]">
                 <div class="laptop overflow-hidden rounded-t-[16px] border-[10px] border-b-0 border-[#2a2e2b] bg-black">
                   <div class="relative aspect-video">
-                    <img :src="photo('g23', 'l')" alt="" class="size-full object-cover" loading="lazy" />
+                    <img :src="photo('g23', 'l')" v-bind="photoSize('g23', 'l')" alt="" class="size-full object-cover" loading="lazy" />
                     <div class="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-3 pt-10">
                       <span class="text-[12px] font-semibold text-white">Aina &amp; Hakim</span>
-                      <img v-if="qr" :src="qr" alt="" class="size-10 rounded-[4px] bg-white p-1" />
+                      <img v-if="qr" :src="qr" width="256" height="256" alt="" class="size-10 rounded-[4px] bg-white p-1" />
                     </div>
                   </div>
                 </div>

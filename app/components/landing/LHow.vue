@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Camera, Check, ImagePlus, Images } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
-import { GUEST_NAMES, photo } from '~/composables/useLanding';
+import { GUEST_NAMES, photo, photoSize } from '~/composables/useLanding';
 import { prefersReduced } from '~/composables/useLandingMotion';
 import QrStand from '~/components/print/QrStand.vue';
 
@@ -87,7 +87,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
               />
               <div class="l-phone relative z-10 aspect-[9/19] h-[88%] sm:ml-[30%]">
                 <div class="l-phone-screen bg-[#0b0b0b]">
-                  <img :src="photo('g10')" alt="" class="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-[6px]" />
+                  <img :src="photo('g10')" v-bind="photoSize('g10')" alt="" class="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-[6px]" />
                   <QrStand
                     class="absolute left-1/2 top-[42%] w-[64%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] overflow-hidden rounded-[6px]"
                     :url="url" link="indahnya.my/aina-hakim" template="garden" :names="{ a: 'Aina', b: 'Hakim' }" title="Walimatulurus" date="15.08.2026" :locale="L.nav.lang === 'EN' ? 'ms' : 'en'"
@@ -109,7 +109,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
               <div class="l-phone relative aspect-[9/19] h-[88%]">
                 <div class="l-phone-screen px-[6%] pt-[17%]">
                   <p class="text-[15px] font-semibold leading-5 text-[#1a1a1a]">Aina &amp; Hakim</p>
-                  <p class="text-[11px] leading-4 text-[#75716d]">{{ L.how.gallery }}</p>
+                  <p class="text-[11px] leading-4 text-[#69655f]">{{ L.how.gallery }}</p>
                   <div class="mt-3 rounded-[14px] bg-white p-3 shadow-[0_1px_0_rgba(26,26,26,.05)]">
                     <div class="flex items-center justify-between text-[11px] font-medium text-[#1a1a1a]">
                       <span>{{ sent < TOTAL ? L.how.uploading : L.how.done }}</span>
@@ -119,7 +119,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
                   </div>
                   <div class="mt-3 grid grid-cols-3 gap-1.5">
                     <div v-for="(id, k) in picks" :key="id" class="relative aspect-square overflow-hidden rounded-[8px] bg-[#ebe8e5]">
-                      <img :src="photo(id)" alt="" class="size-full object-cover" loading="lazy" />
+                      <img :src="photo(id)" v-bind="photoSize(id)" alt="" class="size-full object-cover" loading="lazy" />
                       <span class="absolute inset-0 grid place-items-center transition-opacity duration-500" :class="sent > k ? 'opacity-0' : 'bg-black/35'">
                         <svg viewBox="0 0 36 36" class="size-7 -rotate-90" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="3" /><circle cx="18" cy="18" r="15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" pathLength="1" stroke-dasharray="1" :stroke-dashoffset="sent > k ? 0 : sent === k ? 0.4 : 1" class="transition-[stroke-dashoffset] duration-300" /></svg>
                       </span>
@@ -135,10 +135,10 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
             <!-- 3 · in the gallery and on the screen -->
             <template v-else>
               <div class="tv absolute right-[5%] top-[10%] hidden aspect-video w-[54%] overflow-hidden rounded-[10px] bg-black shadow-[0_0_0_6px_#2a2e2b,0_40px_80px_-30px_rgba(0,0,0,.8)] sm:block">
-                <img :src="photo('g21', 'l')" alt="" class="size-full object-cover" loading="lazy" />
+                <img :src="photo('g21', 'l')" v-bind="photoSize('g21', 'l')" alt="" class="size-full object-cover" loading="lazy" />
                 <div class="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-[3%] pt-[10%]">
                   <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-white"><Camera class="size-3" :stroke-width="2" />{{ GUEST_NAMES[4] }}</span>
-                  <img v-if="qr" :src="qr" alt="" class="size-[14%] rounded-[3px] bg-white p-[1.5%]" />
+                  <img v-if="qr" :src="qr" width="256" height="256" alt="" class="size-[14%] rounded-[3px] bg-white p-[1.5%]" />
                 </div>
               </div>
               <div class="l-phone relative z-10 aspect-[9/19] h-[88%] sm:mr-[34%] sm:mt-[8%]">
@@ -147,7 +147,7 @@ const galleryIds = ['g21', 'g04', 'g02', 'g11', 'g18', 'g09', 'g15', 'g01', 'g14
                   <div class="mt-2 inline-flex rounded-full bg-[#ebe8e5] p-0.5 text-[10px] font-medium"><span class="rounded-full bg-white px-2.5 py-1 text-[#1a1a1a]">{{ L.how.all }}</span><span class="px-2.5 py-1 text-[#55524f]">{{ L.how.mine }}</span></div>
                   <div class="mt-2.5 columns-2 gap-1.5">
                     <div v-for="(id, k) in galleryIds" :key="id" class="g-tile relative mb-1.5 overflow-hidden rounded-[8px] bg-[#ebe8e5]" :class="k === 0 && 'is-new'" :style="{ '--k': k }">
-                      <img :src="photo(id)" alt="" class="block w-full" loading="lazy" />
+                      <img :src="photo(id)" v-bind="photoSize(id)" alt="" class="block w-full" loading="lazy" />
                     </div>
                   </div>
                   <div class="toast absolute inset-x-[6%] bottom-[5%] flex h-11 items-center gap-2 rounded-full bg-[#1a1a1a] px-4 text-[12px] font-semibold text-white"><span class="grid size-5 place-items-center rounded-full bg-[#7dd56f] text-[#1a1a1a]"><Check class="size-3" :stroke-width="3" /></span>{{ L.how.done }}<Images class="ml-auto size-4 opacity-60" :stroke-width="2" /></div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
-import { PHOTOS, GUEST_NAMES, photo } from '~/composables/useLanding';
+import { PHOTOS, GUEST_NAMES, photo, photoSize } from '~/composables/useLanding';
 import { useLandingMotion, prefersReduced } from '~/composables/useLandingMotion';
 import { qrModules, logoPatch } from '~~/shared/utils/qr-art';
 import '@fontsource/great-vibes/latin-400.css';
@@ -444,7 +444,7 @@ onBeforeUnmount(() => {
           :style="{ left: `${floatBox.cx + f.dx * floatBox.cw}px`, top: `${floatBox.cy + f.dy * floatBox.cw}px`, width: `${f.w * floatBox.cw}px`, '--r': `${f.r}deg`, '--i': i }"
         >
           <div class="hero-polaroid">
-            <img :src="photo(f.id)" alt="" class="block w-full rounded-[6px] object-cover" :class="f.tall ? 'aspect-[4/5]' : 'aspect-[4/3]'" :fetchpriority="i < 2 ? 'high' : undefined" decoding="async" />
+            <img :src="photo(f.id)" v-bind="photoSize(f.id)" alt="" class="block w-full rounded-[6px] object-cover" :class="f.tall ? 'aspect-[4/5]' : 'aspect-[4/3]'" :fetchpriority="i < 2 ? 'high' : undefined" decoding="async" />
             <span class="mt-1.5 block truncate px-0.5 text-[11px] font-medium leading-4 text-[#55524f]">{{ f.name }}</span>
           </div>
         </div>
@@ -454,7 +454,7 @@ onBeforeUnmount(() => {
       <div ref="copy" class="l-wrap relative flex h-full flex-col [will-change:transform,opacity] pb-10 pt-[104px] md:pt-[128px] lg:pt-[19vh]">
         <p data-words class="hero-in self-start text-[14px] font-semibold text-[#27622a] md:text-[15px]" style="--d: 0">{{ L.hero.eyebrow }}</p>
         <h1 id="hero-title" class="l-display mt-4 text-[clamp(44px,7.4vw,116px)] text-[#1a1a1a] md:mt-5">
-          <span class="hero-line block"><span data-words class="hero-in inline-block" style="--d: 1">{{ L.hero.h1a }}</span></span>
+          <span class="hero-line block"><span data-words class="hero-in inline-block" style="--d: 1">{{ L.hero.h1a }}</span></span>{{ ' ' }}<!-- a real space, so the text reads "majlis. Satu" to a crawler -->
           <span class="hero-line is-open block"><span data-words class="hero-in inline-block" style="--d: 2">{{ h1b.lead }}<span class="relative inline-block">{{ h1b.word }}<svg class="qr-ring pointer-events-none absolute left-[-9%] top-[-14%] h-[128%] w-[118%] overflow-visible" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true"><path d="M150 14 C 108 2, 34 6, 14 34 C -4 62, 40 92, 104 90 C 168 88, 196 62, 186 36 C 178 16, 140 8, 96 10" fill="none" stroke="#7dd56f" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke" pathLength="1" /></svg></span>{{ h1b.tail }}</span></span>
         </h1>
         <div class="max-w-[560px] min-[900px]:max-w-[44%] lg:max-w-[40%]">
@@ -467,11 +467,11 @@ onBeforeUnmount(() => {
           <TransitionGroup tag="ul" name="feed" data-words class="feed relative mt-10 hidden w-[340px] min-[900px]:block [@media(max-height:680px)]:!hidden" aria-hidden="true">
             <li v-for="(f, k) in feed" :key="f.key" class="feed-item flex items-center gap-3 rounded-[18px] bg-[#fdfcfb] p-2.5 pr-4" :style="{ '--k': k }">
               <span class="flex w-[86px] shrink-0 -space-x-3">
-                <img v-for="id in f.ids.slice(0, 3)" :key="id" :src="photo(id)" alt="" class="size-10 rounded-[10px] border-2 border-[#fdfcfb] object-cover" />
+                <img v-for="id in f.ids.slice(0, 3)" :key="id" :src="photo(id)" v-bind="photoSize(id)" alt="" class="size-10 rounded-[10px] border-2 border-[#fdfcfb] object-cover" />
               </span>
               <span class="min-w-0 flex-1 text-[14px] leading-[18px]">
                 <span class="block truncate"><b class="font-semibold text-[#1a1a1a]">{{ f.name }}</b> <span class="text-[#55524f]">{{ feedLine(f.ids.length) }}</span></span>
-                <span class="block text-[12px] text-[#75716d]">{{ L.hero.feedNow }}</span>
+                <span class="block text-[12px] text-[#69655f]">{{ L.hero.feedNow }}</span>
               </span>
             </li>
           </TransitionGroup>

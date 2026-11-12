@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { linkIn } from '~~/shared/utils/site-pages';
 import { Menu, X, ArrowRight } from 'lucide-vue-next';
 import { Logo } from '~/ui';
 import type { LandingCopy } from '~/composables/useLanding';
@@ -44,9 +45,9 @@ const links = computed(() => ([
   { id: '', page: '/tentang', label: props.L.nav.about },
 ] as { id: string; page?: string; label: string }[]).map(l => ({
   ...l,
-  to: { path: l.page ?? '/', hash: l.id || undefined, query: en.value ? { lang: 'en' } : undefined },
+  to: { path: linkIn(l.page ?? '/', en.value ? 'en' : 'ms'), hash: l.id || undefined },
   scroll: !l.page && props.home, // a section of the page we are on
-  here: !!l.page && route.path === l.page,
+  here: !!l.page && route.path === linkIn(l.page, en.value ? 'en' : 'ms'),
 })));
 function go(l: { id: string; scroll: boolean }, e: MouseEvent) {
   sheet.value = false;
@@ -58,7 +59,7 @@ watch(sheet, v => document.documentElement.classList.toggle('l-lock', v));
 <template>
   <header class="nav fixed inset-x-0 top-0 z-40 px-3 pt-3 md:px-5 md:pt-4" :class="{ 'nav-hidden': hidden }">
     <div class="nav-pill mx-auto flex h-[60px] max-w-[1280px] items-center justify-between gap-3 rounded-full pl-4 pr-2 md:pl-5" :class="{ 'is-solid': solid || sheet, 'is-dim': dim && !sheet }">
-      <NuxtLink to="/" class="rounded-full" aria-label="Indahnya"><Logo :size="24" class="nav-logo" /></NuxtLink>
+      <NuxtLink :to="linkIn('/', en ? 'en' : 'ms')" class="rounded-full" aria-label="Indahnya"><Logo :size="24" class="nav-logo" /></NuxtLink>
       <nav class="hidden items-center gap-0.5 lg:flex" aria-label="Utama">
         <NuxtLink v-for="l in links" :key="l.label" :to="l.to" class="nav-link" :class="l.here && 'is-here'" :aria-current="l.here ? 'page' : undefined" @click="go(l, $event)">{{ l.label }}</NuxtLink>
       </nav>

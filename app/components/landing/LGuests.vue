@@ -206,8 +206,8 @@ const sideColour = ['#27622a', '#7dd56f', '#cdeec5'];
         </div>
         <label class="relative mt-6 block">
           <span class="sr-only">{{ L.guests.seat.title }}</span>
-          <Search class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#75716d]" :stroke-width="2" aria-hidden="true" />
-          <input v-model="q" type="search" maxlength="40" autocomplete="off" :placeholder="ph ? ph : L.guests.seat.placeholder" class="h-14 w-full rounded-full border border-[#d9d5d1] bg-white pl-12 pr-5 text-[17px] outline-none transition placeholder:text-[#75716d] focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,.1)]">
+          <Search class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#69655f]" :stroke-width="2" aria-hidden="true" />
+          <input v-model="q" type="search" maxlength="40" autocomplete="off" :placeholder="ph ? ph : L.guests.seat.placeholder" class="h-14 w-full rounded-full border border-[#d9d5d1] bg-white pl-12 pr-5 text-[17px] outline-none transition placeholder:text-[#69655f] focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(26,26,26,.1)]">
         </label>
 
         <div class="mt-6 grid grid-cols-1 items-center gap-6 sm:grid-cols-[1fr_auto]">
@@ -220,7 +220,7 @@ const sideColour = ['#27622a', '#7dd56f', '#cdeec5'];
               <p class="seat-hit mt-3 inline-flex items-center gap-2 text-[14px] text-[#27622a]"><span class="size-2 rounded-full bg-[#7dd56f]" />{{ L.guests.seat.walk }}</p>
             </template>
             <p v-else-if="result" class="text-[15px] text-[#55524f]">{{ L.guests.seat.none }}</p>
-            <p v-else class="text-[15px] text-[#75716d]">{{ q.trim().length ? L.guests.seat.short : '' }}</p>
+            <p v-else class="text-[15px] text-[#69655f]">{{ q.trim().length ? L.guests.seat.short : '' }}</p>
           </div>
           <!-- the dewan floor, the found table lit and the walk to it drawn -->
           <svg viewBox="0 0 340 346" class="dewan w-full max-w-[330px] justify-self-center sm:w-[300px] sm:justify-self-end lg:w-[330px]" role="img" :aria-label="found ? tableLabel(found) : L.guests.seat.title">
@@ -291,7 +291,7 @@ const sideColour = ['#27622a', '#7dd56f', '#cdeec5'];
 .dewan .wall { fill: #f6f4f1; stroke: #d9d5d1; stroke-width: 1.5; }
 .dewan .walkway { fill: #ebe8e5; opacity: .7; }
 .dewan .pelamin { fill: #e6f3e1; stroke: #bfdcb5; stroke-width: 1; }
-.dewan .lbl { font: 600 9px Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; fill: #75716d; text-anchor: middle; }
+.dewan .lbl { font: 600 9px Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; fill: #69655f; text-anchor: middle; }
 .dewan .lbl-on { fill: #27622a; }
 .dewan .num { font: 600 11px Inter, sans-serif; fill: #55524f; text-anchor: middle; transition: fill .4s; }
 .dewan .chair { fill: #d9d5d1; transition: fill .4s; }

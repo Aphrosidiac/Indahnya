@@ -101,16 +101,17 @@ export const LANDING = {
       ],
       choose: 'Pilih',
       compare: 'Banding semua pakej',
-      note: 'Bayar melalui CHIP: FPX, kad atau e-wallet. Harga dalam Ringgit, resit ke email.',
+      note: 'Bayar melalui CHIP, termasuk FPX online banking. Harga dalam Ringgit, resit ke email.',
     },
     faq: {
       title: 'Yang orang selalu tanya.',
       items: [
         { q: 'Apa itu Indahnya?', a: 'Indahnya ialah galeri gambar majlis dengan QR untuk Malaysia. Tetamu scan QR atas meja, upload gambar dari browser phone tanpa app atau login, dan semua masuk satu galeri yang boleh naik atas TV dewan. Ada juga e-kad jemputan, RSVP, carian nombor meja dan ucapan.' },
+        { q: 'Untuk majlis apa?', a: 'Majlis kahwin (nikah, sanding, bertandang), tunang, aqiqah, hari jadi, graduasi dan majlis syarikat. Satu majlis ialah satu tarikh dan satu tempat: kalau ada dua majlis, buat dua.' },
         { q: 'Berapa harga Indahnya?', a: 'Percuma untuk mula (RM0): 50 upload, simpan 30 hari selepas majlis. RM59 sekali bayar untuk upload tanpa had dan simpan setahun. RM99 sekali bayar untuk simpan dua tahun dan tanpa badge Indahnya. Tak ada subscription, tak ada caj per tetamu.' },
         { q: 'Apa beza dengan group WhatsApp atau Google Drive?', a: 'Dengan Indahnya, tetamu tak perlu join group, ada akaun Google atau download app. Scan QR, terus upload. Semua gambar duduk dalam satu galeri dengan nama siapa yang snap, boleh naik atas TV dewan masa majlis, dan tuan majlis download semua sekali gus.' },
         { q: 'Tetamu kena download app ke?', a: 'Tak. Scan QR, browser phone terus buka galeri. iPhone, Android, phone lama makcik, semua jalan.' },
-        { q: 'Kalau tak ada line kat dewan?', a: 'Gambar yang tak sempat upload sambung sendiri bila line kembali. Kalau page tertutup, buka balik page galeri tu — upload sambung dari tempat dia berhenti. Untuk TV, guna hotspot phone. Slideshow tetap jalan dengan gambar yang dah ada.' },
+        { q: 'Kalau tak ada line kat dewan?', a: 'Gambar yang tak sempat upload sambung sendiri bila line kembali. Kalau page tertutup, buka balik page galeri tu. Upload sambung dari tempat dia berhenti. Untuk TV, guna hotspot phone. Slideshow tetap jalan dengan gambar yang dah ada.' },
         { q: 'Boleh tapis gambar yang tak sesuai?', a: 'Boleh. Sembunyi atau padam dari dashboard, atau on approval mode supaya gambar hanya naik selepas korang tengok.' },
         { q: 'Gambar disimpan berapa lama?', a: 'Percuma: 30 hari selepas majlis. RM59: setahun. RM99: dua tahun. Kiraan bermula dari hari majlis, bukan hari korang buat akaun. Kami email sebelum tamat, dan korang boleh download semua atau lanjutkan.' },
         { q: 'Video boleh?', a: 'Boleh, sampai 60 saat setiap satu. Kami tukar ke format yang main kat semua phone.' },
@@ -215,12 +216,13 @@ export const LANDING = {
       ],
       choose: 'Choose',
       compare: 'Compare every plan',
-      note: 'Paid through CHIP: FPX, card or e-wallet. Prices in Ringgit, receipt by email.',
+      note: 'Paid through CHIP, including FPX online banking. Prices in Ringgit, receipt by email.',
     },
     faq: {
       title: 'What people ask.',
       items: [
         { q: 'What is Indahnya?', a: 'Indahnya is a QR photo gallery for Malaysian events. Guests scan a QR code on the table, upload photos from their phone browser with no app or sign-up, and everything lands in one gallery that can play on the venue screen. It also has an e-invitation card, RSVP, a table finder and guest wishes.' },
+        { q: 'What events is it for?', a: 'Weddings (nikah, sanding, bertandang), engagements, aqiqah, birthdays, graduations and company events. One event is one date and one venue: two majlis means two events.' },
         { q: 'How much does Indahnya cost?', a: 'Free to start (RM0): 50 uploads, kept 30 days after the event. RM59 one-time for unlimited uploads kept for a year. RM99 one-time for two years and no Indahnya badge. No subscription and no per-guest fee.' },
         { q: 'How is it different from a WhatsApp group or Google Drive?', a: 'With Indahnya, guests do not join a group, need a Google account or download an app. They scan the QR and upload. Every photo sits in one gallery with the name of whoever took it, can play on the venue screen during the event, and the hosts download everything at once.' },
         { q: 'Do guests need to install an app?', a: 'No. Scan the QR and the gallery opens in the phone browser. iPhone, Android, an aunty\'s old phone, all fine.' },
@@ -245,3 +247,9 @@ export const PHOTOS: Record<string, [number, number]> = { g01: [900, 506], g02: 
 export const GUEST_NAMES = ['Makcik Ros', 'Aiman', 'Team Office', 'Kak Yati', 'Pak Long', 'Nadia & Irfan', 'Abang Faiz', 'Cousins', 'Uncle Lim', 'Syafiq', 'Auntie Mei', 'Hana'];
 /** Sample photos (scripts/landing-photos.json, built by scripts/build-photos.mjs): 's' 560px for tiles, 'l' 1600px for big frames. */
 export const photo = (id: string, size: 's' | 'l' = 's') => `/landing/${size}/${id}.webp`;
+/** The intrinsic width and height of a sample photo at that size, for <img width height> (no layout shift). */
+export function photoSize(id: string, size: 's' | 'l' = 's') {
+  const [w, h] = PHOTOS[id] ?? [900, 600];
+  const width = size === 'l' ? 1600 : 560;
+  return { width, height: Math.round((width * h) / w) };
+}

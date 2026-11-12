@@ -61,8 +61,8 @@ Labels: [measured] [sourced] [code] [inferred], as in the research files.
 10. **`/en/wedding-photo-sharing-malaysia`**: English Malaysia-qualified field is thin locally.
 11. **`/panduan/slideshow-tv-majlis`**: zero typed demand; prompts p010, p011, p032.
 12. **`/en/guides/collect-guest-photos-malaysia`**, **`/en/digital-wedding-invitation-malaysia`**.
-13. **`/banding`** hub with a neutral dated retention/price table, and **`/banding/kenangan`**: only on the owner's
-    word (decision 1).
+13. **`/banding`** hub with a neutral dated retention and price table (approved 12 Nov). **`/banding/kenangan`** stays
+    on hold.
 
 All of it is built in one pass; the order is the build and review order, not a release schedule.
 
@@ -112,7 +112,9 @@ All of it is built in one pass; the order is the build and review order, not a r
 | `/banding/whatsapp-google-drive` | google drive atau qr code gambar kahwin | When WhatsApp or Drive is enough, when a QR gallery helps; dated, sourced facts | `/panduan/kumpul-gambar-tetamu`, `/harga` |
 | `/banding/alternatif-wedibox-malaysia` | wedibox alternative malaysia | What Wedibox does (USD, dated), what a Malaysian majlis needs, where Wedibox is the better buy | `/`, `/harga` |
 
-Held for decision 1: `/banding` hub (neutral dated table, retention and price ranges) and `/banding/kenangan`.
+| `/banding` | perbandingan galeri qr majlis malaysia | A neutral, dated table of Malaysian QR galleries and Wedibox: price, retention, caps, e-kad and RSVP; where each is the better buy; no ranking | every `/banding` page, `/harga` |
+
+On hold: `/banding/kenangan`.
 
 ### 3.3 English pages
 
@@ -182,8 +184,8 @@ Also no `llms.txt` work and no `FAQPage` markup.
 
 | # | Decision | Unlocks | Recommendation |
 |---|---|---|---|
-| 1 | Name rivals on pages? (`/banding` hub, `/banding/kenangan`; Wedibox is already planned) | 2 pages; the citable market table | Yes for Wedibox and the neutral hub; Kenangan only if you're comfortable naming a local CHIP peer |
-| 2 | English to `/en/` | Wave 0.8; the English pages | Yes, now |
+| 1 | Name rivals on pages? | the `/banding` hub, the Wedibox page | **Decided 12 Nov: yes** for Wedibox and the neutral hub. `/banding/kenangan` on hold |
+| 2 | English to `/en/` | Wave 0.8; the English pages | **Decided 12 Nov: yes** |
 | 3 | Founder name on `/tentang` | Entity trust for an ambiguous brand word | Your call |
 | 4 | Training crawlers (GPTBot, ClaudeBot, CCBot, Google-Extended) | robots.txt | Keep allowed while the brand is new |
 | 5 | hello@indahnya.my on `/privasi`, `/terma` | Consistency | Your call (unchanged) |

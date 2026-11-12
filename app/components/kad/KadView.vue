@@ -170,7 +170,7 @@ function tool(k: string) {
     <!-- COVER: the tap that opens the kad is the gesture that lets the song start -->
     <Transition name="kad-cover">
       <div v-if="!opened" class="kad-cover" role="dialog" :aria-label="view.title">
-        <img v-if="view.cover" :src="view.cover" alt="" class="kad-cover-photo" />
+        <img v-if="view.cover" :src="view.cover" width="1200" height="1500" alt="" class="kad-cover-photo" />
         <div class="kad-cover-inner">
           <p class="kad-eyebrow">{{ view.title }}</p>
           <KadOrnament :kind="t.ornament" class="mt-4" />
@@ -188,7 +188,7 @@ function tool(k: string) {
     <main class="kad-column" :aria-hidden="!opened && mode === 'page' ? 'true' : undefined">
       <!-- HERO -->
       <section class="kad-hero" :class="view.cover && 'kad-hero-photo'">
-        <img v-if="view.cover" :src="view.cover" alt="" class="kad-hero-img" />
+        <img v-if="view.cover" :src="view.cover" width="1200" height="1500" alt="" class="kad-hero-img" />
         <div class="kad-hero-text">
           <p class="kad-eyebrow">{{ view.title }}</p>
           <KadOrnament :kind="t.ornament" class="mt-3" />
@@ -269,7 +269,7 @@ function tool(k: string) {
         <h2 class="kad-h2">{{ L.photos }}</h2>
         <div class="kad-photos" :class="view.photos.length === 1 && 'kad-photos-one'">
           <button v-for="(p, i) in view.photos" :key="p" type="button" class="kad-photo" :aria-label="`${L.photos} ${i + 1}`" @click="viewing = i">
-            <img :src="p" alt="" loading="lazy" decoding="async" />
+            <img :src="p" width="800" height="1000" alt="" loading="lazy" decoding="async" />
           </button>
         </div>
       </section>
@@ -382,7 +382,7 @@ function tool(k: string) {
         </div>
         <div v-else-if="sheet === 'gift' && view.gift" class="kad-sheet-body">
           <p v-if="view.gift.note" class="kad-p kad-center">{{ view.gift.note }}</p>
-          <div v-if="view.gift.qr" class="kad-qr"><img :src="view.gift.qr" alt="DuitNow QR" /><p class="kad-small">{{ L.qr }}</p></div>
+          <div v-if="view.gift.qr" class="kad-qr"><img :src="view.gift.qr" width="256" height="256" alt="DuitNow QR" /><p class="kad-small">{{ L.qr }}</p></div>
           <div v-for="a in view.gift.accounts" :key="a.number" class="kad-row">
             <div class="min-w-0 flex-1"><p class="kad-small">{{ a.bank }}</p><p class="kad-row-title kad-num">{{ a.number }}</p><p class="kad-small">{{ a.name }}</p></div>
             <button type="button" class="kad-btn kad-btn-sm" @click="copy(a.number)"><component :is="copied === a.number ? Check : Copy" class="size-4" :stroke-width="1.75" aria-hidden="true" />{{ copied === a.number ? L.copied : L.copy }}</button>

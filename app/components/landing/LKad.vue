@@ -169,7 +169,7 @@ const swatch = (t: KadTemplate) => ({ background: `linear-gradient(135deg, ${KAD
   width: 100%; height: 52px; border-radius: 14px; border: 1px solid #d9d5d1; background: #fdfcfb; padding: 0 16px;
   font-size: 17px; color: #1a1a1a; outline: none; transition: border-color .15s, box-shadow .15s;
 }
-.field-l::placeholder { color: #75716d; }
+.field-l::placeholder { color: #69655f; }
 .field-l:focus { border-color: #1a1a1a; box-shadow: 0 0 0 3px rgb(26 26 26 / .1); }
 .demo-cursor { opacity: 0; transition: transform .9s cubic-bezier(.65, 0, .35, 1), opacity .4s; }
 .demo-cursor.is-on { opacity: 1; }

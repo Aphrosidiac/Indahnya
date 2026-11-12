@@ -80,6 +80,8 @@ at start and refuses to run, listing what is missing
 | `NUXT_ALERT_EMAIL` | strongly advised | Where alerts go: refunds needed, jobs given up, mail failures |
 | `NUXT_CLOUDFLARE_ZONE_ID` / `NUXT_CLOUDFLARE_API_TOKEN` | no | Purge hidden/deleted media from the edge at once (token: Zone → Cache Purge) |
 | `NUXT_GOOGLE_CLIENT_ID` / `NUXT_GOOGLE_CLIENT_SECRET` | no | Google sign-in |
+| `NUXT_STAFF_EMAILS` | advised | Staff, comma-separated: who may open `/app/metrics` and the metrics API. Empty = nobody |
+| `NUXT_GSC_SERVICE_ACCOUNT_JSON` / `NUXT_GSC_PROPERTY` / `NUXT_BING_API_KEY` | no | Search Console and Bing Webmaster pulls ([ANALYTICS.md](ANALYTICS.md)) |
 | `DB_POOL_MAX` | no | Postgres connections per process (default 10) |
 | `WORKER` | per process | `0` on the web processes, `1` on the worker (set in `ecosystem.config.cjs`) |
 | `WORKER_PHOTO_CONCURRENCY` / `WORKER_VIDEO_CONCURRENCY` / `FFMPEG_THREADS` | no | Worker lanes (default 2 / 1) and threads per encode (default 2) |
@@ -235,6 +237,27 @@ With `NUXT_ALERT_EMAIL` set, these arrive by mail, at most once per 15 minutes p
 - **Purge without a final warning.**
 
 Without `NUXT_ALERT_EMAIL`, they appear only in `pm2 logs` with the prefix `[alert]`.
+
+## Analytics
+
+Indahnya counts its own visitors, crawlers, sign-up sources, revenue and search; the full story is in
+[ANALYTICS.md](ANALYTICS.md). What a deploy needs:
+
+- **nginx** writes a JSON log, `/var/log/indahnya/traffic.log` (`indahnya_json` in `deploy/nginx.conf`), next to the
+  existing access log, and answers the beacon `/_e` with 204 itself. `deploy/remote.sh` creates the directory
+  (`root:indahnya 0750`), the file (`0640`) and `/etc/logrotate.d/indahnya-traffic` (daily, 14 kept, `delaycompress`,
+  nginx sent USR1) before it runs `nginx -t`, so the first deploy after this change needs nothing by hand;
+  `setup-server.sh` does the same on a fresh box. Both only touch Indahnya's own files and server block.
+- **Migration** `0008_analytics` adds the traffic and search tables and five nullable `users` columns; the deploy's
+  migration step applies it. Additive, so a rollback still runs.
+- **Env:** `NUXT_STAFF_EMAILS` (comma-separated; empty = nobody is staff, the report stays closed). Optional:
+  `NUXT_GSC_SERVICE_ACCOUNT_JSON`, `NUXT_GSC_PROPERTY`, `NUXT_BING_API_KEY`, `NUXT_BING_SITE_URL`,
+  `NUXT_TRAFFIC_LOG_PATH`. Add them to `production.env`, then `deploy/env.sh push --reload`.
+- **Read it:** `/app/metrics` (staff), or from the Mac `scripts/metrics.sh report 7` (runs
+  `scripts/metrics-cli.ts` on the box as `indahnya`, over `ssh indahnya`). `scripts/metrics.sh ingest` reads the log
+  at once instead of waiting for the 10-minute tick.
+- **After the first deploy:** `scripts/metrics.sh ingest` should report `lines` above 0 within minutes of traffic;
+  the report's Sources table shows the `traffic` collector `OK`.
 
 ## Static preview (Cloudflare Pages)
 

@@ -5,6 +5,7 @@ import { processMedia } from '../worker/process-media';
 import { purgeEvent, sweep } from '../worker/purge';
 import { notifyExpiring } from '../worker/notify';
 import { kadGc } from '../worker/kad-gc';
+import { trafficTick } from '../worker/traffic';
 import { sweepSandbox } from '../utils/sandbox';
 import { opsAlert } from '../utils/alert';
 import { MAX_ATTEMPTS, LOCK_STALE_MIN, closeAbandonedJobs, pruneHousekeeping, cleanTmp } from '../worker/housekeeping';
@@ -108,9 +109,11 @@ export default defineNitroPlugin((nitro) => {
     setInterval(tickAll, 1000),
     setInterval(beat, 60_000),
     setInterval(() => { sweepSandbox().catch(e => console.error('[sandbox]', e)); }, 10 * 60_000),
+    setInterval(() => { void trafficTick(); }, 10 * 60_000),
     setInterval(hourly, 3_600_000),
   ];
   const first = setTimeout(hourly, 15_000);
+  const firstTraffic = setTimeout(() => { void trafficTick(); }, 45_000);
 
   /**
    * PM2 reload / SIGTERM: stop claiming, let what is running finish (PM2's
@@ -119,7 +122,7 @@ export default defineNitroPlugin((nitro) => {
    */
   nitro.hooks.hook('close', async () => {
     stopping = true;
-    timers.forEach(clearInterval); clearTimeout(first);
+    timers.forEach(clearInterval); clearTimeout(first); clearTimeout(firstTraffic);
     if (!running.size) return;
     console.log(`[worker] waiting for ${running.size} job(s) to finish`);
     await Promise.race([Promise.allSettled([...running]), new Promise(r => setTimeout(r, 25_000))]);

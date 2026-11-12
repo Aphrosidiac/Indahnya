@@ -80,6 +80,17 @@ export default defineNuxtConfig({
     chip: { secretKey: '', brandId: '', webhookPublicKey: '' },
     google: { clientId: '', clientSecret: '' },
     smtp: { url: '', from: 'Indahnya <hello@indahnya.my>' },
+    /**
+     * Analytics (docs/ANALYTICS.md). Staff = these emails (comma-separated): both sign-in methods prove the
+     * mailbox, so a match is enough. The log is nginx's `indahnya_json` file. The search keys are optional:
+     * without them the report says "not configured".
+     */
+    staffEmails: '',
+    trafficLogPath: '/var/log/indahnya/traffic.log',
+    gscServiceAccountJson: '',
+    gscProperty: 'sc-domain:indahnya.my',
+    bingApiKey: '',
+    bingSiteUrl: 'https://indahnya.my/',
     /** Where alerts go: refunds needed, jobs given up, purges without a warning, mail failures. */
     alertEmail: '',
     /** Optional: purge media URLs from Cloudflare's edge on hide/delete (token needs Zone → Cache Purge). */
@@ -100,6 +111,12 @@ export default defineNuxtConfig({
       preview: false,
     },
   },
+  /**
+   * Public pages inline their CSS into the HTML instead of linking it: a linked
+   * 100 KB stylesheet held the first paint for ~3 s on mobile 4G (Lighthouse,
+   * docs/seo/ACCEPTANCE.md Gate B). The host app is client-only and unaffected.
+   */
+  features: { inlineStyles: true },
   nitro: {
     experimental: { tasks: true },
     /**

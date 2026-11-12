@@ -34,7 +34,7 @@ onBeforeUnmount(() => triggers.forEach(t => t.kill()));
       <div class="lg:col-span-4">
         <p class="l-h3 text-[#27622a]">{{ L.nosLead }}</p>
         <ul class="mt-5 space-y-1" role="list">
-          <li v-for="n in L.nos" :key="n" class="no l-h3 text-[clamp(24px,2.4vw,34px)] text-[#75716d]"><span class="no-text">{{ n }}</span></li>
+          <li v-for="n in L.nos" :key="n" class="no l-h3 text-[clamp(24px,2.4vw,34px)] text-[#69655f]"><span class="no-text">{{ n }}</span></li>
         </ul>
       </div>
       <p ref="para" class="l-display text-[clamp(30px,4.1vw,60px)] !leading-[1.08] !tracking-[-0.035em] text-[#1a1a1a] lg:col-span-8">

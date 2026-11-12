@@ -31,8 +31,33 @@ activate() { # release dir
   fi
 }
 
+# The analytics log nginx writes (deploy/nginx.conf `indahnya_json`) must exist before `nginx -t`, and the app user
+# must be able to read it: root:indahnya 0750/0640 and its own logrotate rule (nginx's would make it 0640 www-data:adm).
+# Idempotent, and only Indahnya's directory and rule. deploy/setup-server.sh does the same on provisioning.
+ensure_traffic_log() {
+  install -d -m 0750 -o root -g $APP /var/log/indahnya
+  [ -e /var/log/indahnya/traffic.log ] || install -m 0640 -o root -g $APP /dev/null /var/log/indahnya/traffic.log
+  chown root:$APP /var/log/indahnya/traffic.log && chmod 0640 /var/log/indahnya/traffic.log
+  cat > /etc/logrotate.d/indahnya-traffic <<LOGROTATE
+/var/log/indahnya/traffic.log {
+  daily
+  rotate 14
+  missingok
+  notifempty
+  compress
+  delaycompress
+  create 0640 root $APP
+  sharedscripts
+  postrotate
+    [ ! -s /run/nginx.pid ] || kill -USR1 "\$(cat /run/nginx.pid)"
+  endscript
+}
+LOGROTATE
+}
+
 install_nginx() { # release dir
   local src="$1/deploy/nginx.conf" dst=/etc/nginx/sites-available/indahnya
+  ensure_traffic_log
   if ! cmp -s "$src" "$dst"; then
     [ -f "$dst" ] && cp "$dst" "$dst.prev"
     cp "$src" "$dst" && ln -sfn "$dst" /etc/nginx/sites-enabled/indahnya

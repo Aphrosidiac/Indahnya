@@ -1,5 +1,8 @@
 # Indahnya: canonical fact set
 
+> **Superseded for facts (12 Nov 2026):** the current fact set is `docs/seo/research/indahnya-truth.md`, and the
+> plan is `docs/seo/strike-plan.md`. This file is kept as the 4 Oct GEO record.
+
 The one description every surface uses: the landing, `/tentang`, the JSON-LD
 (`app/composables/useSiteGraph.ts`), app-store and directory profiles, press
 boilerplate. Answer-engine checks (`ai_visibility.py`) compare against this.

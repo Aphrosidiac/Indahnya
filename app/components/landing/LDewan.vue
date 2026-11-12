@@ -198,12 +198,12 @@ const tint = (n: string) => TINTS[[...n].reduce((a, c) => a + c.charCodeAt(0), 0
           <!-- the room catches the screen's light: the slide itself, blown up and blurred behind it -->
           <div class="ambient pointer-events-none absolute -inset-[8%] -z-10" aria-hidden="true">
             <TransitionGroup name="glow">
-              <img v-for="s in slides" :key="s.key" :src="s.src" alt="" class="absolute inset-0 size-full object-cover" />
+              <img v-for="s in slides" :key="s.key" :src="s.src" width="1600" height="900" alt="" class="absolute inset-0 size-full object-cover" />
             </TransitionGroup>
           </div>
           <div class="tv relative aspect-video w-full overflow-hidden rounded-[14px] bg-black">
             <TransitionGroup name="slide">
-              <img v-for="s in slides" :key="s.key" :src="s.src" alt="" decoding="async" loading="lazy" class="slide absolute inset-0 size-full object-cover" :class="s.fresh && 'object-contain bg-black'" />
+              <img v-for="s in slides" :key="s.key" :src="s.src" width="1600" height="900" alt="" decoding="async" loading="lazy" class="slide absolute inset-0 size-full object-cover" :class="s.fresh && 'object-contain bg-black'" />
             </TransitionGroup>
 
             <!-- top: what a guest sees on the dewan screen -->
@@ -227,7 +227,7 @@ const tint = (n: string) => TINTS[[...n].reduce((a, c) => a + c.charCodeAt(0), 0
                 </div>
               </Transition>
               <div v-if="!phone" class="relative w-[clamp(70px,10%,118px)] shrink-0 rounded-[10px] bg-white p-[5px] pb-1 shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
-                <img v-if="pairQr" :src="pairQr" :alt="preview ? L.live.tvScanPreview : L.live.tvScan" class="block w-full" />
+                <img v-if="pairQr" :src="pairQr" width="256" height="256" :alt="preview ? L.live.tvScanPreview : L.live.tvScan" class="block w-full" />
                 <div v-else class="aspect-square w-full animate-pulse rounded-[4px] bg-[#ebe8e5]" />
                 <p class="mt-[3px] text-center text-[clamp(7px,0.72vw,10px)] font-bold uppercase leading-tight tracking-[.04em] text-[#1a1a1a]">{{ preview ? L.live.tvScanPreview : L.live.tvScan }}</p>
                 <div ref="burstRoot" class="pointer-events-none absolute left-1/2 top-1/2" aria-hidden="true" />

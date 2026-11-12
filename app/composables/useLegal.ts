@@ -10,17 +10,22 @@
 import { COMPANY } from '~~/shared/company';
 
 export interface LegalSection { h: string; p?: string[]; ul?: string[] }
-export interface LegalDoc { title: string; updated: string; intro: string; sections: LegalSection[]; other: string }
+/** `desc`: the 120–160 character search snippet; `mod`: the visible updated date as YYYY-MM-DD (sitemap lastmod, dateModified). */
+export interface LegalDoc { title: string; updated: string; mod: string; desc: string; intro: string; sections: LegalSection[]; other: string }
 
 const UPDATED_MS = 'Dikemas kini 5 Oktober 2026';
+const UPDATED_PRIV_MS = 'Dikemas kini 12 November 2026';
 const UPDATED_EN = 'Updated 5 October 2026';
+const UPDATED_PRIV_EN = 'Updated 12 November 2026';
 const CONTACT_MS = 'Email hello@indahnya.my atau WhatsApp +60 13‑907 8719.';
 const CONTACT_EN = 'Email hello@indahnya.my or WhatsApp +60 13‑907 8719.';
 
 export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
   ms: {
     title: 'Notis Privasi',
-    updated: UPDATED_MS,
+    updated: UPDATED_PRIV_MS,
+    mod: '2026-11-12',
+    desc: 'Notis privasi Indahnya (PDPA 2010): data yang kami kumpul untuk galeri gambar majlis, e-kad dan RSVP, siapa boleh tengok, berapa lama simpan dan hak korang.',
     intro: 'Indahnya (indahnya.my) dikendalikan oleh FF Dev Studio, Malaysia — pengguna data di bawah Akta Perlindungan Data Peribadi 2010 (butiran syarikat di bawah). Notis ni terangkan data apa yang kami kumpul, kenapa, siapa boleh tengok, berapa lama kami simpan, dan hak korang.',
     sections: [
       { h: 'Data yang kami kumpul', ul: [
@@ -31,7 +36,8 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Tetamu — ucapan: ucapan bertulis, dan ucapan suara (rakaman suara tetamu sampai 60 saat).',
         'Tetamu tak perlu akaun atau email. Semua maklumat tetamu adalah pilihan — tak isi pun boleh tengok galeri dan upload gambar.',
         'Bayaran: status bayaran, jumlah dan cara bayar (contohnya FPX atau kad). Butiran kad, akaun bank dan e-wallet diproses terus oleh CHIP — kami tak nampak dan tak simpan.',
-        'Teknikal: alamat IP (untuk keselamatan dan had cubaan), dan cookie yang perlu untuk sistem jalan — satu untuk log masuk tuan majlis, satu untuk kenal browser tetamu supaya "Gambar saya", RSVP dan padam gambar sendiri boleh berfungsi. Tak ada cookie iklan, analitik atau tracking pihak ketiga.',
+        'Teknikal: alamat IP (untuk keselamatan dan had cubaan), dan cookie yang perlu untuk sistem jalan — satu untuk log masuk tuan majlis, satu untuk kenal browser tetamu supaya "Gambar saya", RSVP dan padam gambar sendiri boleh berfungsi. Tak ada cookie iklan atau tracking pihak ketiga.',
+        'Statistik lawatan: bila korang buka halaman awam Indahnya (bukan halaman majlis), kami set satu cookie pihak pertama, indahnya_ft, yang simpan halaman pertama korang buka, laman yang hantar korang ke sini dan masanya, selama 180 hari. Ia hanya disalin ke akaun kalau korang daftar, supaya kami tahu dari mana pengguna datang. Halaman awam juga hantar satu permintaan kecil ke server kami sendiri supaya lawatan orang boleh dibezakan dari bot. Log server simpan IP, browser dan halaman selama 14 hari. Dalam pangkalan data, lawatan orang disimpan sebagai kod sehala yang bertukar setiap hari, dan IP penuh hanya untuk trafik automatik (bot), selama 120 hari. Cloudflare, yang hantar laman ni, juga kira lawatan untuk kami tanpa cookie. Data ni tak dijual dan tak dikongsi untuk iklan.',
       ] },
       { h: 'Maklumat dalam gambar dan video', p: [
         'Gambar dan video dari phone selalunya ada metadata, termasuk kadang-kadang lokasi GPS tempat gambar tu diambil. Salinan yang dipaparkan dalam galeri, atas TV dan dalam kad dah dibuang semua metadata ni. Fail asal disimpan secara tertutup, dan hanya tuan majlis boleh download fail asal (contohnya dalam zip) — fail asal tu masih ada metadata asalnya.',
@@ -77,7 +83,9 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
   },
   en: {
     title: 'Privacy Notice',
-    updated: UPDATED_EN,
+    updated: UPDATED_PRIV_EN,
+    mod: '2026-11-12',
+    desc: 'Indahnya\'s privacy notice (PDPA 2010): what we collect for the photo gallery, e-invite and RSVP, who can see it, how long it is kept, and your rights.',
     intro: 'Indahnya (indahnya.my) is operated by FF Dev Studio, Malaysia — the data user under the Personal Data Protection Act 2010 (company details below). This notice explains what data we collect, why, who can see it, how long we keep it, and your rights.',
     sections: [
       { h: 'What we collect', ul: [
@@ -88,7 +96,8 @@ export const PRIVACY: Record<'ms' | 'en', LegalDoc> = {
         'Guests — wishes: written wishes, and voice wishes (a recording of the guest\'s voice, up to 60 seconds).',
         'Guests need no account or email. Everything a guest gives is optional — they can view the gallery and upload without giving anything.',
         'Payments: payment status, amount and method (for example FPX or card). Card, bank account and e-wallet details are handled by CHIP directly — we never see or store them.',
-        'Technical: IP address (for security and rate limits), and the cookies the service needs to work — one keeps a host signed in, one recognises a guest\'s browser so "My photos", RSVP and deleting your own photo work. No advertising, analytics or third-party tracking cookies.',
+        'Technical: IP address (for security and rate limits), and the cookies the service needs to work — one keeps a host signed in, one recognises a guest\'s browser so "My photos", RSVP and deleting your own photo work. No advertising or third-party tracking cookies.',
+        'Visit statistics: when you open Indahnya\'s public pages (not an event\'s pages), we set one first-party cookie, indahnya_ft, holding the first page you opened, the site that sent you and when, for 180 days. It is copied onto an account only if you sign up, so we know where users come from. Public pages also send one small request to our own server so that people can be told apart from bots. The server log keeps IP address, browser and page for 14 days. In our database, people\'s visits are kept as a one-way code that changes every day, and full IP addresses only for automated traffic (bots), for 120 days. Cloudflare, which delivers this site, also counts visits for us without cookies. This data is never sold or shared for advertising.',
       ] },
       { h: 'Information inside photos and videos', p: [
         'Photos and videos from phones usually carry metadata, sometimes including the GPS location where they were taken. The copies shown in the gallery, on the TV and in the invitation have all of that removed. Originals are stored privately, and only the host can download them (for example in the zip) — those originals keep their original metadata.',
@@ -138,6 +147,8 @@ export const TERMS: Record<'ms' | 'en', LegalDoc> = {
   ms: {
     title: 'Terma Perkhidmatan',
     updated: UPDATED_MS,
+    mod: '2026-10-05',
+    desc: 'Terma perkhidmatan Indahnya, galeri gambar majlis dengan QR oleh FF Dev Studio: akaun, bayaran sekali, kandungan tetamu, tempoh simpanan dan tanggungjawab.',
     intro: 'Terma ni terpakai bila korang guna Indahnya (indahnya.my), perkhidmatan oleh FF Dev Studio, Malaysia. Dengan buat majlis atau upload gambar, korang setuju dengan terma ni dan Notis Privasi kami.',
     sections: [
       { h: 'Perkhidmatan', p: ['Indahnya bagi setiap majlis satu link dan QR untuk tetamu upload gambar dan video ke satu galeri, dengan slideshow untuk skrin dewan dan dashboard untuk tuan majlis. Tetamu tak perlu akaun.'] },
@@ -167,6 +178,8 @@ export const TERMS: Record<'ms' | 'en', LegalDoc> = {
   en: {
     title: 'Terms of Service',
     updated: UPDATED_EN,
+    mod: '2026-10-05',
+    desc: 'Terms of service for Indahnya, the QR photo gallery for Malaysian events by FF Dev Studio: accounts, one-time payments, guest content, retention and liability.',
     intro: 'These terms apply when you use Indahnya (indahnya.my), a service by FF Dev Studio, Malaysia. By creating an event or uploading a photo you agree to these terms and our Privacy Notice.',
     sections: [
       { h: 'The service', p: ['Indahnya gives each event one link and QR for guests to upload photos and videos into one gallery, with a slideshow for the venue screen and a dashboard for the host. Guests need no account.'] },
@@ -212,6 +225,8 @@ export const REFUND: Record<'ms' | 'en', LegalDoc> = {
   ms: {
     title: 'Bayaran Balik dan Pembatalan',
     updated: UPDATED_PAY_MS,
+    mod: '2026-10-14',
+    desc: 'Bila korang boleh dapat bayaran balik untuk pakej Indahnya, macam mana nak minta dalam 14 hari selepas majlis, dan apa jadi kalau bayaran CHIP dibatalkan.',
     intro: 'Halaman ni terangkan bila korang boleh dapat bayaran balik (refund) untuk Indahnya (indahnya.my), macam mana nak minta, dan apa jadi kalau korang batalkan bayaran. Ia melengkapkan Terma Perkhidmatan kami.',
     sections: [
       { h: 'Apa yang korang bayar', ul: [
@@ -246,6 +261,8 @@ export const REFUND: Record<'ms' | 'en', LegalDoc> = {
   en: {
     title: 'Refunds and Cancellation',
     updated: UPDATED_PAY_EN,
+    mod: '2026-10-14',
+    desc: 'When you can get a refund for an Indahnya plan, how to ask within 14 days of your event, and what happens if a CHIP payment is cancelled or charged back.',
     intro: 'This page explains when you can get a refund for Indahnya (indahnya.my), how to ask for one, and what happens if you cancel a payment. It complements our Terms of Service.',
     sections: [
       { h: 'What you pay for', ul: [
@@ -283,6 +300,8 @@ export const DELIVERY: Record<'ms' | 'en', LegalDoc> = {
   ms: {
     title: 'Penghantaran dan Pemulangan',
     updated: UPDATED_PAY_MS,
+    mod: '2026-10-14',
+    desc: 'Indahnya ialah perkhidmatan digital: tiada barang dihantar dan tiada kos pos. Halaman ni terangkan bila akses galeri dan e-kad dibuka selepas bayaran CHIP.',
     intro: 'Indahnya ialah perkhidmatan digital yang disampaikan secara online. Tak ada barang fizikal yang dihantar ke alamat korang, jadi tak ada kos penghantaran, kurier atau tarikh sampai. Halaman ni terangkan apa yang korang dapat dan bila akses diberi selepas bayar.',
     sections: [
       { h: 'Apa yang korang dapat', ul: [
@@ -317,6 +336,8 @@ export const DELIVERY: Record<'ms' | 'en', LegalDoc> = {
   en: {
     title: 'Delivery and Returns',
     updated: UPDATED_PAY_EN,
+    mod: '2026-10-14',
+    desc: 'Indahnya is a digital service: nothing is shipped and there is no postage. This page explains when your gallery and e-invite open after a CHIP payment.',
     intro: 'Indahnya is a digital service delivered online. Nothing physical is shipped to you, so there is no shipping cost, courier or delivery date. This page explains what you get and when access is given after you pay.',
     sections: [
       { h: 'What you get', ul: [

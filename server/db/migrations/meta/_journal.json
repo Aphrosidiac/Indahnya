@@ -57,6 +57,13 @@
       "when": 1791628269224,
       "tag": "0007_chip",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794479939837,
+      "tag": "0008_analytics",
+      "breakpoints": true
     }
   ]
 }

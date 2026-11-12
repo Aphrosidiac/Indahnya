@@ -5,6 +5,7 @@ import { createSession, findOrCreateUser } from '../../../utils/session';
 import { readBodyAs } from '../../../utils/validate';
 import { tokenHash } from '../../../utils/ids';
 import { rateLimit, clientIp } from '../../../utils/rate';
+import { afterSignIn } from '../../../utils/traffic/auth';
 
 const Body = z.object({ t: z.string().min(16).max(64) });
 
@@ -22,5 +23,6 @@ export default defineEventHandler(async (event) => {
   if (!row) throw createError({ statusCode: 410, statusMessage: 'Link dah tamat atau dah diguna' });
   const user = await findOrCreateUser(row.email);
   await createSession(event, user.id);
+  await afterSignIn(event, user);
   return { next: safeNext(row.next) };
 });

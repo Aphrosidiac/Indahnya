@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { linkIn } from '~~/shared/utils/site-pages';
 import { ArrowRight } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
-import { photo } from '~/composables/useLanding';
+import { photo, photoSize } from '~/composables/useLanding';
 import { prefersReduced } from '~/composables/useLandingMotion';
 import { WORDMARK } from '~/ui/brand-art';
 import SAMPLE_PHOTOS from '~~/scripts/landing-photos.json';
@@ -11,7 +12,33 @@ import SAMPLE_PHOTOS from '~~/scripts/landing-photos.json';
  * drift at different depths around one big button, then the name, cropped
  * by the bottom of the page, filled with the day's photos.
  */
-const props = defineProps<{ L: LandingCopy; other: string; qr: string; lang: 'ms' | 'en' }>();
+const props = defineProps<{ L: LandingCopy; other: string; qr: string; lang: 'ms' | 'en'; updated?: string }>();
+/** Every public page, in this page's language where it has a twin (shared/utils/site-pages.ts). */
+const footerLinks = computed(() => {
+  const l = props.lang;
+  return [
+    { to: linkIn('/harga', l), label: props.L.nav.pricing },
+    { to: linkIn('/tentang', l), label: props.L.footer.about },
+    { to: linkIn('/privasi', l), label: props.L.footer.links.privacy },
+    { to: linkIn('/terma', l), label: props.L.footer.links.terms },
+    { to: linkIn('/bayaran-balik', l), label: props.L.footer.links.refund },
+    { to: linkIn('/penghantaran', l), label: props.L.footer.links.delivery },
+    // pages in one language only (docs/seo/strike-plan.md §3.2–3.3)
+    ...(l === 'en'
+      ? [
+          { to: '/en/wedding-photo-sharing-malaysia', label: 'Wedding photo sharing' },
+          { to: '/en/digital-wedding-invitation-malaysia', label: 'Digital invitation' },
+          { to: '/en/guides/collect-guest-photos-malaysia', label: 'Collecting guest photos' },
+        ]
+      : [
+          { to: '/e-kad', label: 'E-kad' },
+          { to: '/contoh', label: 'Contoh' },
+          { to: '/buku-tetamu-digital', label: 'Buku tetamu digital' },
+          { to: '/panduan', label: 'Panduan' },
+          { to: '/banding', label: 'Banding' },
+        ]),
+  ];
+});
 const ITEMS = [
   { id: 'g04', x: 6, y: 10, w: 150, r: -8, d: 0.6 }, { id: 'g21', x: 18, y: 58, w: 120, r: 6, d: 1.1 }, { id: 'qr', x: 4, y: 72, w: 110, r: 9, d: 0.8 },
   { id: 'g11', x: 30, y: 4, w: 130, r: 5, d: 1.3 }, { id: 'g02', x: 72, y: 6, w: 140, r: -6, d: 0.7 }, { id: 'qr', x: 86, y: 18, w: 104, r: -10, d: 1.2 },
@@ -49,8 +76,8 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
     <div ref="field" class="relative mx-auto flex min-h-[86vh] max-w-[1600px] items-center justify-center px-4">
       <div class="pointer-events-none absolute inset-0" aria-hidden="true">
         <div v-for="(it, i) in ITEMS" :key="i" class="drift absolute" :class="(i % 3 === 2 || (it.y > 30 && it.y < 84)) && 'max-md:hidden'" :data-d="it.d" :style="{ left: `${it.x}%`, top: `${it.y}%`, width: `clamp(64px, ${it.w / 14.4}vw, ${it.w}px)`, '--r': `${it.r}deg`, '--i': i }">
-          <div v-if="it.id === 'qr'" class="drift-in rounded-[10px] bg-[#fdfcfb] p-[10%] shadow-[0_20px_40px_-20px_rgba(60,48,36,.45)]"><img v-if="qr" :src="qr" alt="" class="w-full" /></div>
-          <img v-else :src="photo(it.id)" alt="" class="drift-in w-full rounded-[10px] shadow-[0_20px_40px_-20px_rgba(60,48,36,.45)]" loading="lazy" />
+          <div v-if="it.id === 'qr'" class="drift-in rounded-[10px] bg-[#fdfcfb] p-[10%] shadow-[0_20px_40px_-20px_rgba(60,48,36,.45)]"><img v-if="qr" :src="qr" width="256" height="256" alt="" class="w-full" /></div>
+          <img v-else :src="photo(it.id)" v-bind="photoSize(it.id)" alt="" class="drift-in w-full rounded-[10px] shadow-[0_20px_40px_-20px_rgba(60,48,36,.45)]" loading="lazy" />
         </div>
       </div>
       <div class="relative max-w-[760px] text-center">
@@ -65,19 +92,15 @@ const credits = Object.values(SAMPLE_PHOTOS.reduce<Record<string, { by: string; 
         <p class="text-[15px] text-[#55524f]">{{ L.footer.tagline }}</p>
         <!-- on a phone each link is a full 44px row to tap -->
         <nav class="flex flex-wrap items-center gap-x-6 text-[15px] text-[#55524f] md:gap-y-2 [&>a]:max-md:inline-flex [&>a]:max-md:min-h-11 [&>a]:max-md:items-center" aria-label="Footer">
-          <NuxtLink :to="lang === 'en' ? '/harga?lang=en' : '/harga'" class="hover:text-[#1a1a1a]">{{ L.nav.pricing }}</NuxtLink>
-          <NuxtLink :to="lang === 'en' ? '/tentang?lang=en' : '/tentang'" class="hover:text-[#1a1a1a]">{{ L.footer.about }}</NuxtLink>
-          <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="hover:text-[#1a1a1a]">{{ L.footer.links.privacy }}</NuxtLink>
-          <NuxtLink :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="hover:text-[#1a1a1a]">{{ L.footer.links.terms }}</NuxtLink>
-          <NuxtLink :to="lang === 'en' ? '/bayaran-balik?lang=en' : '/bayaran-balik'" class="hover:text-[#1a1a1a]">{{ L.footer.links.refund }}</NuxtLink>
-          <NuxtLink :to="lang === 'en' ? '/penghantaran?lang=en' : '/penghantaran'" class="hover:text-[#1a1a1a]">{{ L.footer.links.delivery }}</NuxtLink>
+          <NuxtLink v-for="f in footerLinks" :key="f.to" :to="f.to" class="hover:text-[#1a1a1a]">{{ f.label }}</NuxtLink>
           <a href="https://wa.me/60139078719" target="_blank" rel="noopener" class="hover:text-[#1a1a1a]">{{ L.footer.links.contact }}</a>
           <NuxtLink :to="other" class="hover:text-[#1a1a1a]">{{ L.nav.lang === 'EN' ? 'English' : 'Bahasa Melayu' }}</NuxtLink>
           <span>{{ L.footer.by }} <a href="https://ffdev.studio" target="_blank" rel="noopener" class="font-semibold text-[#1a1a1a] hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">FF Dev Studio</a></span>
         </nav>
       </div>
       <CompanyInfo class="mt-6 max-w-[880px] text-[14px] text-[#55524f]" />
-      <p class="mt-4 max-w-[880px] text-[13px] leading-[1.6] text-[#75716d]">
+      <p v-if="updated" class="mt-4 text-[13px] text-[#69655f]">{{ updated }}</p>
+      <p class="mt-4 max-w-[880px] text-[13px] leading-[1.6] text-[#69655f]">
         {{ L.footer.credit }}
         <template v-for="(c, i) in credits" :key="c.user"><a :href="`https://unsplash.com/@${c.user}?utm_source=indahnya&utm_medium=referral`" target="_blank" rel="noopener" class="underline decoration-[#1a1a1a]/20 underline-offset-2 hover:text-[#1a1a1a]">{{ c.by }}</a>{{ i < credits.length - 2 ? ', ' : i === credits.length - 2 ? ` ${L.footer.and} ` : ' ' }}</template>{{ L.footer.on }}.
         {{ L.footer.disclaimer }}

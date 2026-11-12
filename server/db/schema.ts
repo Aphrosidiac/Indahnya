@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
-  pgTable, text, timestamp, integer, bigint, boolean, jsonb, primaryKey, index, uniqueIndex,
+  pgTable, text, timestamp, integer, bigint, boolean, jsonb, primaryKey, index, uniqueIndex, doublePrecision,
 } from 'drizzle-orm/pg-core';
 
 /**
@@ -43,6 +43,16 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   /** Account deleted: the email is replaced and the name cleared; payments keep pointing here for the books. */
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  /**
+   * Where the person first came from, copied once at sign-up from the
+   * first-visit cookie (server/utils/traffic/channel.ts). Reporting only; null
+   * when the cookie was absent. Never trusted for anything else.
+   */
+  signupLanding: text('signup_landing'),
+  signupRefHost: text('signup_ref_host'),
+  signupUtmSource: text('signup_utm_source'),
+  signupChannel: text('signup_channel'),
+  firstSeenAt: timestamp('first_seen_at', { withTimezone: true }),
 }, t => [uniqueIndex('users_email_uq').on(t.email)]);
 
 /** `id` is the SHA-256 of the cookie's token: a leaked table or backup holds no live session. */
@@ -285,4 +295,96 @@ export const rateLimits = pgTable('rate_limits', {
 export const heartbeats = pgTable('heartbeats', {
   name: text('name').primaryKey(),
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Analytics (docs/ANALYTICS.md). One row per request that is worth keeping:
+ * marketing pages, the beacon, robots/sitemap, and every non-human request.
+ * People's IPs are never stored (`ip` is null for human, unconfirmed and staff);
+ * `visitor` is a daily-salted hash of IP + User-Agent. Pruned after 120 days.
+ */
+export const trafficHits = pgTable('traffic_hits', {
+  id: text('id').primaryKey(),
+  at: timestamp('at', { withTimezone: true }).notNull(),
+  /** site | www | other */
+  host: text('host').notNull(),
+  /** marketing | couple | app | tv | embed | api | file | beacon | asset | other */
+  grp: text('grp').notNull(),
+  method: text('method').notNull(),
+  path: text('path').notNull(),
+  status: integer('status').notNull(),
+  bytes: integer('bytes').notNull().default(0),
+  ms: integer('ms').notNull().default(0),
+  country: text('country'),
+  refHost: text('ref_host'),
+  /** page | beacon | file | api | asset */
+  kind: text('kind').notNull(),
+  /** human | unconfirmed | staff | search-bot | ai-bot | other-bot | impostor | automation | tool | monitor | scanner | datacenter | internal */
+  class: text('class').notNull(),
+  agent: text('agent'),
+  /** verified (published IP list or forward-confirmed reverse DNS) | failed | unverifiable | n/a */
+  verified: text('verified').notNull().default('n/a'),
+  visitor: text('visitor').notNull(),
+  ip: text('ip'),
+  ua: text('ua').notNull().default(''),
+  /** Page views: the beacon for this page arrived from the same visitor. */
+  beacon: boolean('beacon').notNull().default(false),
+  /** Beacon rows: its own fields (path, referrer host, utm source, width, webdriver, trigger, device). */
+  data: jsonb('data').$type<Record<string, unknown>>(),
+}, t => [
+  index('traffic_hits_at_idx').on(t.at),
+  index('traffic_hits_kind_idx').on(t.grp, t.kind, t.at),
+  index('traffic_hits_class_idx').on(t.class, t.at),
+  index('traffic_hits_visitor_idx').on(t.visitor, t.at),
+]);
+
+/** Requests counted per Malaysia day, not stored one by one (every request, assets and app traffic included). */
+export const trafficDaily = pgTable('traffic_daily', {
+  date: text('date').notNull(),
+  host: text('host').notNull(),
+  grp: text('grp').notNull(),
+  class: text('class').notNull(),
+  requests: integer('requests').notNull().default(0),
+}, t => [primaryKey({ columns: [t.date, t.host, t.grp, t.class] })]);
+
+/** Where the log reader stopped: the file's inode and byte offset. It follows logrotate's rename. */
+export const trafficCursor = pgTable('traffic_cursor', {
+  id: text('id').primaryKey(),
+  inode: bigint('inode', { mode: 'bigint' }).notNull(),
+  offset: bigint('offset', { mode: 'bigint' }).notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** IPs a staff account signed in from (staff only, ever); visits from them in the next 30 days are class `staff`. */
+export const trafficStaffIps = pgTable('traffic_staff_ips', {
+  ip: text('ip').primaryKey(),
+  seenAt: timestamp('seen_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** One random salt per Malaysia day for the visitor hash; deleted after three days, so old ids cannot be tied back to an IP. */
+export const trafficSalts = pgTable('traffic_salts', {
+  day: text('day').primaryKey(),
+  salt: text('salt').notNull(),
+});
+
+/** Search performance per day from Google Search Console and Bing Webmaster Tools. */
+export const searchDaily = pgTable('search_daily', {
+  engine: text('engine').notNull(),
+  date: text('date').notNull(),
+  /** '*' = the day's total (query and page both '*'), or that page / that query. */
+  query: text('query').notNull(),
+  page: text('page').notNull(),
+  clicks: integer('clicks').notNull().default(0),
+  impressions: integer('impressions').notNull().default(0),
+  /** Average position (1 = top). */
+  position: doublePrecision('position').notNull().default(0),
+}, t => [primaryKey({ columns: [t.engine, t.date, t.query, t.page] }), index('search_daily_engine_idx').on(t.engine, t.date)]);
+
+/** Per-source status of the analytics collectors (last run, last error), read by the report. */
+export const collectorRuns = pgTable('collector_runs', {
+  id: text('id').primaryKey(),
+  ok: boolean('ok').notNull(),
+  detail: text('detail'),
+  rows: integer('rows').notNull().default(0),
+  ranAt: timestamp('ran_at', { withTimezone: true }).notNull().defaultNow(),
 });

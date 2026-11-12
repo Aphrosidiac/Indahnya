@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { linkIn } from '~~/shared/utils/site-pages';
 import { Check, ArrowRight } from 'lucide-vue-next';
 import type { LandingCopy } from '~/composables/useLanding';
 
@@ -46,7 +47,7 @@ const en = computed(() => props.L.nav.lang === 'BM'); // the switch names the ot
     <div class="mt-14 flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
       <p class="max-w-[52ch] text-[15px] leading-[1.55] text-[#55524f]">{{ L.pricing.note }}</p>
       <div class="flex shrink-0 flex-wrap items-center gap-2">
-        <NuxtLink v-if="!page" :to="{ path: '/harga', query: en ? { lang: 'en' } : undefined }" class="l-btn l-btn-line">{{ L.pricing.compare }}</NuxtLink>
+        <NuxtLink v-if="!page" :to="linkIn('/harga', en ? 'en' : 'ms')" class="l-btn l-btn-line">{{ L.pricing.compare }}</NuxtLink>
         <NuxtLink to="/app?new=1" class="l-btn l-btn-go">{{ L.cta }}<ArrowRight class="size-[18px]" :stroke-width="2" aria-hidden="true" /></NuxtLink>
       </div>
     </div>

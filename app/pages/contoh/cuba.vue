@@ -94,7 +94,7 @@ const anyDone = computed(() => up.done.value > 0);
             </span>
             <Check v-if="it.state === 'ready'" class="size-5 text-[#3d8f39]" :stroke-width="2.5" />
             <AlertCircle v-else-if="it.state === 'failed'" class="size-5 text-[#b42318]" :stroke-width="2" />
-            <Loader2 v-else class="size-5 animate-spin text-[#75716d]" :stroke-width="2" />
+            <Loader2 v-else class="size-5 animate-spin text-[#69655f]" :stroke-width="2" />
           </li>
         </ul>
         <p v-if="anyDone" class="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-[#27622a]">{{ T.done }}</p>

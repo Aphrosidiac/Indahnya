@@ -112,7 +112,7 @@ async function destroy() {
             <p v-else-if="p.key === 'free' && ev.plan === 'free'" class="mt-5 text-center text-[12px] leading-4 text-ink-500">Pakej semasa</p>
           </Card>
         </div>
-        <p class="mt-4 text-[12px] leading-4 text-ink-500">Bayaran melalui CHIP — FPX, kad atau e-wallet. Harga dalam Ringgit Malaysia. Resit dihantar ke email.</p>
+        <p class="mt-4 text-[12px] leading-4 text-ink-500">Bayaran melalui CHIP, termasuk FPX online banking. Harga dalam Ringgit Malaysia. Resit dihantar ke email.</p>
       </template>
 
       <!-- MAJLIS -->

@@ -6,7 +6,8 @@ import LVine from '~/components/landing/LVine.vue';
 import LPricing from '~/components/landing/LPricing.vue';
 import LFaq from '~/components/landing/LFaq.vue';
 import LFinal from '~/components/landing/LFinal.vue';
-import { LANDING, type LandingLang } from '~/composables/useLanding';
+import { LANDING } from '~/composables/useLanding';
+import { linkIn } from '~~/shared/utils/site-pages';
 import { PRICING } from '~/composables/usePricing';
 import { qrArtDataUrl } from '~~/shared/utils/qr-art';
 
@@ -15,45 +16,20 @@ import { qrArtDataUrl } from '~~/shared/utils/qr-art';
  * always agree), every feature side by side, how paying works, and the
  * money questions. Copy in usePricing; numbers in server/utils/plans.ts.
  */
-definePageMeta({ layout: 'bare' });
-const route = useRoute();
-const lang = computed<LandingLang>(() => (route.query.lang === 'en' ? 'en' : 'ms'));
+definePageMeta({ layout: 'bare', alias: ['/en/pricing'] });
+const lang = useLang();
 const L = computed(() => LANDING[lang.value]);
 const P = computed(() => PRICING[lang.value]);
-const other = computed(() => (lang.value === 'ms' ? '/harga?lang=en' : '/harga'));
+const other = computed(() => linkIn('/harga', lang.value === 'ms' ? 'en' : 'ms'));
 
 const site = useRuntimeConfig().public.siteUrl;
-const url = computed(() => `${site}/harga${lang.value === 'en' ? '?lang=en' : ''}`);
-useHead({
-  htmlAttrs: { lang: () => (lang.value === 'en' ? 'en-MY' : 'ms-MY') },
-  link: [
-    { rel: 'canonical', href: url },
-    { rel: 'alternate', hreflang: 'ms-MY', href: `${site}/harga` },
-    { rel: 'alternate', hreflang: 'en-MY', href: `${site}/harga?lang=en` },
-    { rel: 'alternate', hreflang: 'x-default', href: `${site}/harga` },
-  ],
-  script: [{
-    type: 'application/ld+json',
-    // the offers themselves live on the app entity in the site graph
-    innerHTML: () => ldJson([
-      ...siteGraph(site, lang.value),
-      {
-        '@type': 'WebPage', '@id': `${url.value}#webpage`, url: url.value, name: P.value.seoTitle, description: P.value.seoDesc,
-        inLanguage: lang.value === 'en' ? 'en-MY' : 'ms-MY', isPartOf: { '@id': `${site}/#website` }, about: { '@id': `${site}/#app` },
-        dateModified: '2026-10-13T00:00:00+08:00',
-      },
-      {
-        '@type': 'FAQPage', '@id': `${url.value}#faq`, isPartOf: { '@id': `${url.value}#webpage` },
-        mainEntity: P.value.faq.items.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
-      },
-    ]),
-  }],
-});
-useSeoMeta({
-  title: () => P.value.seoTitle, description: () => P.value.seoDesc,
-  ogTitle: () => P.value.seoTitle, ogDescription: () => P.value.seoDesc, ogUrl: url, ogType: 'website', ogSiteName: 'Indahnya',
-  ogLocale: () => (lang.value === 'en' ? 'en_MY' : 'ms_MY'), ogImage: `${site}/og.jpg`, ogImageWidth: 1200, ogImageHeight: 630,
-  twitterCard: 'summary_large_image',
+// the offers themselves live on the app entity in the site graph
+usePublicSeo({
+  title: () => P.value.seoTitle,
+  description: () => P.value.seoDesc,
+  modified: '2026-11-12',
+  graph: true,
+  crumbs: () => [{ name: L.value.nav.pricing, path: linkIn('/harga', lang.value) }],
 });
 const demoQr = qrArtDataUrl(`${site}/aina-hakim`);
 onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
@@ -84,7 +60,7 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
             <div v-for="r in g.rows" :key="r.label" role="row" class="cmp-row border-b border-[#1a1a1a]/[.07] py-3.5 last:border-0 md:py-4">
               <span role="rowheader" class="max-sm:col-span-3 max-sm:pb-1.5">
                 <span class="block text-[15px] font-medium leading-[1.35] text-[#1a1a1a] md:text-[16px]">{{ r.label }}</span>
-                <span v-if="r.hint" class="mt-0.5 block text-[13px] leading-[1.4] text-[#75716d]">{{ r.hint }}</span>
+                <span v-if="r.hint" class="mt-0.5 block text-[13px] leading-[1.4] text-[#69655f]">{{ r.hint }}</span>
               </span>
               <span v-for="(v, i) in r.v" :key="i" role="cell" class="cmp-cell text-[15px] text-[#1a1a1a] md:text-[16px]" :class="i === 1 && 'is-hot'">
                 <Check v-if="v === true" class="size-5 text-[#27622a]" :stroke-width="2.25" :aria-label="lang === 'en' ? 'Included' : 'Ada'" />
@@ -103,14 +79,14 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
           <li v-for="(x, i) in P.how.items" :key="x.title" class="flex flex-col rounded-[28px] p-6 md:p-8" :class="i === 3 ? 'bg-[#e6f3e1]' : 'bg-[#fdfcfb] shadow-[0_1px_0_rgba(26,26,26,.04),0_24px_60px_-40px_rgba(60,48,36,.3)]'">
             <h3 class="l-h3">{{ x.title }}</h3>
             <p class="l-body mt-3">{{ x.body }}</p>
-            <NuxtLink v-if="i === 3" :to="lang === 'en' ? '/terma?lang=en' : '/terma'" class="mt-6 inline-flex items-center gap-2 self-start text-[15px] font-semibold text-[#27622a] hover:underline">{{ P.how.terms }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></NuxtLink>
+            <NuxtLink v-if="i === 3" :to="linkIn('/terma', lang)" class="mt-6 inline-flex items-center gap-2 self-start text-[15px] font-semibold text-[#27622a] hover:underline">{{ P.how.terms }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></NuxtLink>
           </li>
         </ul>
       </section>
 
       <LFaq :L="L" :faq="P.faq" />
     </main>
-    <LFinal :L="L" :other="other" :qr="demoQr" :lang="lang" />
+    <LFinal :L="L" :other="other" :qr="demoQr" :lang="lang" :updated="lang === 'en' ? 'Updated 12 November 2026' : 'Dikemas kini 12 November 2026'" />
   </div>
 </template>
 

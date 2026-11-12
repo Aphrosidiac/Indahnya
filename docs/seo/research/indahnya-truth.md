@@ -71,7 +71,10 @@ Builds on `docs/geo/facts.md` (2026-10-04). Section 6 lists where that file is n
 | Name on photos | guests give a name; the gallery and TV show it | [code `api/g/[slug]/name.post.ts`] |
 | Voice wishes | recorded in the browser, up to 60 s / 10 MB | [code `audioSec`, `audioBytes`] |
 | RSVP | name, phone, attending or not, pax, side (lelaki / perempuan / rakan / lain), meal, note; one reply per browser; the host can add replies taken by phone and assign a table; host sees totals; CSV export | [code `server/db/schema.ts` `rsvps`, `api/g/[slug]/rsvp.*`, `rsvps.csv.get.ts`] |
-| Table finder | guest types a name, gets a table number | [code `api/g/[slug]/tempat.get.ts`] |
+| Table finder | guest types at least 3 letters of a name and gets the table; only for replies marked hadir and already seated | [code `api/g/[slug]/tempat.get.ts`] |
+| Seating (host) | host makes tables with a name and capacity and moves hadir replies onto them; over capacity shows red but is allowed | [code `api/events/[id]/seating.patch.ts`, `tables/*`] |
+| Wishes zip | `ucapan.txt` with every written wish, and the voice notes as `.m4a` files in `suara/` | [code `api/events/[id]/ucapan.zip.get.ts`] |
+| TV slideshow | a secret link the host can rotate; default 7 s per photo, guest names on, shuffle off (all settable) | [code `server/utils/events.ts` defaults, `app/pages/tv/[slug].vue`, `tv-token.post.ts`] |
 
 ### Host side [code]
 

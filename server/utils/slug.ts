@@ -11,6 +11,8 @@ export const RESERVED = new Set([
   'app', 'api', 'masuk', 'keluar', 'tv', 'harga', 'contoh', 'blog', 'admin', 'g', 'e', 'assets', '_nuxt',
   'privasi', 'terma', 'bayaran-balik', 'penghantaran', 'tentang', 'bantuan', 'login', 'logout', 'static', 'media', 'embed', 'auth', 'stripe', 'chip',
   'mula', 'landing', 'cuba', 'about', 'privacy', 'terms', 'help', 'health', 'sitemap', 'robots', 'favicon',
+  // public pages of the SEO build (shared/utils/site-pages.ts) and their likely neighbours
+  'en', 'e-kad', 'ekad', 'kad', 'panduan', 'banding', 'buku-tetamu-digital', 'pricing', 'refunds', 'delivery', 'guides', 'compare', 'metrics', 'internal',
 ]);
 
 /** Is the slug free for a new majlis? Never if it is reserved, in use, or was ever given up by another event. */

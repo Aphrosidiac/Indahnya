@@ -6,7 +6,7 @@
  * (docs/geo/owner-todo.md). No em dashes (landing copy rule).
  */
 export interface AboutCopy {
-  eyebrow: string; title: string; seoTitle: string; updated: string; intro: string;
+  eyebrow: string; title: string; seoTitle: string; seoDesc: string; updated: string; intro: string;
   factsTitle: string; facts: [string, string][];
   why: { h: string; lead: string; p: string };
   how: { h: string; steps: { t: string; b: string }[] };
@@ -19,7 +19,8 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
     eyebrow: 'Tentang kami',
     title: 'Tentang Indahnya',
     seoTitle: 'Tentang Indahnya: galeri gambar majlis dengan QR',
-    updated: 'Dikemas kini 4 Oktober 2026',
+    seoDesc: 'Indahnya (indahnya.my) ialah galeri gambar majlis dengan QR, e-kad dan RSVP untuk Malaysia, dibina oleh FF Dev Studio di Setiu, Terengganu. Fakta dan harga.',
+    updated: 'Dikemas kini 12 November 2026',
     intro: 'Indahnya ialah galeri gambar majlis dengan QR untuk Malaysia. Tetamu scan QR atas meja, upload gambar terus dari browser phone tanpa app atau login, dan semua gambar masuk satu galeri yang boleh naik atas TV dewan. Indahnya juga ada e-kad jemputan, RSVP, carian nombor meja dan ucapan. Dibina oleh FF Dev Studio, Malaysia.',
     factsTitle: 'Fakta ringkas',
     facts: [
@@ -29,7 +30,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
       ['Untuk', 'Majlis kahwin, aqiqah, hari jadi, graduasi, majlis syarikat dan majlis lain di Malaysia'],
       ['Bahasa', 'Bahasa Melayu dan English'],
       ['Harga', 'Percuma, RM0 (50 upload, simpan 30 hari selepas majlis); RM59 sekali bayar (upload tanpa had, simpan setahun); RM99 sekali bayar (upload tanpa had, simpan dua tahun)'],
-      ['Bayaran', 'Melalui CHIP: FPX, kad atau e-wallet, dalam Ringgit'],
+      ['Bayaran', 'Melalui CHIP, termasuk FPX online banking, dalam Ringgit'],
       ['Dibina oleh', 'FF Dev Studio, Malaysia'],
       ['Hubungi', 'hello@ffdev.studio · WhatsApp +60\u00a013\u2011907\u00a08719'],
     ],
@@ -66,7 +67,8 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
     eyebrow: 'About us',
     title: 'About Indahnya',
     seoTitle: 'About Indahnya: QR photo gallery for Malaysian events',
-    updated: 'Updated 4 October 2026',
+    seoDesc: 'Indahnya (indahnya.my) is a QR photo gallery with e-invites and RSVP for Malaysian events, built by FF Dev Studio in Setiu, Terengganu. Facts, prices, contact.',
+    updated: 'Updated 12 November 2026',
     intro: 'Indahnya is a QR photo gallery for Malaysian events. Guests scan a QR code on the table, upload photos straight from their phone browser with no app or sign-up, and every photo lands in one gallery that can play on the venue screen. Indahnya also has e-invitation cards, RSVP, table finder and guest wishes. Built by FF Dev Studio, Malaysia.',
     factsTitle: 'Quick facts',
     facts: [
@@ -76,7 +78,7 @@ export const ABOUT: Record<'ms' | 'en', AboutCopy> = {
       ['For', 'Weddings, aqiqah, birthdays, graduations, company events and other events in Malaysia'],
       ['Languages', 'Bahasa Melayu and English'],
       ['Pricing', 'Free, RM0 (50 uploads, kept 30 days after the event); RM59 one-time (unlimited uploads, kept one year); RM99 one-time (unlimited uploads, kept two years)'],
-      ['Payment', 'Through CHIP: FPX, card or e-wallet, in Ringgit'],
+      ['Payment', 'Through CHIP, including FPX online banking, in Ringgit'],
       ['Built by', 'FF Dev Studio, Malaysia'],
       ['Contact', 'hello@ffdev.studio · WhatsApp +60\u00a013\u2011907\u00a08719'],
     ],

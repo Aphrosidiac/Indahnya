@@ -45,7 +45,7 @@ const head = computed(() => (props.locale === 'en' ? 'Scan & share your photos o
       <p v-if="date" class="date">{{ date }}</p>
     </div>
     <div class="scan">
-      <img :src="qr" alt="QR" class="qr">
+      <img :src="qr" width="256" height="256" alt="QR" class="qr">
       <p class="head">{{ head }}</p>
       <p class="link">{{ link }}</p>
     </div>

@@ -14,7 +14,7 @@ export type PricingRow = { label: string; hint?: string; v: [string | boolean, s
 
 export const PRICING = {
   ms: {
-    seoTitle: 'Harga Indahnya: RM0, RM59 atau RM99 sekali bayar',
+    seoTitle: 'Harga galeri QR majlis: RM0, RM59, RM99 | Indahnya',
     seoDesc: 'Harga galeri gambar majlis Indahnya. Percuma untuk 50 upload, RM59 atau RM99 sekali bayar untuk upload tanpa had. Tak ada subscription, tak ada caj per tetamu.',
     eyebrow: 'Harga',
     compare: {
@@ -67,7 +67,7 @@ export const PRICING = {
       items: [
         { q: 'Kena bayar sebelum majlis ke?', a: 'Tak. Buat majlis percuma, print QR, guna terus. Upgrade bila-bila, termasuk masa majlis tengah jalan kalau 50 upload dah nak penuh.' },
         { q: 'Apa jadi bila 50 upload percuma dah penuh?', a: 'Upload baru berhenti sampai korang upgrade. Gambar yang dah masuk kekal dalam galeri. Lepas upgrade, tetamu terus boleh upload balik, tak payah print QR baru.' },
-        { q: 'Boleh bayar guna apa?', a: 'Melalui CHIP: FPX online banking, kad debit atau kredit, dan e-wallet. Harga dalam Ringgit, resit dihantar ke email.' },
+        { q: 'Boleh bayar guna apa?', a: 'Melalui CHIP. Halaman bayaran CHIP tunjuk cara yang dibuka, termasuk FPX online banking. Harga dalam Ringgit, resit dihantar ke email.' },
         { q: 'Kiraan 6 bulan atau setahun tu bermula bila?', a: 'Dari hari majlis, bukan hari korang buat akaun atau bayar. Buat awal pun tak rugi apa-apa.' },
         { q: 'Apa jadi bila tempoh simpan tamat?', a: 'Kami email dulu sebelum tamat. Korang boleh download semua gambar dalam satu zip, atau bayar sekali lagi untuk sambung. Lepas tamat, galeri masih ada 30 hari sebelum dipadam terus.' },
         { q: 'Ada caj per tetamu atau caj tersembunyi?', a: 'Tak ada. Berapa ramai tetamu pun, harga sama. Yang korang nampak kat page ni je yang korang bayar.' },
@@ -76,7 +76,7 @@ export const PRICING = {
   },
   en: {
     seoTitle: 'Indahnya pricing: RM0, RM59 or RM99, paid once',
-    seoDesc: 'Indahnya event photo gallery pricing. Free for 50 uploads, RM59 or RM99 paid once for unlimited uploads. No subscription, no per-guest fees.',
+    seoDesc: 'Indahnya QR photo gallery pricing: free for 50 uploads, or RM59 or RM99 paid once for unlimited uploads, e-invite and RSVP included. No per-guest fee.',
     eyebrow: 'Pricing',
     compare: {
       title: 'Compare every plan.',
@@ -128,7 +128,7 @@ export const PRICING = {
       items: [
         { q: 'Do I have to pay before the event?', a: 'No. Create the event for free, print the QR and use it. Upgrade any time, even in the middle of the event if the 50 free uploads are nearly used.' },
         { q: 'What happens when the 50 free uploads are used?', a: 'New uploads pause until you upgrade. Photos already in stay in the gallery. Once you upgrade, guests can upload again straight away with the same QR.' },
-        { q: 'How can I pay?', a: 'Through CHIP: FPX online banking, debit or credit card, and e-wallets. Prices are in Ringgit and the receipt goes to your email.' },
+        { q: 'How can I pay?', a: 'Through CHIP. The CHIP payment page shows the methods that are open, including FPX online banking. Prices are in Ringgit and the receipt goes to your email.' },
         { q: 'When do the 6 months or one year start?', a: 'From the day of the event, not the day you sign up or pay. Setting up early costs you nothing.' },
         { q: 'What happens when storage ends?', a: 'We email you before it ends. You can download every photo in one zip, or pay again to extend. After it ends the gallery stays for 30 days before it is deleted for good.' },
         { q: 'Any per-guest or hidden fees?', a: 'None. However many guests come, the price is the same. What you see on this page is all you pay.' },

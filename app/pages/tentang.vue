@@ -5,7 +5,8 @@ import LNav from '~/components/landing/LNav.vue';
 import LVine from '~/components/landing/LVine.vue';
 import LFinal from '~/components/landing/LFinal.vue';
 import QrStand from '~/components/print/QrStand.vue';
-import { LANDING, type LandingLang } from '~/composables/useLanding';
+import { LANDING } from '~/composables/useLanding';
+import { linkIn } from '~~/shared/utils/site-pages';
 import { ABOUT } from '~/composables/useAbout';
 import { qrArtDataUrl } from '~~/shared/utils/qr-art';
 
@@ -14,40 +15,20 @@ import { qrArtDataUrl } from '~~/shared/utils/qr-art';
  * a reader (or an answer engine) checks Indahnya against. Copy in useAbout;
  * entities in useSiteGraph.
  */
-definePageMeta({ layout: 'bare' });
-const route = useRoute();
-const lang = computed<LandingLang>(() => (route.query.lang === 'en' ? 'en' : 'ms'));
+definePageMeta({ layout: 'bare', alias: ['/en/about'] });
+const lang = useLang();
 const L = computed(() => LANDING[lang.value]);
 const A = computed(() => ABOUT[lang.value]);
-const other = computed(() => (lang.value === 'ms' ? '/tentang?lang=en' : '/tentang'));
+const other = computed(() => linkIn('/tentang', lang.value === 'ms' ? 'en' : 'ms'));
 
 const site = useRuntimeConfig().public.siteUrl;
-const url = computed(() => `${site}/tentang${lang.value === 'en' ? '?lang=en' : ''}`);
-useHead({
-  htmlAttrs: { lang: () => (lang.value === 'en' ? 'en-MY' : 'ms-MY') },
-  link: [
-    { rel: 'canonical', href: url },
-    { rel: 'alternate', hreflang: 'ms-MY', href: `${site}/tentang` },
-    { rel: 'alternate', hreflang: 'en-MY', href: `${site}/tentang?lang=en` },
-    { rel: 'alternate', hreflang: 'x-default', href: `${site}/tentang` },
-  ],
-  script: [{
-    type: 'application/ld+json',
-    innerHTML: () => ldJson([
-      ...siteGraph(site, lang.value),
-      {
-        '@type': 'AboutPage', '@id': `${url.value}#webpage`, url: url.value, name: A.value.title, description: A.value.intro,
-        inLanguage: lang.value === 'en' ? 'en-MY' : 'ms-MY', isPartOf: { '@id': `${site}/#website` }, about: { '@id': `${site}/#app` },
-        dateModified: '2026-10-04T00:00:00+08:00',
-      },
-    ]),
-  }],
-});
-useSeoMeta({
-  title: () => A.value.seoTitle, description: () => A.value.intro,
-  ogTitle: () => A.value.seoTitle, ogDescription: () => A.value.intro, ogUrl: url, ogType: 'website', ogSiteName: 'Indahnya',
-  ogLocale: () => (lang.value === 'en' ? 'en_MY' : 'ms_MY'), ogImage: `${site}/og.jpg`, ogImageWidth: 1200, ogImageHeight: 630,
-  twitterCard: 'summary_large_image',
+usePublicSeo({
+  title: () => A.value.seoTitle,
+  description: () => A.value.seoDesc,
+  type: 'AboutPage',
+  modified: '2026-11-12',
+  graph: true,
+  crumbs: () => [{ name: A.value.title, path: linkIn('/tentang', lang.value) }],
 });
 const demoQr = qrArtDataUrl(`${site}/aina-hakim`);
 onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
@@ -65,7 +46,7 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
             <p class="text-[14px] font-semibold uppercase tracking-[.12em] text-[#27622a]">{{ A.eyebrow }}</p>
             <h1 class="l-display mt-4 text-[clamp(48px,7vw,112px)]">{{ A.title }}</h1>
             <p class="l-lead mt-8 !max-w-[60ch]">{{ A.intro }}</p>
-            <p class="mt-5 text-[13px] text-[#75716d]">{{ A.updated }}</p>
+            <p class="mt-5 text-[13px] text-[#69655f]">{{ A.updated }}</p>
           </div>
           <!-- the product in a glance: the table cards guests meet (no people, so nobody reads as a customer) -->
           <div class="relative mx-auto aspect-[5/4] w-full max-w-[480px] lg:col-span-5" aria-hidden="true">
@@ -127,7 +108,7 @@ onBeforeUnmount(() => document.documentElement.classList.remove('l-lock'));
                 <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[#27622a] text-white"><Check class="size-3.5" :stroke-width="3" aria-hidden="true" /></span>{{ x }}
               </li>
             </ul>
-            <NuxtLink :to="lang === 'en' ? '/privasi?lang=en' : '/privasi'" class="mt-8 inline-flex items-center gap-2 text-[15px] font-semibold text-[#27622a] hover:underline">{{ A.privacy.more }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></NuxtLink>
+            <NuxtLink :to="linkIn('/privasi', lang)" class="mt-8 inline-flex items-center gap-2 text-[15px] font-semibold text-[#27622a] hover:underline">{{ A.privacy.more }}<ArrowRight class="size-4" :stroke-width="2" aria-hidden="true" /></NuxtLink>
           </div>
           <div class="flex flex-col rounded-[28px] bg-[#1a1a1a] p-6 text-[#f3f1ee] md:p-10">
             <h2 class="l-h3">{{ A.who.h }}</h2>

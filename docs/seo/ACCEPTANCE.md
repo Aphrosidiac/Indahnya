@@ -41,6 +41,10 @@ Every sitemap URL, fetched from a production build (`nuxt build` + `node .output
 Mobile and desktop: Performance, Accessibility, Best Practices and SEO each **100**; Performance is the median of
 three runs. The LCP element never fades in from opacity 0; the landing's vine and Lenis must not cost the score.
 
+**Accepted 13 Nov 2026 (Fakhrul):** mobile Performance 96–100 passes for release. The gap is the heading font and
+the home animations. The gate still prints these as failures, so read its report for anything below 96, or any
+other category below 100.
+
 How the pages meet it (13 Nov 2026; mobile went from 60–92 to 96–100). Keep these when changing the landing:
 
 - **Measure over HTTP/2.** The gate's local proxy speaks HTTP/2 like Cloudflare. Over HTTP/1.1 Lighthouse charged
